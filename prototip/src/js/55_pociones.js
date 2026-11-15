@@ -74,6 +74,8 @@ function sfx(name,k){
     case 'rain':noise(t,3.5,{freq:4000,type:'highpass',vol:0.06,attack:0.5});for(let i=0;i<12;i++)noise(t+0.3+Math.random()*3,0.03,{freq:2500+Math.random()*2000,q:3,vol:0.04});break;
     case 'pet':noise(t,0.6,{freq:140,to:70,type:'lowpass',q:6,vol:0.3,attack:0.02});tone(95,t,0.5,{type:'sawtooth',to:55,vol:0.05});break;
     case 'dig':for(let i=0;i<4;i++)noise(t+i*0.16,0.1,{freq:500,type:'lowpass',vol:0.12});break;
+    case 'giggle':for(let i=0;i<8;i++)tone(700+(i%2)*260+Math.random()*80,t+i*0.09,0.08,{type:'triangle',vol:0.07,to:900});break;
+    case 'water':noise(t,0.5,{freq:900,to:1600,q:1.5,vol:0.08,attack:0.05});break;
     case 'click':tone(820,t,0.04,{vol:0.05,type:'triangle'});break;
   }
 }
@@ -298,7 +300,7 @@ function potionActions(){
   if(Math.abs(ly-L(1))<0.6){_w.setFromMatrixPosition(WARD_M.clone().multiply(TRS(0,0,0.9)));
     if(Math.hypot(lx-_w.x,lz-_w.z)<1.7){ctxCap='Armari';ctxA.set(_w.x+OX,OY+L(1)+2.6,_w.z+OZ);
       if(!GS.wardOpen)return ['armario'];
-      if(ph==='premio'){LAB.ponerse=REWARD[POT().premio.ropa].lab;return ['ponerse'];}}}
+      if(ph==='premio'&&!REWARD[POT().premio.ropa].noWard){LAB.ponerse=REWARD[POT().premio.ropa].lab;return ['ponerse'];}}}
   // libro
   if(ph!=='inicio'&&Math.abs(ly-L(2))<0.6&&Math.hypot(lx-BOOK.x,lz-BOOK.z)<1.8){ctxCap='Llibre de conjurs';ctxA.set(BOOK.x+OX,BOOK.y+OY+0.9,BOOK.z+OZ);return ['leer'];}
   // caldero
@@ -320,7 +322,7 @@ Object.assign(ACT,{
   armario(){GS.wardOpen=true;saveGame();sfx('open');},
   ponerse(){const P=POT(),r=P.premio.ropa,R=REWARD[r];if(!R)return;R.w.visible=false;R.wear();GS.clothes.push(r);GS.phase='fin';saveGame();sfx('magic');
     for(let i=0;i<14;i++)emit('dust',S.pos.x,S.y+1.4,S.pos.z,1,{sp:1.4,size:0.08,color:pick(['#c98aff','#ffd84a','#fff3b0'])});
-    GS.diary.push('Ja tinc '+P.premio.nombre+'.');saveGame();setTimeout(()=>conill([TXT.fin,TXT.fin2,TXT.fin3][GS.pot]||TXT.fin2),1200);},
+    GS.diary.push('Ja tinc '+P.premio.nombre+'.');saveGame();setTimeout(()=>conill([TXT.fin,TXT.fin2,TXT.fin3,TXT.fin4][GS.pot]||TXT.fin2),1200);},
   leer(){openBook();},
   echar(){const i=GS.bag.findIndex(inPot);if(i<0)return;const id=GS.bag.splice(i,1)[0],ing=findIng(id);
     const g=mkPot(ing.color,1.3);scene.add(g);g.position.set(S.pos.x,S.y+1.1,S.pos.z);
@@ -341,8 +343,10 @@ function potionDone(){
   setTimeout(()=>{sfx('success');beamT=0;if(GS.pot===0)rainbow.visible=true;
     setTimeout(()=>say(TXT.voz,TXT.felicita[GS.pot],()=>{
       P.diario.forEach(t=>GS.diary.push(t));GS.phase='premio';saveGame();wandUI();
-      sfx('magic');setTimeout(()=>conill([TXT.regalo,TXT.regalo2,TXT.regalo3][GS.pot]||TXT.regalo2),900);}),1600);},700);
+      sfx('magic');setTimeout(()=>conill([TXT.regalo,TXT.regalo2,TXT.regalo3,TXT.regalo4][GS.pot]||TXT.regalo2),900);}),1600);},700);
 }
+function finishReward(){const P=POT();GS.clothes.push(P.premio.ropa);GS.phase='fin';GS.diary.push('Ja tinc '+P.premio.nombre+'.');saveGame();sfx('magic');
+  setTimeout(()=>conill([TXT.fin,TXT.fin2,TXT.fin3,TXT.fin4][GS.pot]||TXT.fin2),1200);}
 // empezar la poción siguiente: la voz la encarga en la sala del trono
 function startPotion(i){GS.pot=i;GS.phase='leer';GS.got={};GS.bag=[];GS.layers=[];GS.hint={};GS.guide=null;clearCauldron();saveGame();}
 
@@ -464,7 +468,7 @@ function gameStep(dt){
   bookGlow.material.opacity=GS.phase==='leer'?0.45+0.25*Math.sin(t*3):0;
   // premios: en el armario cuando toca
   const rw=GS.phase==='premio'?POT().premio.ropa:null;
-  for(const k in REWARD){const R=REWARD[k];R.w.visible=k===rw;if(R.w.visible)R.w.rotation.y=PI+0.05+Math.sin(t)*0.2;}
+  for(const k in REWARD){const R=REWARD[k];if(R.noWard)continue;R.w.visible=k===rw;if(R.w.visible)R.w.rotation.y=PI+0.05+Math.sin(t)*0.2;}
   hatB.visible=GS.clothes.includes('barret');
   // bote volando al caldero
   if(flying){flying.t+=dt/0.7;const u=Math.min(1,flying.t);flying.g.position.lerpVectors(flying.from,flying.to,u);flying.g.position.y+=Math.sin(u*PI)*1.2;flying.g.rotation.z=u*8;

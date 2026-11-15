@@ -86,6 +86,7 @@ if(GS.clothes.includes('sabates'))wearShoes();
 
 /* ---------- acciones ---------- */
 function p3Actions(){
+  if(PLAY&&GS.pot===3)return p4Actions();
   if(!p3on()||(UST.st&&UST.st!=='cola')||ROCK.dig||ROCK.mv)return null;
   if(mode!=='forest')return null;
   const nearUni=uniDist()<2.7;
@@ -114,7 +115,7 @@ Object.assign(ACT,{
 
 /* ---------- bucle ---------- */
 function p3Step(dt){
-  const t=S.t;
+  const t=S.t;p4Step(dt);
   for(const k in handFood)handFood[k].visible=GS.food===k;
   // mariposa dorada: vuela bajito en círculos por el claro y deja polvo brillante
   if(BFLY.g.visible){const a=t*0.35,c={x:-0.5,z:-1.5};BFLY.g.position.set(c.x+Math.sin(a)*3.2+Math.sin(a*2.3)*0.6,gY(c.x,c.z)+1.25+Math.sin(t*1.7)*0.25,c.z+Math.cos(a)*2.6);
