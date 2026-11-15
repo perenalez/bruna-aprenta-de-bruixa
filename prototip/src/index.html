@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Bruna · El bosque y el torreón</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#40398f;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#3b2c2a;-webkit-user-select:none;user-select:none;touch-action:none}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.ui{position:fixed;z-index:5}
+#top{left:0;right:0;top:0;padding:calc(env(safe-area-inset-top) + 12px) 14px 0;pointer-events:none}
+#title{line-height:1.15}
+#title b{font-size:20px;letter-spacing:.3px;color:#ff8fa0}
+#title small{display:block;font-size:11px;color:#e9dcec;opacity:.8;margin-top:2px}
+#hint{left:50%;top:calc(env(safe-area-inset-top) + 62px);transform:translateX(-50%);background:rgba(255,255,255,.82);padding:7px 14px;border-radius:999px;font-size:12px;pointer-events:none;transition:opacity .8s;white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
+#joy{left:calc(env(safe-area-inset-left) + 22px);bottom:calc(env(safe-area-inset-bottom) + 28px);width:132px;height:132px;border-radius:50%;background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.55);touch-action:none}
+#knob{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;background:rgba(255,255,255,.9);box-shadow:0 2px 8px rgba(0,0,0,.3);pointer-events:none}
+#acts{right:calc(env(safe-area-inset-right) + 22px);bottom:calc(env(safe-area-inset-bottom) + 28px);display:flex;align-items:flex-end;gap:12px}
+.rb{border:0;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 2px 8px rgba(0,0,0,.3);font:700 13px system-ui;color:#3b2c2a;cursor:pointer;touch-action:manipulation}
+.rb:active{transform:scale(.94);background:#fff}
+#bjump{width:88px;height:88px}
+#bwave{width:58px;height:58px;margin-bottom:4px}
+#ctx{left:0;top:0;display:none;gap:8px;align-items:center;flex-direction:column;will-change:transform}
+#ctx .row{display:flex;gap:8px}
+#ctx .cap{font:600 11px system-ui;color:#fff;background:rgba(30,20,36,.7);padding:3px 9px;border-radius:999px;white-space:nowrap}
+#ctx button{border:0;border-radius:12px;background:#fff8e6;color:#8a2337;font:800 15px system-ui;padding:10px 16px;box-shadow:0 3px 0 #b9975a,0 6px 14px rgba(0,0,0,.4);cursor:pointer;touch-action:manipulation;white-space:nowrap}
+#ctx button:active{transform:translateY(2px);box-shadow:0 1px 0 #b9975a}
+#ctx button.hot{background:#ffe14d;color:#7a2a12;animation:pl .35s infinite alternate}@keyframes pl{to{transform:scale(1.12)}}
+#ctx button.alt{background:#efe3ff;color:#5b2d8a;box-shadow:0 3px 0 #9d86bd,0 6px 14px rgba(0,0,0,.4)}
+#read{position:fixed;inset:0;z-index:20;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:rgba(15,10,20,.74);padding:16px}
+#read.on{display:flex}
+#spread{display:flex;width:min(94vw,580px);min-height:min(60vh,330px);background:#f3e2b3;border:7px solid #6d3b2e;border-radius:8px;box-shadow:0 14px 40px rgba(0,0,0,.6);font-family:"Bradley Hand","Segoe Print","Marker Felt","Comic Sans MS",cursive;color:#4a2f22;animation:op .35s ease-out}
+@keyframes op{from{transform:scaleX(.15);opacity:0}to{transform:none;opacity:1}}
+.pg{flex:1;padding:18px 16px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px}
+.pg:first-child{box-shadow:inset -14px 0 16px -12px rgba(90,55,30,.55)}
+.pg:last-child{box-shadow:inset 14px 0 16px -12px rgba(90,55,30,.55)}
+.pg h2{margin:0;font-size:26px;letter-spacing:1px}
+.pg h3{margin:0;font-size:15px;text-transform:uppercase;letter-spacing:2px;opacity:.7}
+.pg ul{list-style:none;margin:0;padding:0;font-size:21px;line-height:1.7}
+.pg svg{width:86px;height:86px;stroke:#4a2f22;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+#closeRead{border:0;border-radius:999px;background:#fff8e6;color:#8a2337;font:800 15px system-ui;padding:11px 26px;box-shadow:0 3px 0 #b9975a;cursor:pointer}
+#chips{right:8px;top:calc(env(safe-area-inset-top) + 8px);display:flex;flex-direction:column;gap:4px;align-items:flex-end}
+#chips button{border:0;border-radius:999px;background:rgba(255,255,255,.22);color:#fff;font:600 11px system-ui;padding:5px 10px;cursor:pointer;touch-action:manipulation}
+#chips button:active{background:#fff8e6;color:#8a2337}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="top" class="ui"><div id="title"><b>Bruna</b><small>Prueba de juego · <span id="cnt">el bosque</span></small></div></div>
+<div id="hint" class="ui">Sigue el camino hasta el torreón · arrastra para girar la cámara</div>
+<div id="ctx" class="ui"></div>
+<div id="chips" class="ui"></div>
+
+<div id="joy" class="ui"><div id="knob"></div></div>
+<div id="acts" class="ui">
+  <button id="bwave" class="rb">Saludar</button>
+  <button id="bjump" class="rb">Saltar</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/*@@BUNDLE@@*/
+</script>
+</body>
+</html>
