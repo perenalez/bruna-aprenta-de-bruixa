@@ -157,8 +157,8 @@ function mkDoor(key,lvl,x,z,ry,name){
   f.mesh(g);
   const d={key,lvl,x,z,ry,name,hinge,open:0,tgt:0};doors.push(d);return d;
 }
-const DE=mkDoor('E',0,0,RM+WT/2,0,'Puerta del torreón');
-const DT=[0,1,2,3].map(n=>mkDoor('T'+n,n,-7.78,0,PI/2,['Puerta de la escalera','Puerta de la habitación de Bruna','Puerta de la cocina','Puerta de la terraza'][n]));
+const DE=mkDoor('E',0,0,RM+WT/2,0,'Porta del torreó');
+const DT=[0,1,2,3].map(n=>mkDoor('T'+n,n,-7.78,0,PI/2,['Porta de l\'escala','Porta de l\'habitació de la Bruna','Porta de la cuina','Porta de la terrassa'][n]));
 const inDoorRect=(d,x,z,m)=>d.key==='E'?(Math.abs(x)<DW/2-m&&z>6.9&&z<8.75):(x>-8.6&&x<-6.5&&Math.abs(z)<DW/2-m);
 
 /* ---------- ascensor: la tarima del trono ---------- */

@@ -122,5 +122,5 @@ addEventListener('keyup',e=>{const k=e.key.toLowerCase();K[k]=false;if(k===' ')S
    if(ptrs.size===1){cam.yaw-=dx*0.0065;cam.pitch=clamp(cam.pitch+dy*0.005,0.03,1.3);}else if(ptrs.size===2){const d=dist2();if(pd>0)cam.dist=clamp(cam.dist*pd/d,1.4,16);pd=d;}});
  const up=e=>{ptrs.delete(e.pointerId);pd=0;};canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',up);
  canvas.addEventListener('wheel',e=>{cam.dist=clamp(cam.dist*(1+e.deltaY*0.001),1.4,16);e.preventDefault();},{passive:false});}
-if(!matchMedia('(pointer:coarse)').matches)$('hint').textContent='WASD: andar · Mayús: correr · Espacio: saltar · E: puertas, ascensor, acariciar';
+if(!matchMedia('(pointer:coarse)').matches)$('hint').textContent='WASD: caminar · Majúscules: córrer · Espai: saltar · E: portes, ascensor, accions';
 setTimeout(()=>$('hint').style.opacity=0,9000);

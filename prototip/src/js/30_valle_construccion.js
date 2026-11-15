@@ -290,13 +290,13 @@ function zoneKey(){
 }
 function forestName(){
   const x=S.pos.x,z=S.pos.z;
-  if(inCave)return 'la cueva del árbol';if(H1.inside)return 'la casa abandonada';if(H2.inside)return 'la casita abandonada';
-  if(onBridge(x,z))return 'el puente';if(z<-38&&Math.abs(x-RX(z))<RW+5)return 'el río';
-  if(Math.hypot(x-GT.x,z-GT.z)<16)return 'el árbol gigante';
-  if(Math.hypot(x-H1.x,z-H1.z)<11||Math.hypot(x-H2.x,z-H2.z)<9||Math.hypot(x-TH.x,z-TH.z)<7)return 'las casas abandonadas';
-  if(valE(x,z)<1.02&&z<-46)return 'el bosque encantado';
-  if(pondD(x,z)<1.6)return 'el estanque de las ranas';
-  return z<-12?'el camino del torreón':'el bosque';
+  if(inCave)return 'la cova de l\'arbre';if(H1.inside)return 'la casa abandonada';if(H2.inside)return 'la caseta abandonada';
+  if(onBridge(x,z))return 'el pont';if(z<-38&&Math.abs(x-RX(z))<RW+5)return 'el riu';
+  if(Math.hypot(x-GT.x,z-GT.z)<16)return 'l\'arbre gegant';
+  if(Math.hypot(x-H1.x,z-H1.z)<11||Math.hypot(x-H2.x,z-H2.z)<9||Math.hypot(x-TH.x,z-TH.z)<7)return 'les cases abandonades';
+  if(valE(x,z)<1.02&&z<-46)return 'el bosc encantat';
+  if(pondD(x,z)<1.6)return 'l\'estany de les granotes';
+  return z<-12?'el camí del torreó':'el bosc';
 }
 function surfForest(x,z){
   if(waterAt(x,z)>gY(x,z)+0.015)return 'water';

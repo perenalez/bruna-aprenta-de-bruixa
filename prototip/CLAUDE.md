@@ -24,7 +24,7 @@ Per obrir-lo sense servidor, n'hi ha prou amb obrir `dist/index.local.html` al n
 - **Three.js r128** (global `THREE`, des de CDN o `vendor/three.min.js`). No hi ha framework, ni bundler, ni dependències en temps d'execució.
 - `tools/build.mjs` concatena **`src/js/*.js` per ordre alfabètic** dins un sol IIFE `(()=>{ ... })();` i l'injecta a `src/index.html` (marcador `/*@@BUNDLE@@*/`). També en comprova la sintaxi.
 - ⚠️ **L'ordre dels fitxers importa.** Tot comparteix un sol àmbit. Les `const` s'han de definir abans que les faci servir el codi que s'executa en carregar (TDZ). Les `function` es poden fer servir abans perquè s'eleven. Si afegeixes un mòdul, posa-li un número que el col·loqui al lloc correcte.
-- Els comentaris del codi i la interfície estan en **castellà**.
+- Els comentaris del codi estan en **castellà**; la interfície i els textos del joc, en **català**.
 
 ### Mòduls (`src/js/`)
 
@@ -129,7 +129,7 @@ Al joc complet s'ha d'activar a partir del **nivell 4**. Encara no hi ha sistema
 - **Poció 2** (`56_pocion2.js`): flor amb pol·len, roca amb molsa i marieta de 7 punts al bosc (`registerItem`); despensa amb formatge i el ratolí que segueix la Bruna (`MOUSE`); la planta carnívora gran del soterrani (`BIGP`), que babeja amb el conjur Sol i s'ha d'esquivar (`BABA`, botó «¡ESQUIVA!»).
 - **Poció 3** (`57_pocion3.js`): menjar per a l'unicorn (baies, poma, bolet, herba; només les baies lila funcionen), passeig, pet i cua aixecada per posar el pot (`UST`); la roca que s'empeny i el Conillet que cava el cuc (`ROCK`); pinyols a la cistella de la cuina, saba a l'arbre blau (`T1`) i la papallona daurada (`BFLY`). Premi: sabates amb ales (`wearShoes`). Poder: turbo amb fruita (`POW.turbo`, `turboOn()` a `46`).
 - **Proves:** `tests/pocion1.mjs`, `tests/pocion2.mjs` i `tests/pocion3.mjs` (`npm run test:pociones`).
-- **Idioma:** els textos encara són en castellà; s'han de passar al català (decisió del Pere).
+- **Idioma:** el joc és en **català** (decisió del Pere). Els textos de la història són a `54_datos_pociones.js` (`TXT`); els noms dels botons de salt ràpid, a `TP_CA` (`50_juego.js`), perquè les claus internes (`Bosque`, `Trono`…) les fan servir els tests.
 - **Simplificacions pendents:** la llibreta s'obre com una finestra (encara no amb la càmera a les mans de la Bruna) i la bruixa adulta encara és només una veu amb bafarades.
 
 ## Demos (`00a_demo.js`)

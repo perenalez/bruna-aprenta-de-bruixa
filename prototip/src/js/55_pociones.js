@@ -154,9 +154,9 @@ const shadowBottle=()=>`<svg viewBox="0 0 64 64"><path d="M26 10h12M27 10v14c-8 
 const hatSvg=`<svg viewBox="0 0 64 64"><path d="M8 48c10 4 38 4 48 0-6-2-11-3-14-3L36 10c-2-3-5-2-6 0l-8 35c-4 0-9 1-14 3z" fill="#3a2a4a" stroke="#4a3a30" stroke-width="2"/><path d="M23 40c6 1.5 13 1.5 18 0" stroke="#b07ae0" stroke-width="4" fill="none"/></svg>`;
 {
   const hud=document.createElement('div');hud.id='hud';hud.className='ui';
-  hud.innerHTML=`<button class="hb" id="bnote" aria-label="Libreta">${ICON.nb}<span class="bdg"></span></button><button class="hb" id="bsack" aria-label="Saco">${ICON.sack}</button><button class="hb" id="bsnd" aria-label="Sonido">${ICON.snd}</button>`;
+  hud.innerHTML=`<button class="hb" id="bnote" aria-label="Llibreta">${ICON.nb}<span class="bdg"></span></button><button class="hb" id="bsack" aria-label="Sac">${ICON.sack}</button><button class="hb" id="bsnd" aria-label="So">${ICON.snd}</button>`;
   document.body.appendChild(hud);
-  const w=document.createElement('button');w.id='bwand';w.className='hb ui';w.setAttribute('aria-label','Varita');w.innerHTML=ICON.wand;document.body.appendChild(w);
+  const w=document.createElement('button');w.id='bwand';w.className='hb ui';w.setAttribute('aria-label','Vareta');w.innerHTML=ICON.wand;document.body.appendChild(w);
   const sp=document.createElement('div');sp.id='spells';sp.className='ui';document.body.appendChild(sp);
   const d=document.createElement('div');d.id='dlg';d.className='ui';d.innerHTML='<b></b><p></p><i>toca ▶</i>';document.body.appendChild(d);
   const mini=document.createElement('div');mini.id='mini';mini.className='ui';document.body.appendChild(mini);
@@ -190,7 +190,7 @@ function nextLine(){
 /* ---------- el Conillet: mensajes en el chat de la libreta ---------- */
 BN.tail.material=BN.tail.material.clone();BN.tail.material.emissive=new THREE.Color('#7dff6a');BN.tail.material.emissiveIntensity=0;
 const bnGlow=halo(BN.root,0,0.22,0,1.3,'#9dff8a',0);
-function conill(text,quiet){GS.chat.push(text);GS.unread++;saveGame();badges();if(!quiet){sfx('notify');toast('Conillet tiene un mensaje · mira la libreta',2600);}}
+function conill(text,quiet){GS.chat.push(text);GS.unread++;saveGame();badges();if(!quiet){sfx('notify');toast('En Conillet té un missatge · mira la llibreta',2600);}}
 function badges(){
   const b=$('bnote').querySelector('.bdg');b.textContent=GS.unread;b.style.display=GS.unread?'flex':'none';
 }
@@ -260,7 +260,7 @@ const dressSaved=[];
 function wearDress(){if(dressSaved.length)return;const c=LM('#2f2440'),s=LM('#3a2a52',{side:THREE.DoubleSide});
   B.root.traverse(o=>{if(o.isMesh&&o.material&&o.material.map&&o!==hatB){dressSaved.push([o,o.material]);o.material=o.material.side===THREE.DoubleSide?s:c;}});}
 // premios de cada poción: qué aparece en el armario y qué pasa al ponérselo
-const REWARD={barret:{w:hatW,lab:'Ponerse el sombrero',wear(){hatB.visible=true;}},vestit:{w:dressW,lab:'Ponerse el vestido',wear:wearDress}};
+const REWARD={barret:{w:hatW,lab:'Posar-se el barret',wear(){hatB.visible=true;}},vestit:{w:dressW,lab:'Posar-se el vestit',wear:wearDress}};
 // libro de conjuros (sobre la mesa de la cocina) y caldero
 const BOOK=new THREE.Vector3().setFromMatrixPosition(at(3.5,2,2.6,-0.6).multiply(TRS(-0.15,0.76,0)));
 const bookGlow=halo(G[2],BOOK.x,BOOK.y+0.25,BOOK.z,1.4,'#ffe08a',0);
@@ -296,19 +296,19 @@ function potionActions(){
   const l=toLoc(S.pos.x,S.pos.z,S.y),lx=l.x,lz=l.z,ly=l.y;
   // armario de Bruna
   if(Math.abs(ly-L(1))<0.6){_w.setFromMatrixPosition(WARD_M.clone().multiply(TRS(0,0,0.9)));
-    if(Math.hypot(lx-_w.x,lz-_w.z)<1.7){ctxCap='Armario';ctxA.set(_w.x+OX,OY+L(1)+2.6,_w.z+OZ);
+    if(Math.hypot(lx-_w.x,lz-_w.z)<1.7){ctxCap='Armari';ctxA.set(_w.x+OX,OY+L(1)+2.6,_w.z+OZ);
       if(!GS.wardOpen)return ['armario'];
       if(ph==='premio'){LAB.ponerse=REWARD[POT().premio.ropa].lab;return ['ponerse'];}}}
   // libro
-  if(ph!=='inicio'&&Math.abs(ly-L(2))<0.6&&Math.hypot(lx-BOOK.x,lz-BOOK.z)<1.8){ctxCap='Libro de conjuros';ctxA.set(BOOK.x+OX,BOOK.y+OY+0.9,BOOK.z+OZ);return ['leer'];}
+  if(ph!=='inicio'&&Math.abs(ly-L(2))<0.6&&Math.hypot(lx-BOOK.x,lz-BOOK.z)<1.8){ctxCap='Llibre de conjurs';ctxA.set(BOOK.x+OX,BOOK.y+OY+0.9,BOOK.z+OZ);return ['leer'];}
   // caldero
   if(Math.abs(ly-L(2))<0.6&&Math.hypot(lx-KC.x,lz-KC.z)<2.3){
     ctxA.set(KC.x+OX,OY+L(2)+2.2,KC.z+OZ);
-    if(busy&&GS.bag.some(inPot)&&GS.layers.length<5){ctxCap='Caldero · '+GS.layers.length+'/5';return ['echar'];}
-    if(ph==='remover'){ctxCap='Caldero';return ['remover'];}}
+    if(busy&&GS.bag.some(inPot)&&GS.layers.length<5){ctxCap='Calder · '+GS.layers.length+'/5';return ['echar'];}
+    if(ph==='remover'){ctxCap='Calder';return ['remover'];}}
   return null;
 }
-Object.assign(LAB,{coger:'Coger',armario:'Abrir el armario',ponerse:'Ponérselo',leer:'Leer',echar:'Echar al caldero',remover:'Remover'});
+Object.assign(LAB,{coger:'Agafar',armario:'Obrir l\'armari',ponerse:'Posar-s\'ho',leer:'Llegir',echar:'Tirar al calder',remover:'Remenar'});
 // dar un ingrediente: lo apunta en la libreta y, si ya están todos, toca ir al caldero
 function giveIngredient(id,x,y,z){const ing=findIng(id);if(!ing||GS.got[id])return;GS.got[id]=true;GS.bag.push(id);sfx('pick');
   if(x!==undefined)for(let i=0;i<10;i++)emit('dust',x,y+0.2,z,1,{sp:1.2,size:0.07,color:ing.color});
@@ -320,7 +320,7 @@ Object.assign(ACT,{
   armario(){GS.wardOpen=true;saveGame();sfx('open');},
   ponerse(){const P=POT(),r=P.premio.ropa,R=REWARD[r];if(!R)return;R.w.visible=false;R.wear();GS.clothes.push(r);GS.phase='fin';saveGame();sfx('magic');
     for(let i=0;i<14;i++)emit('dust',S.pos.x,S.y+1.4,S.pos.z,1,{sp:1.4,size:0.08,color:pick(['#c98aff','#ffd84a','#fff3b0'])});
-    GS.diary.push('Ya tengo '+P.premio.nombre+'.');saveGame();setTimeout(()=>conill([TXT.fin,TXT.fin2,TXT.fin3][GS.pot]||TXT.fin2),1200);},
+    GS.diary.push('Ja tinc '+P.premio.nombre+'.');saveGame();setTimeout(()=>conill([TXT.fin,TXT.fin2,TXT.fin3][GS.pot]||TXT.fin2),1200);},
   leer(){openBook();},
   echar(){const i=GS.bag.findIndex(inPot);if(i<0)return;const id=GS.bag.splice(i,1)[0],ing=findIng(id);
     const g=mkPot(ing.color,1.3);scene.add(g);g.position.set(S.pos.x,S.y+1.1,S.pos.z);
@@ -366,9 +366,9 @@ function openStir(){
 /* ---------- libro de conjuros ---------- */
 function openBook(){
   const P=POT(),rd=$('read');sfx('page');
-  const right=P.pendiente?'<h3>Próximamente</h3><p>Esta poción aún está en construcción.</p>':
-    '<h3>Ingredientes</h3><ul>'+P.ingredientes.map(i=>`<li style="display:flex;align-items:center;gap:8px;justify-content:center"><span style="width:16px;height:16px;border-radius:50%;background:${i.color};display:inline-block;border:2px solid #4a2f22"></span>${i.nombre}</li>`).join('')+'</ul>';
-  rd.innerHTML=`<div id="spread"><div class="pg"><h3>Libro de conjuros</h3><h2>${P.nombre}</h2><p style="font-size:17px;margin:0">${P.poder}.</p><p style="font-size:16px;margin:0;opacity:.85">${P.receta||''}</p></div><div class="pg">${right}</div></div><button id="closeRead">${GS.phase==='leer'?'Apuntar en la libreta':'Cerrar'}</button>`;
+  const right=P.pendiente?'<h3>Aviat</h3><p>Aquesta poció encara s\'està construint.</p>':
+    '<h3>Ingredients</h3><ul>'+P.ingredientes.map(i=>`<li style="display:flex;align-items:center;gap:8px;justify-content:center"><span style="width:16px;height:16px;border-radius:50%;background:${i.color};display:inline-block;border:2px solid #4a2f22"></span>${i.nombre}</li>`).join('')+'</ul>';
+  rd.innerHTML=`<div id="spread"><div class="pg"><h3>Llibre de conjurs</h3><h2>${P.nombre}</h2><p style="font-size:17px;margin:0">${P.poder}.</p><p style="font-size:16px;margin:0;opacity:.85">${P.receta||''}</p></div><div class="pg">${right}</div></div><button id="closeRead">${GS.phase==='leer'?'Apuntar-ho a la llibreta':'Tancar'}</button>`;
   rd.classList.add('on');
   $('closeRead').addEventListener('click',()=>{rd.classList.remove('on');
     if(GS.phase==='leer'){GS.phase='recoger';saveGame();sfx('write');setTimeout(()=>{openNotebook('pot');setTimeout(()=>conill(TXT.leido),900);},300);}});
@@ -381,26 +381,26 @@ function renderNotebook(){
   const P=POT(),read=!['inicio','leer','tarea'].includes(GS.phase),ov=$('ovNb');
   let body='';
   if(nbTab==='pot'){
-    if(GS.phase==='inicio')body='<h2>Mi libreta</h2><div class="sub">Aquí apuntaré las recetas, lo que aprenda y los mensajes del Conillet.</div><p class="entry">Todavía no tengo ninguna tarea. Quizá en el torreón…</p>';
-    else{body=`<h2>${P.nombre}</h2><div class="sub">${read?'Lo que necesito (toca un hueco vacío para pedir pista)':'Lee el libro de conjuros en la cocina del caldero para saber qué necesitas.'}</div><div class="slots">`+
+    if(GS.phase==='inicio')body='<h2>La meva llibreta</h2><div class="sub">Aquí apuntaré les receptes, el que aprengui i els missatges d\'en Conillet.</div><p class="entry">Encara no tinc cap tasca. Potser al torreó…</p>';
+    else{body=`<h2>${P.nombre}</h2><div class="sub">${read?'El que necessito (toca un forat buit per demanar una pista)':'Llegeix el llibre de conjurs a la cuina del calder per saber què necessites.'}</div><div class="slots">`+
       P.ingredientes.map(i=>{const got=GS.got[i.id];
         if(!read)return '<div class="slot q">?</div>';
         return `<div class="slot ${got?'got':''}" data-ask="${got?'':i.id}">${got?bottle(i.color):shadowBottle()}<div class="lbl">${i.nombre}</div></div>`;}).join('')+'</div>';
       if(GS.layers.length)body+=`<p class="entry" style="margin-top:12px">En el caldero: ${GS.layers.length} de 5.</p>`;}
   }else if(nbTab==='diary'){
-    body='<h2>Diario</h2>'+(GS.diary.length?GS.diary.map(t=>`<p class="entry">· ${t}</p>`).join(''):'<p class="entry">Aún no he aprendido ningún conjuro.</p>')+'<button class="reset" id="rst">Empezar la partida de nuevo</button>';
+    body='<h2>Diari</h2>'+(GS.diary.length?GS.diary.map(t=>`<p class="entry">· ${t}</p>`).join(''):'<p class="entry">Encara no he après cap conjur.</p>')+'<button class="reset" id="rst">Tornar a començar la partida</button>';
   }else{
-    body='<h2>Chat con Conillet</h2>'+(GS.chat.length?GS.chat.map(t=>`<div class="msg"><b>${TXT.conill}</b>${t}</div>`).join(''):'<p class="entry">Aún no hay mensajes.</p>');
-    const miss=missing();if(miss&&(GS.phase==='recoger'))body+=`<button class="ask" id="askC">Conillet, ¿dónde está ${miss.nombre.toLowerCase().replace('bote','el bote')}?</button>`;
+    body='<h2>Xat amb en Conillet</h2>'+(GS.chat.length?GS.chat.map(t=>`<div class="msg"><b>${TXT.conill}</b>${t}</div>`).join(''):'<p class="entry">Encara no hi ha missatges.</p>');
+    const miss=missing();if(miss&&(GS.phase==='recoger'))body+=`<button class="ask" id="askC">Conillet, on és «${miss.nombre}»?</button>`;
     GS.unread=0;saveGame();badges();
   }
-  ov.innerHTML=`<div id="nbk"><button class="cls" id="nbX">✕</button><div class="tabs"><button data-t="pot" class="${nbTab==='pot'?'on':''}">Poción</button><button data-t="diary" class="${nbTab==='diary'?'on':''}">Diario</button><button data-t="chat" class="${nbTab==='chat'?'on':''}">Chat<span class="bdg">${GS.unread}</span></button></div><div class="pane">${body}</div></div>`;
+  ov.innerHTML=`<div id="nbk"><button class="cls" id="nbX">✕</button><div class="tabs"><button data-t="pot" class="${nbTab==='pot'?'on':''}">Poció</button><button data-t="diary" class="${nbTab==='diary'?'on':''}">Diari</button><button data-t="chat" class="${nbTab==='chat'?'on':''}">Xat<span class="bdg">${GS.unread}</span></button></div><div class="pane">${body}</div></div>`;
   ov.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{sfx('page');nbTab=b.dataset.t;renderNotebook();}));
   const cb=ov.querySelector('.tabs [data-t=chat] .bdg');cb.style.display=GS.unread&&nbTab!=='chat'?'flex':'none';
   $('nbX').addEventListener('click',()=>closeOv(ov));
   ov.querySelectorAll('[data-ask]').forEach(s=>{if(s.dataset.ask)s.addEventListener('click',()=>{askHint(s.dataset.ask);nbTab='chat';renderNotebook();});});
   const a=$('askC');if(a)a.addEventListener('click',()=>{askHint(missing().id);renderNotebook();});
-  const r=$('rst');if(r)r.addEventListener('click',()=>{if(confirm('¿Seguro? Se borrará la partida y empezarás desde el bosque.')){try{localStorage.removeItem(SAVE);}catch(e){}location.reload();}});
+  const r=$('rst');if(r)r.addEventListener('click',()=>{if(confirm('N\'estàs segura? S\'esborrarà la partida i tornaràs a començar des del bosc.')){try{localStorage.removeItem(SAVE);}catch(e){}location.reload();}});
   const pane=ov.querySelector('.pane');if(nbTab==='chat')pane.scrollTop=pane.scrollHeight;
 }
 const missing=()=>{const P=POT();if(P.pendiente)return null;
@@ -408,22 +408,22 @@ const missing=()=>{const P=POT();if(P.pendiente)return null;
 // pistas en dos capas: primero vaga; si insistes, la clara y te guía
 function askHint(id){const ing=POT().ingredientes.find(i=>i.id===id);if(!ing)return;
   const n=(GS.hint[id]||0)+1;GS.hint[id]=n;
-  if(n===1)conill(ing.vaga+' (Si no lo encuentras, pregúntame otra vez.)',true);
-  else{conill(ing.clara+' Te acompaño: cuanto más cerca, más brillo y más salto.',true);GS.guide=id;}
+  if(n===1)conill(ing.vaga+' (Si no ho trobes, torna-m\'ho a preguntar.)',true);
+  else{conill(ing.clara+' T\'acompanyo: com més a prop, més brillo i més salto.',true);GS.guide=id;}
   GS.unread=0;sfx('notify');saveGame();badges();}
 // mini-libreta: el dibujo a lápiz al conseguir un ingrediente (la recompensa)
 let miniT=0;
-function miniDraw(ing){const m=$('mini');m.innerHTML=bottle(ing.color,'draw')+'<span>'+ing.nombre+'<br><small style="font-size:13px;opacity:.7">apuntado en la libreta</small></span>';
+function miniDraw(ing){const m=$('mini');m.innerHTML=bottle(ing.color,'draw')+'<span>'+ing.nombre+'<br><small style="font-size:13px;opacity:.7">apuntat a la llibreta</small></span>';
   m.classList.remove('on');void m.offsetWidth;m.classList.add('on');sfx('write');clearTimeout(miniT);miniT=setTimeout(()=>m.classList.remove('on'),3200);}
 
 /* ---------- saco ---------- */
 function openSack(){const ov=$('ovSack'),P=POT();
   const items=GS.bag.map(id=>P.ingredientes.find(i=>i.id===id)).filter(Boolean);
-  ov.innerHTML=`<div id="sack"><button class="cls" id="skX">✕</button><h2>El saco</h2>${items.length?'<div class="items">'+items.map(i=>`<div class="it">${bottle(i.color)}<div>${i.nombre}</div></div>`).join('')+'</div>':'<div class="empty">El saco está vacío.</div>'}</div>`;
+  ov.innerHTML=`<div id="sack"><button class="cls" id="skX">✕</button><h2>El sac</h2>${items.length?'<div class="items">'+items.map(i=>`<div class="it">${bottle(i.color)}<div>${i.nombre}</div></div>`).join('')+'</div>':'<div class="empty">El sac és buit.</div>'}</div>`;
   ov.classList.add('on');$('skX').addEventListener('click',()=>closeOv(ov));}
 
 /* ---------- varita y conjuros ---------- */
-const SPELL_LAB={sol:'Sol',lluvia:'Lluvia'};
+const SPELL_LAB={sol:'Sol',lluvia:'Pluja'};
 function wandUI(){const list=Object.keys(SPELL_LAB).filter(k=>POW[k]&&(PLAY||true));
   $('bwand').style.display=list.length?'flex':'none';
   $('spells').innerHTML=list.map(k=>`<button data-s="${k}">${SPELL_LAB[k]}</button>`).join('');
@@ -481,7 +481,7 @@ function gameStep(dt){
   let glow=0;
   if(GS.guide&&!GS.got[GS.guide]&&targetPos(GS.guide,_w)){
     const d=Math.hypot(_w.x-S.pos.x,_w.z-S.pos.z)+Math.abs(_w.y-S.y)*2.5;glow=sat(1-d/16);
-    const band=d<3?3:d<7?2:d<12?1:0;if(band!==guideBand&&tAcc>1){if(band>guideBand&&band>0)toast(['','Conillet: templado…','Conillet: ¡caliente, caliente!','Conillet: ¡que te quemas!'][band],1600);guideBand=band;}
+    const band=d<3?3:d<7?2:d<12?1:0;if(band!==guideBand&&tAcc>1){if(band>guideBand&&band>0)toast(['','Conillet: tebi…','Conillet: calent, calent!','Conillet: que et cremes!'][band],1600);guideBand=band;}
     if(d<3&&!FL.on){BN.root.position.y+=Math.abs(Math.sin(t*7))*0.3;}}
   bnGlow.material.opacity+=(glow*0.9-bnGlow.material.opacity)*(1-Math.exp(-dt*4));
   spellStep(dt);

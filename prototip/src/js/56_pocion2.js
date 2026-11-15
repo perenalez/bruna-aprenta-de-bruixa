@@ -111,16 +111,16 @@ function potionExtraActions(){
   if(mode!=='tower'||BABA.st)return null;
   const l=toLoc(S.pos.x,S.pos.z,S.y);
   // cocina: coger queso de la despensa
-  if(Math.abs(l.y-L(2))<0.6&&!GS.got.pelo&&!GS.cheese&&MOUSE.st!=='corre'&&Math.hypot(l.x-PANTRY.x,l.z-PANTRY.z)<1.7){ctxCap='Despensa';ctxA.set(OX+PANTRY.x,OY+L(2)+1.9,OZ+PANTRY.z);return ['queso'];}
+  if(Math.abs(l.y-L(2))<0.6&&!GS.got.pelo&&!GS.cheese&&MOUSE.st!=='corre'&&Math.hypot(l.x-PANTRY.x,l.z-PANTRY.z)<1.7){ctxCap='Rebost';ctxA.set(OX+PANTRY.x,OY+L(2)+1.9,OZ+PANTRY.z);return ['queso'];}
   // sótano: la planta grande
   if(l.y<-2.6){const d=Math.hypot(l.x-BIGP.x,l.z-BIGP.z);
     if(d<2.6&&GS.cheese&&MOUSE.st==='sigue'){ctxCap='Planta carnívora';ctxA.set(OX+BIGP.x,OY+BY+2.6,OZ+BIGP.z);return ['dejarQueso'];}
     if(d<2.6&&!GS.got.baba){ctxCap='Planta carnívora';ctxA.set(OX+BIGP.x,OY+BY+2.6,OZ+BIGP.z);return ['ofrecer'];}}
   return null;
 }
-Object.assign(LAB,{queso:'Coger queso',dejarQueso:'Dejar el queso',ofrecer:'Ofrecer el bote'});
+Object.assign(LAB,{queso:'Agafar formatge',dejarQueso:'Deixar el formatge',ofrecer:'Oferir el pot'});
 Object.assign(ACT,{
-  queso(){GS.cheese=true;saveGame();sfx('pick');toast('Tienes queso. ¿Quién tendrá hambre?',2500);},
+  queso(){GS.cheese=true;saveGame();sfx('pick');toast('Tens formatge. Qui deu tenir gana?',2500);},
   dejarQueso(){GS.cheese=false;saveGame();
     const ox=BIGP.x,oz=BIGP.z,dl=Math.hypot(ox,oz)||1,cx=ox+ox/dl*0.9,cz=oz+oz/dl*0.9;      // detrás de la planta (hacia la pared)
     dropCheese.position.set(OX+cx,OY+BY+0.02,OZ+cz);dropCheese.visible=true;MOUSE.st='corre';MOUSE.t=0;

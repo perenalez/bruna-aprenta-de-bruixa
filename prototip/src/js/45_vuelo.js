@@ -45,8 +45,8 @@ function canLaunch(){
 }
 function flightActions(){
   if(FL.on||FL.phase||!POW.escoba)return null;          // la escoba llega con la poción 4
-  if(FL.state==='stand'&&mode==='tower'){const p=BROOM_STAND();if(Math.hypot(S.pos.x-p.x,S.pos.z-p.z)<1.9&&Math.abs(S.y-p.y)<1){ctxCap='Escoba mágica';ctxA.set(p.x,p.y+2.1,p.z);return ['escoba'];}}
-  if(canLaunch()){ctxCap='Borde de la terraza';return ['lanzarse'];}
+  if(FL.state==='stand'&&mode==='tower'){const p=BROOM_STAND();if(Math.hypot(S.pos.x-p.x,S.pos.z-p.z)<1.9&&Math.abs(S.y-p.y)<1){ctxCap='Escombra màgica';ctxA.set(p.x,p.y+2.1,p.z);return ['escoba'];}}
+  if(canLaunch()){ctxCap='Vora de la terrassa';return ['lanzarse'];}
   return null;
 }
 function startLaunch(){
@@ -58,8 +58,8 @@ function launchNow(){
   broomTo('fly');SP.squat.v=-1.6;sfx('fly');
   for(let i=0;i<14;i++)emit('dust',S.pos.x,S.y+0.4,S.pos.z,1,{sp:1.4,size:0.07,color:pick(['#e6c8ff','#ffd6f0','#c8e8ff'])});
   if(Math.hypot(BN.x-S.pos.x,BN.z-S.pos.z)<4.5){BN.riding=true;BN.root.rotation.order='YXZ';}
-  $('bjump').textContent='Subir';
-  toast(matchMedia('(pointer:coarse)').matches?'Mantén «Subir» para subir · suéltalo para bajar':'Mantén Espacio para subir · suéltalo para bajar',5000);
+  $('bjump').textContent='Pujar';
+  toast(matchMedia('(pointer:coarse)').matches?'Mantén «Pujar» per pujar · deixa-ho anar per baixar':'Mantén Espai per pujar · deixa-ho anar per baixar',5000);
 }
 function endFlight(soft){
   FL.on=false;FL.phase=null;S.air=false;S.vy=0;$('bjump').textContent='Saltar';
@@ -89,7 +89,7 @@ function fSolids(p,px,pz,py){
   // árbol gigante: tronco y copa
   {const lx=p.x-GT.x,lz=p.z-GT.z,d=Math.hypot(lx,lz),hy=p.y-GT.y,rT=(hy<3.5?6.3:hy<15?lerp(5.5,4.4,(hy-3.5)/11.5):lerp(4.4,3.4,(hy-15)/6.5))+0.55;
    if(hy<22.5&&d<rT&&d>1e-4){p.x=GT.x+lx/d*rT;p.z=GT.z+lz/d*rT;}
-   const ex=lx/15.5,ey=(hy-25.5)/6,ez=lz/15.5,e=Math.hypot(ex,ey,ez);if(e<1&&e>1e-4){p.x=GT.x+ex/e*15.5;p.y=GT.y+25.5+ey/e*6;p.z=GT.z+ez/e*15.5;FL.vh*=0.97;if(S.t-FL.msgT>4){FL.msgT=S.t;toast('¡Hojas! Mejor por encima o por debajo de la copa',2000);}}}
+   const ex=lx/15.5,ey=(hy-25.5)/6,ez=lz/15.5,e=Math.hypot(ex,ey,ez);if(e<1&&e>1e-4){p.x=GT.x+ex/e*15.5;p.y=GT.y+25.5+ey/e*6;p.z=GT.z+ez/e*15.5;FL.vh*=0.97;if(S.t-FL.msgT>4){FL.msgT=S.t;toast('Fulles! Millor per sobre o per sota de la copa',2000);}}}
   // casas (con tejado)
   for(const H of HOUSES){const top=H.y+H.h*1.62+0.25;if(p.y>top)continue;const l=hL(H,p.x,p.z),hw=H.w/2+0.55,hd=H.d/2+0.65;
     if(Math.abs(l[0])<hw&&Math.abs(l[1])<hd){let lx=l[0],lz=l[1];if(hw-Math.abs(lx)<hd-Math.abs(lz))lx=Math.sign(lx||1)*hw;else lz=Math.sign(lz||1)*hd;p.x=H.x+lx*H.c+lz*H.s;p.z=H.z-lx*H.s+lz*H.c;}}
@@ -97,7 +97,7 @@ function fSolids(p,px,pz,py){
   const gnd=gY(p.x,p.z);if(p.y-gnd<3.5)for(const c of COL){const dx=p.x-c.x,dz=p.z-c.z;if(Math.abs(dx)>c.r+0.5||Math.abs(dz)>c.r+0.5)continue;const d=Math.hypot(dx,dz),mn=c.r+0.3;if(d<mn&&d>1e-5){p.x=c.x+dx/d*mn;p.z=c.z+dz/d*mn;}}
   mushSolid(p);
   // límites del mundo
-  if(p.x<-85||p.x>85||p.z<-150||p.z>62){p.x=clamp(p.x,-85,85);p.z=clamp(p.z,-150,62);FL.vh*=0.9;if(S.t-FL.msgT>4){FL.msgT=S.t;toast('La escoba no quiere ir más lejos',1800);}}
+  if(p.x<-85||p.x>85||p.z<-150||p.z>62){p.x=clamp(p.x,-85,85);p.z=clamp(p.z,-150,62);FL.vh*=0.9;if(S.t-FL.msgT>4){FL.msgT=S.t;toast('L\'escombra no vol anar més lluny',1800);}}
 }
 function flightStep(dt){
   // anticipación del salto
@@ -122,9 +122,9 @@ function flightStep(dt){
   const G=fGround(_fp.x,_fp.z,py),surf=G.water!==null?G.water:G.g;
   if(_fp.y<=surf&&FL.vy<=0&&FL.age>0.45){
     if(G.water!==null){_fp.y=surf;FL.vy=2.6;emit('drop',_fp.x,0,_fp.z,10,{sp:1.4,up:1.1,size:1.3});emit('ring',_fp.x,0,_fp.z,1,{size:1.1});emit('ring',_fp.x,0,_fp.z,1,{size:1.8,life:1.2});
-      if(S.t-FL.msgT>3){FL.msgT=S.t;toast('¡A la escoba no le gusta mojarse!',1800);}}
+      if(S.t-FL.msgT>3){FL.msgT=S.t;toast('A l\'escombra no li agrada mullar-se!',1800);}}
     else if(landable(_fp.x,_fp.z,G.g)){land(_fp.x,_fp.z,G.g);return;}
-    else{_fp.y=surf;FL.vy=1.8;if(S.t-FL.msgT>3){FL.msgT=S.t;toast('Aquí no se puede aterrizar',1600);}}
+    else{_fp.y=surf;FL.vy=1.8;if(S.t-FL.msgT>3){FL.msgT=S.t;toast('Aquí no es pot aterrar',1600);}}
   }
   fSolids(_fp,px,pz,py);
   S.pos.x=_fp.x;S.pos.z=_fp.z;S.y=_fp.y;
@@ -145,9 +145,9 @@ function land(x,z,g){
   mode=inTowerZone(x,z,g)?'tower':'forest';
   SP.squat.v+=1.2+2.5*imp;FL.landT=S.t;
   const s=mode==='tower'?'stone':surfForest(x,z);burst(s==='water'?'grass':s,x,g,z,1);emit('dust',x,g+0.03,z,6,{sp:1.4,size:0.1,color:DUSTC});
-  if(sp<1.6)toast('¡Aterrizaje perfecto!',1600);
-  else if(sp>3.3){toast(FL.hardN++<2?'¡Uf! Para aterrizar suave, aprieta un poco justo antes de tocar el suelo':'¡Uf! Aterrizaje movidito',FL.hardN<3?3600:1500);}
-  else toast('¡Aterrizaje!',1400);
+  if(sp<1.6)toast('Aterratge perfecte!',1600);
+  else if(sp>3.3){toast(FL.hardN++<2?'Uf! Per aterrar suau, prem una mica just abans de tocar a terra':'Uf! Aterratge mogudet',FL.hardN<3?3600:1500);}
+  else toast('Aterratge!',1400);
 }
 /* ---------- postura encima de la escoba ---------- */
 function flightLegs(F){
@@ -179,14 +179,14 @@ const FLIGHT_TEST=DEMO==='vuelo';
 if(FLIGHT_TEST){
 S.pos.set(OX-1.1,0,OZ+5.3);S.y=OY+L(3);S.yaw=S.tyaw=Math.atan2(BROOM_STAND().x-S.pos.x,BROOM_STAND().z-S.pos.z);
 cam.yaw=Math.atan2(S.pos.x-BROOM_STAND().x,S.pos.z-BROOM_STAND().z)-0.45;cam.pitch=0.42;camT.set(S.pos.x,S.y+0.72,S.pos.z);
-setTimeout(()=>toast(matchMedia('(pointer:coarse)').matches?'Coge la escoba y salta desde el borde':'E: coger la escoba · Espacio en el borde: saltar',6000),400);
+setTimeout(()=>toast(matchMedia('(pointer:coarse)').matches?'Agafa l\'escombra i salta des de la vora':'E: agafar l\'escombra · Espai a la vora: saltar',6000),400);
 // panel para probar sensaciones: los valores se aplican al momento
-const SL=[['Subida','up',1,7,0.1,'m/s'],['Caída','down',1,8,0.1,'m/s'],['Reacción','acc',2,14,0.5,''],['Velocidad','speed',3,14,0.5,'m/s']];
+const SL=[['Pujada','up',1,7,0.1,'m/s'],['Caiguda','down',1,8,0.1,'m/s'],['Reacció','acc',2,14,0.5,''],['Velocitat','speed',3,14,0.5,'m/s']];
 const css=document.createElement('style');css.textContent='#fbtn{left:calc(env(safe-area-inset-left) + 12px);top:calc(env(safe-area-inset-top) + 96px);border:0;border-radius:999px;background:rgba(255,255,255,.22);color:#fff;font:600 11px system-ui;padding:5px 10px;cursor:pointer}#fpan{left:calc(env(safe-area-inset-left) + 12px);top:calc(env(safe-area-inset-top) + 124px);display:none;width:210px;background:rgba(30,20,40,.78);color:#fff;border-radius:14px;padding:10px 12px;font:600 11px system-ui}#fpan.on{display:block}#fpan label{display:flex;justify-content:space-between;margin-top:6px}#fpan input{width:100%;accent-color:#ff8fa0}#fpan p{margin:8px 0 0;font-weight:400;opacity:.75;line-height:1.35}';document.head.appendChild(css);
-const fb=document.createElement('button');fb.id='fbtn';fb.className='ui';fb.textContent='⚙ Ajustes de vuelo';document.body.appendChild(fb);
+const fb=document.createElement('button');fb.id='fbtn';fb.className='ui';fb.textContent='⚙ Ajustos de vol';document.body.appendChild(fb);
 const fp=document.createElement('div');fp.id='fpan';fp.className='ui';document.body.appendChild(fp);
 const getV=k=>k==='acc'?FLY.accUp:k==='down'?-FLY.down:FLY[k],setV=(k,v)=>{if(k==='acc'){FLY.accUp=v;FLY.accDown=v*0.92;}else if(k==='down')FLY.down=-v;else{FLY[k]=v;if(k==='speed')FLY.boost=v*1.43;}};
-fp.innerHTML=SL.map(([n,k,a,b,st,u])=>'<label>'+n+'<span id="fv_'+k+'"></span></label><input type="range" min="'+a+'" max="'+b+'" step="'+st+'" data-k="'+k+'" data-u="'+u+'">').join('')+'<p>Subida y caída: a qué velocidad sube con Espacio apretado y baja al soltarlo. Reacción: lo rápido que cambia de una a otra (más bajo = más pesada y difícil).</p>';
+fp.innerHTML=SL.map(([n,k,a,b,st,u])=>'<label>'+n+'<span id="fv_'+k+'"></span></label><input type="range" min="'+a+'" max="'+b+'" step="'+st+'" data-k="'+k+'" data-u="'+u+'">').join('')+'<p>Pujada i caiguda: a quina velocitat puja amb Espai premut i baixa en deixar-lo anar. Reacció: com de ràpid canvia d\'una a l\'altra (més baix = més pesada i difícil).</p>';
 fp.querySelectorAll('input').forEach(i=>{const k=i.dataset.k,show=()=>{$('fv_'+k).textContent=(+i.value).toFixed(1)+' '+i.dataset.u;};i.value=getV(k);show();
   i.addEventListener('input',()=>{setV(k,+i.value);show();});i.addEventListener('change',()=>i.blur());i.addEventListener('pointerdown',e=>e.stopPropagation());});
 fb.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();fp.classList.toggle('on');});

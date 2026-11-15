@@ -112,7 +112,7 @@ function stepMove(dt){
   S.acc+=((S.speed-prev)/dt-S.acc)*(1-Math.exp(-dt*12));
   // ascensor
   if(!liftIdle()){const d=lift.tgt-lift.y;lift.y+=Math.sign(d)*Math.min(Math.abs(d),1.6*dt);
-    if(Math.abs(lift.tgt-lift.y)<0.01){lift.y=lift.tgt;if(lift.riding){lift.riding=false;toast(lift.y<-1?'El dormitorio de la bruja':'La sala del trono',1800);}}}
+    if(Math.abs(lift.tgt-lift.y)<0.01){lift.y=lift.tgt;if(lift.riding){lift.riding=false;toast(lift.y<-1?'El dormitori de la bruixa':'La sala del tron',1800);}}}
   lift.g.position.y=lift.y;
   lift.door+=((lift.y<=BY+0.01&&liftIdle()?1:0)-lift.door)*(1-Math.exp(-dt*4));tubeDoor.rotation.y=-lift.door*1.75;
   if(lift.riding){S.y=OY+lift.y;S.vy=0;S.air=false;S.jumpReq=false;S.speed=0;return;}
@@ -156,10 +156,10 @@ function actions(){
   ctxA.set(S.pos.x,S.y+1.75,S.pos.z);
   {const pa=potionActions();if(pa)return pa;}       // pociones: libro, botes, caldero, armario (55_pociones.js)
   {const fa=flightActions();if(fa)return fa;}
-  if(mode==='forest'){if(uniDist()<2.5){ctxCap='Unicornio';ctxA.set(UNI.x,uni.g.position.y+2.0,UNI.z);return ['acariciar'];}return [];}
+  if(mode==='forest'){if(uniDist()<2.5){ctxCap='Unicorn';ctxA.set(UNI.x,uni.g.position.y+2.0,UNI.z);return ['acariciar'];}return [];}
   const l=toLoc(S.pos.x,S.pos.z,S.y);
   if(liftIdle()){
-    if(onLift()){ctxCap='El trono es el ascensor';return [lift.y>-0.1?'bajar':'subir'];}
+    if(onLift()){ctxCap='El tron és l\'ascensor';return [lift.y>-0.1?'bajar':'subir'];}
     if(l.y<-2.6&&lift.y>BY+0.1&&dLiftB()<4.2){ctxCap='Ascensor';return ['llamar'];}
     if(Math.abs(l.y)<0.3&&lift.y<-0.1&&dLiftB()<4.2&&keyAt(l.x,l.z,l.y)===0){ctxCap='Ascensor';return ['llamar'];}
   }
@@ -169,19 +169,19 @@ function actions(){
 }
 const ACT={
   abrir(){if(ctxDoor){ctxDoor.tgt=1;sfx('door');}},
-  cerrar(){const d=ctxDoor;if(!d)return;const l=toLoc(S.pos.x,S.pos.z,S.y);if(inDoorRect(d,l.x,l.z,-0.25)){toast('Apártate de la puerta para cerrarla',1800);return;}d.tgt=0;sfx('door');},
+  cerrar(){const d=ctxDoor;if(!d)return;const l=toLoc(S.pos.x,S.pos.z,S.y);if(inDoorRect(d,l.x,l.z,-0.25)){toast('Aparta\'t de la porta per tancar-la',1800);return;}d.tgt=0;sfx('door');},
   bajar(){lift.tgt=BY;lift.riding=true;sfx('lift');},subir(){lift.tgt=0;lift.riding=true;sfx('lift');},
   llamar(){lift.tgt=S.y-OY<-2.6?BY:0;sfx('lift');},
-  escoba(){broomTo('back');toast('Ve al borde de la terraza y pulsa Espacio para lanzarte',4200);},
+  escoba(){broomTo('back');toast('Ves a la vora de la terrassa i prem Espai per llançar-te',4200);},
   lanzarse(){startLaunch();},
   acariciar(){act={type:'pet',t:0,hb:0};S.tyaw=Math.atan2(UNI.x+Math.sin(UNI.yaw)*0.6-S.pos.x,UNI.z+Math.cos(UNI.yaw)*0.6-S.pos.z);S.speed=0;}
 };
-const LAB={abrir:'Abrir',cerrar:'Cerrar',bajar:'Bajar',subir:'Subir',llamar:'Llamar',acariciar:'Acariciar',escoba:'Coger la escoba',lanzarse:'¡Lanzarse!'};
+const LAB={abrir:'Obrir',cerrar:'Tancar',bajar:'Baixar',subir:'Pujar',llamar:'Cridar',acariciar:'Acariciar',escoba:'Agafar l\'escombra',lanzarse:'Llançar-se!'};
 function stepAct(dt){
   if(!act)return;act.t+=dt;
   if(act.type==='pet'){uni.happy=1;act.hb-=dt;
     if(act.hb<0&&act.t>0.5){act.hb=0.38;uni.head.getWorldPosition(tv);heart(lerp(tv.x,S.pos.x,rr(0.1,0.5)),tv.y+rr(0.1,0.4),lerp(tv.z,S.pos.z,rr(0.1,0.5)));}
-    if(act.t>3.4){act=null;toast('Al unicornio le ha gustado');}}
+    if(act.t>3.4){act=null;toast('A l\'unicorn li ha agradat');}}
 }
 let ctxKey='';
 function renderCtx(){
@@ -199,9 +199,10 @@ addEventListener('keydown',e=>{if(e.key.toLowerCase()==='e'&&!e.repeat){const a=
 
 /* ---------- saltar a cualquier sitio ---------- */
 const TP={Bosque:[-0.6,10.5,null],Estanque:[2.6,6.0,null],'Torreón':[OX,OZ+12.5,OY],Trono:[OX,OZ+3.5,OY],Terraza:[OX,OZ+3,OY+L(3)],'Sótano':[OX,OZ+5.5,OY+BY],Puente:[RXB+BL+1.6,BZ,null],'Árbol':[GT.x,GT.z+13,null],Cueva:[GT.x,GT.z+0.6,null],Setas:[MUSH[0].x+3.2,MUSH[0].z+5.2,null],Casa:[...hW(H1,-0.6,1.2),null],Casita:[...hW(H2,0.3,1.0),null]};
+const TP_CA={Bosque:'Bosc',Estanque:'Estany','Torreón':'Torreó',Trono:'Tron',Terraza:'Terrassa','Sótano':'Soterrani',Puente:'Pont','Árbol':'Arbre',Cueva:'Cova',Setas:'Bolets',Casa:'Casa',Casita:'Caseta'};
 function teleport(name){const t=TP[name];if(!t||lift.riding)return;act=null;if(FL.on||FL.phase)endFlight();S.pos.set(t[0],0,t[1]);S.y=t[2]===null?gY(t[0],t[1]):t[2];S.vy=0;S.air=false;S.speed=0;S.prep=-1;
   mode=inTowerZone(S.pos.x,S.pos.z,S.y)?'tower':'forest';camT.set(S.pos.x,S.y+0.72,S.pos.z);}
-Object.keys(TP).forEach(n=>{const b=document.createElement('button');b.textContent=n;b.addEventListener('pointerdown',e=>{e.preventDefault();teleport(n);});$('chips').appendChild(b);});
+Object.keys(TP).forEach(n=>{const b=document.createElement('button');b.textContent=TP_CA[n]||n;b.addEventListener('pointerdown',e=>{e.preventDefault();teleport(n);});$('chips').appendChild(b);});
 
 /* ---------- luces, visibilidad y vida del torreón ---------- */
 const pl1=new THREE.PointLight('#ff9a48',0,13,1.5),pl2=new THREE.PointLight('#ff9a48',0,13,1.5);scene.add(pl1);scene.add(pl2);
@@ -215,7 +216,7 @@ const LIGHTS={
   cave:[[GT.x-OX,GT.y+2.6-OY,GT.z-OZ,'#6fd8ff',1.1],[GT.x-OX,GT.y+0.9-OY,GT.z-2.2-OZ,'#c07aff',0.85],'#6a64a8','#3e3048',0.55],
   house:[[0,0,0,'#cfd8ff',0.6],[0,0,0,'#ffcf8a',0.3],'#c2b8e6','#8a7262',0.82]
 };
-const NAMES={'-1':'el dormitorio de la bruja',0:'la sala del trono',1:'la habitación de Bruna',2:'la cocina del caldero',3:'la terraza',t:'la escalera'};
+const NAMES={'-1':'el dormitori de la bruixa',0:'la sala del tron',1:'l\'habitació de la Bruna',2:'la cuina del calder',3:'la terrassa',t:'l\'escala'};
 const _col=new THREE.Color();let isBase=false;
 function towerAnim(dt){
   const t=S.t;
@@ -244,9 +245,9 @@ function towerAnim(dt){
   hemi.color.lerp(_col.set(cfg[2]),e);hemi.groundColor.lerp(_col.set(cfg[3]),e);hemi.intensity+=(cfg[4]-hemi.intensity)*e;
   // nombre del sitio
   let nm;
-  if(FL.on)nm='volando · '+Math.max(0,Math.round(S.y-fGround(S.pos.x,S.pos.z,S.y).g))+' m';
+  if(FL.on)nm='volant · '+Math.max(0,Math.round(S.y-fGround(S.pos.x,S.pos.z,S.y).g))+' m';
   else if(mode==='forest')nm=forestName();
-  else nm=curKey==='out'?'el claro del torreón':NAMES[curKey]||'';
+  else nm=curKey==='out'?'el clar del torreó':NAMES[curKey]||'';
   if($('cnt').textContent!==nm)$('cnt').textContent=nm;
 }
 

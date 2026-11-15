@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="ca">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Bruna · El bosque y el torreón</title>
+<title>Bruna · Aprenta de bruixa</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;overflow:hidden;background:#40398f;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#3b2c2a;-webkit-user-select:none;user-select:none;touch-action:none}
@@ -48,8 +48,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#40398f;font-family:sy
 <body>
 <canvas id="c"></canvas>
 
-<div id="top" class="ui"><div id="title"><b>Bruna</b><small>Prueba de juego · <span id="cnt">el bosque</span></small></div></div>
-<div id="hint" class="ui">Sigue el camino hasta el torreón · arrastra para girar la cámara</div>
+<div id="top" class="ui"><div id="title"><b>Bruna</b><small>Aprenta de bruixa · <span id="cnt">el bosc</span></small></div></div>
+<div id="hint" class="ui">Segueix el camí fins al torreó · arrossega per girar la càmera</div>
 <div id="ctx" class="ui"></div>
 <div id="chips" class="ui"></div>
 
@@ -741,8 +741,8 @@ function mkDoor(key,lvl,x,z,ry,name){
   f.mesh(g);
   const d={key,lvl,x,z,ry,name,hinge,open:0,tgt:0};doors.push(d);return d;
 }
-const DE=mkDoor('E',0,0,RM+WT/2,0,'Puerta del torreón');
-const DT=[0,1,2,3].map(n=>mkDoor('T'+n,n,-7.78,0,PI/2,['Puerta de la escalera','Puerta de la habitación de Bruna','Puerta de la cocina','Puerta de la terraza'][n]));
+const DE=mkDoor('E',0,0,RM+WT/2,0,'Porta del torreó');
+const DT=[0,1,2,3].map(n=>mkDoor('T'+n,n,-7.78,0,PI/2,['Porta de l\'escala','Porta de l\'habitació de la Bruna','Porta de la cuina','Porta de la terrassa'][n]));
 const inDoorRect=(d,x,z,m)=>d.key==='E'?(Math.abs(x)<DW/2-m&&z>6.9&&z<8.75):(x>-8.6&&x<-6.5&&Math.abs(z)<DW/2-m);
 
 /* ---------- ascensor: la tarima del trono ---------- */
@@ -1541,13 +1541,13 @@ function zoneKey(){
 }
 function forestName(){
   const x=S.pos.x,z=S.pos.z;
-  if(inCave)return 'la cueva del árbol';if(H1.inside)return 'la casa abandonada';if(H2.inside)return 'la casita abandonada';
-  if(onBridge(x,z))return 'el puente';if(z<-38&&Math.abs(x-RX(z))<RW+5)return 'el río';
-  if(Math.hypot(x-GT.x,z-GT.z)<16)return 'el árbol gigante';
-  if(Math.hypot(x-H1.x,z-H1.z)<11||Math.hypot(x-H2.x,z-H2.z)<9||Math.hypot(x-TH.x,z-TH.z)<7)return 'las casas abandonadas';
-  if(valE(x,z)<1.02&&z<-46)return 'el bosque encantado';
-  if(pondD(x,z)<1.6)return 'el estanque de las ranas';
-  return z<-12?'el camino del torreón':'el bosque';
+  if(inCave)return 'la cova de l\'arbre';if(H1.inside)return 'la casa abandonada';if(H2.inside)return 'la caseta abandonada';
+  if(onBridge(x,z))return 'el pont';if(z<-38&&Math.abs(x-RX(z))<RW+5)return 'el riu';
+  if(Math.hypot(x-GT.x,z-GT.z)<16)return 'l\'arbre gegant';
+  if(Math.hypot(x-H1.x,z-H1.z)<11||Math.hypot(x-H2.x,z-H2.z)<9||Math.hypot(x-TH.x,z-TH.z)<7)return 'les cases abandonades';
+  if(valE(x,z)<1.02&&z<-46)return 'el bosc encantat';
+  if(pondD(x,z)<1.6)return 'l\'estany de les granotes';
+  return z<-12?'el camí del torreó':'el bosc';
 }
 function surfForest(x,z){
   if(waterAt(x,z)>gY(x,z)+0.015)return 'water';
@@ -1683,7 +1683,7 @@ addEventListener('keyup',e=>{const k=e.key.toLowerCase();K[k]=false;if(k===' ')S
    if(ptrs.size===1){cam.yaw-=dx*0.0065;cam.pitch=clamp(cam.pitch+dy*0.005,0.03,1.3);}else if(ptrs.size===2){const d=dist2();if(pd>0)cam.dist=clamp(cam.dist*pd/d,1.4,16);pd=d;}});
  const up=e=>{ptrs.delete(e.pointerId);pd=0;};canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',up);
  canvas.addEventListener('wheel',e=>{cam.dist=clamp(cam.dist*(1+e.deltaY*0.001),1.4,16);e.preventDefault();},{passive:false});}
-if(!matchMedia('(pointer:coarse)').matches)$('hint').textContent='WASD: andar · Mayús: correr · Espacio: saltar · E: puertas, ascensor, acariciar';
+if(!matchMedia('(pointer:coarse)').matches)$('hint').textContent='WASD: caminar · Majúscules: córrer · Espai: saltar · E: portes, ascensor, accions';
 setTimeout(()=>$('hint').style.opacity=0,9000);
 
 /* ===== 41_bruna_animacion.js ===== */
@@ -1931,8 +1931,8 @@ function canLaunch(){
 }
 function flightActions(){
   if(FL.on||FL.phase||!POW.escoba)return null;          // la escoba llega con la poción 4
-  if(FL.state==='stand'&&mode==='tower'){const p=BROOM_STAND();if(Math.hypot(S.pos.x-p.x,S.pos.z-p.z)<1.9&&Math.abs(S.y-p.y)<1){ctxCap='Escoba mágica';ctxA.set(p.x,p.y+2.1,p.z);return ['escoba'];}}
-  if(canLaunch()){ctxCap='Borde de la terraza';return ['lanzarse'];}
+  if(FL.state==='stand'&&mode==='tower'){const p=BROOM_STAND();if(Math.hypot(S.pos.x-p.x,S.pos.z-p.z)<1.9&&Math.abs(S.y-p.y)<1){ctxCap='Escombra màgica';ctxA.set(p.x,p.y+2.1,p.z);return ['escoba'];}}
+  if(canLaunch()){ctxCap='Vora de la terrassa';return ['lanzarse'];}
   return null;
 }
 function startLaunch(){
@@ -1944,8 +1944,8 @@ function launchNow(){
   broomTo('fly');SP.squat.v=-1.6;sfx('fly');
   for(let i=0;i<14;i++)emit('dust',S.pos.x,S.y+0.4,S.pos.z,1,{sp:1.4,size:0.07,color:pick(['#e6c8ff','#ffd6f0','#c8e8ff'])});
   if(Math.hypot(BN.x-S.pos.x,BN.z-S.pos.z)<4.5){BN.riding=true;BN.root.rotation.order='YXZ';}
-  $('bjump').textContent='Subir';
-  toast(matchMedia('(pointer:coarse)').matches?'Mantén «Subir» para subir · suéltalo para bajar':'Mantén Espacio para subir · suéltalo para bajar',5000);
+  $('bjump').textContent='Pujar';
+  toast(matchMedia('(pointer:coarse)').matches?'Mantén «Pujar» per pujar · deixa-ho anar per baixar':'Mantén Espai per pujar · deixa-ho anar per baixar',5000);
 }
 function endFlight(soft){
   FL.on=false;FL.phase=null;S.air=false;S.vy=0;$('bjump').textContent='Saltar';
@@ -1975,7 +1975,7 @@ function fSolids(p,px,pz,py){
   // árbol gigante: tronco y copa
   {const lx=p.x-GT.x,lz=p.z-GT.z,d=Math.hypot(lx,lz),hy=p.y-GT.y,rT=(hy<3.5?6.3:hy<15?lerp(5.5,4.4,(hy-3.5)/11.5):lerp(4.4,3.4,(hy-15)/6.5))+0.55;
    if(hy<22.5&&d<rT&&d>1e-4){p.x=GT.x+lx/d*rT;p.z=GT.z+lz/d*rT;}
-   const ex=lx/15.5,ey=(hy-25.5)/6,ez=lz/15.5,e=Math.hypot(ex,ey,ez);if(e<1&&e>1e-4){p.x=GT.x+ex/e*15.5;p.y=GT.y+25.5+ey/e*6;p.z=GT.z+ez/e*15.5;FL.vh*=0.97;if(S.t-FL.msgT>4){FL.msgT=S.t;toast('¡Hojas! Mejor por encima o por debajo de la copa',2000);}}}
+   const ex=lx/15.5,ey=(hy-25.5)/6,ez=lz/15.5,e=Math.hypot(ex,ey,ez);if(e<1&&e>1e-4){p.x=GT.x+ex/e*15.5;p.y=GT.y+25.5+ey/e*6;p.z=GT.z+ez/e*15.5;FL.vh*=0.97;if(S.t-FL.msgT>4){FL.msgT=S.t;toast('Fulles! Millor per sobre o per sota de la copa',2000);}}}
   // casas (con tejado)
   for(const H of HOUSES){const top=H.y+H.h*1.62+0.25;if(p.y>top)continue;const l=hL(H,p.x,p.z),hw=H.w/2+0.55,hd=H.d/2+0.65;
     if(Math.abs(l[0])<hw&&Math.abs(l[1])<hd){let lx=l[0],lz=l[1];if(hw-Math.abs(lx)<hd-Math.abs(lz))lx=Math.sign(lx||1)*hw;else lz=Math.sign(lz||1)*hd;p.x=H.x+lx*H.c+lz*H.s;p.z=H.z-lx*H.s+lz*H.c;}}
@@ -1983,7 +1983,7 @@ function fSolids(p,px,pz,py){
   const gnd=gY(p.x,p.z);if(p.y-gnd<3.5)for(const c of COL){const dx=p.x-c.x,dz=p.z-c.z;if(Math.abs(dx)>c.r+0.5||Math.abs(dz)>c.r+0.5)continue;const d=Math.hypot(dx,dz),mn=c.r+0.3;if(d<mn&&d>1e-5){p.x=c.x+dx/d*mn;p.z=c.z+dz/d*mn;}}
   mushSolid(p);
   // límites del mundo
-  if(p.x<-85||p.x>85||p.z<-150||p.z>62){p.x=clamp(p.x,-85,85);p.z=clamp(p.z,-150,62);FL.vh*=0.9;if(S.t-FL.msgT>4){FL.msgT=S.t;toast('La escoba no quiere ir más lejos',1800);}}
+  if(p.x<-85||p.x>85||p.z<-150||p.z>62){p.x=clamp(p.x,-85,85);p.z=clamp(p.z,-150,62);FL.vh*=0.9;if(S.t-FL.msgT>4){FL.msgT=S.t;toast('L\'escombra no vol anar més lluny',1800);}}
 }
 function flightStep(dt){
   // anticipación del salto
@@ -2008,9 +2008,9 @@ function flightStep(dt){
   const G=fGround(_fp.x,_fp.z,py),surf=G.water!==null?G.water:G.g;
   if(_fp.y<=surf&&FL.vy<=0&&FL.age>0.45){
     if(G.water!==null){_fp.y=surf;FL.vy=2.6;emit('drop',_fp.x,0,_fp.z,10,{sp:1.4,up:1.1,size:1.3});emit('ring',_fp.x,0,_fp.z,1,{size:1.1});emit('ring',_fp.x,0,_fp.z,1,{size:1.8,life:1.2});
-      if(S.t-FL.msgT>3){FL.msgT=S.t;toast('¡A la escoba no le gusta mojarse!',1800);}}
+      if(S.t-FL.msgT>3){FL.msgT=S.t;toast('A l\'escombra no li agrada mullar-se!',1800);}}
     else if(landable(_fp.x,_fp.z,G.g)){land(_fp.x,_fp.z,G.g);return;}
-    else{_fp.y=surf;FL.vy=1.8;if(S.t-FL.msgT>3){FL.msgT=S.t;toast('Aquí no se puede aterrizar',1600);}}
+    else{_fp.y=surf;FL.vy=1.8;if(S.t-FL.msgT>3){FL.msgT=S.t;toast('Aquí no es pot aterrar',1600);}}
   }
   fSolids(_fp,px,pz,py);
   S.pos.x=_fp.x;S.pos.z=_fp.z;S.y=_fp.y;
@@ -2031,9 +2031,9 @@ function land(x,z,g){
   mode=inTowerZone(x,z,g)?'tower':'forest';
   SP.squat.v+=1.2+2.5*imp;FL.landT=S.t;
   const s=mode==='tower'?'stone':surfForest(x,z);burst(s==='water'?'grass':s,x,g,z,1);emit('dust',x,g+0.03,z,6,{sp:1.4,size:0.1,color:DUSTC});
-  if(sp<1.6)toast('¡Aterrizaje perfecto!',1600);
-  else if(sp>3.3){toast(FL.hardN++<2?'¡Uf! Para aterrizar suave, aprieta un poco justo antes de tocar el suelo':'¡Uf! Aterrizaje movidito',FL.hardN<3?3600:1500);}
-  else toast('¡Aterrizaje!',1400);
+  if(sp<1.6)toast('Aterratge perfecte!',1600);
+  else if(sp>3.3){toast(FL.hardN++<2?'Uf! Per aterrar suau, prem una mica just abans de tocar a terra':'Uf! Aterratge mogudet',FL.hardN<3?3600:1500);}
+  else toast('Aterratge!',1400);
 }
 /* ---------- postura encima de la escoba ---------- */
 function flightLegs(F){
@@ -2065,14 +2065,14 @@ const FLIGHT_TEST=DEMO==='vuelo';
 if(FLIGHT_TEST){
 S.pos.set(OX-1.1,0,OZ+5.3);S.y=OY+L(3);S.yaw=S.tyaw=Math.atan2(BROOM_STAND().x-S.pos.x,BROOM_STAND().z-S.pos.z);
 cam.yaw=Math.atan2(S.pos.x-BROOM_STAND().x,S.pos.z-BROOM_STAND().z)-0.45;cam.pitch=0.42;camT.set(S.pos.x,S.y+0.72,S.pos.z);
-setTimeout(()=>toast(matchMedia('(pointer:coarse)').matches?'Coge la escoba y salta desde el borde':'E: coger la escoba · Espacio en el borde: saltar',6000),400);
+setTimeout(()=>toast(matchMedia('(pointer:coarse)').matches?'Agafa l\'escombra i salta des de la vora':'E: agafar l\'escombra · Espai a la vora: saltar',6000),400);
 // panel para probar sensaciones: los valores se aplican al momento
-const SL=[['Subida','up',1,7,0.1,'m/s'],['Caída','down',1,8,0.1,'m/s'],['Reacción','acc',2,14,0.5,''],['Velocidad','speed',3,14,0.5,'m/s']];
+const SL=[['Pujada','up',1,7,0.1,'m/s'],['Caiguda','down',1,8,0.1,'m/s'],['Reacció','acc',2,14,0.5,''],['Velocitat','speed',3,14,0.5,'m/s']];
 const css=document.createElement('style');css.textContent='#fbtn{left:calc(env(safe-area-inset-left) + 12px);top:calc(env(safe-area-inset-top) + 96px);border:0;border-radius:999px;background:rgba(255,255,255,.22);color:#fff;font:600 11px system-ui;padding:5px 10px;cursor:pointer}#fpan{left:calc(env(safe-area-inset-left) + 12px);top:calc(env(safe-area-inset-top) + 124px);display:none;width:210px;background:rgba(30,20,40,.78);color:#fff;border-radius:14px;padding:10px 12px;font:600 11px system-ui}#fpan.on{display:block}#fpan label{display:flex;justify-content:space-between;margin-top:6px}#fpan input{width:100%;accent-color:#ff8fa0}#fpan p{margin:8px 0 0;font-weight:400;opacity:.75;line-height:1.35}';document.head.appendChild(css);
-const fb=document.createElement('button');fb.id='fbtn';fb.className='ui';fb.textContent='⚙ Ajustes de vuelo';document.body.appendChild(fb);
+const fb=document.createElement('button');fb.id='fbtn';fb.className='ui';fb.textContent='⚙ Ajustos de vol';document.body.appendChild(fb);
 const fp=document.createElement('div');fp.id='fpan';fp.className='ui';document.body.appendChild(fp);
 const getV=k=>k==='acc'?FLY.accUp:k==='down'?-FLY.down:FLY[k],setV=(k,v)=>{if(k==='acc'){FLY.accUp=v;FLY.accDown=v*0.92;}else if(k==='down')FLY.down=-v;else{FLY[k]=v;if(k==='speed')FLY.boost=v*1.43;}};
-fp.innerHTML=SL.map(([n,k,a,b,st,u])=>'<label>'+n+'<span id="fv_'+k+'"></span></label><input type="range" min="'+a+'" max="'+b+'" step="'+st+'" data-k="'+k+'" data-u="'+u+'">').join('')+'<p>Subida y caída: a qué velocidad sube con Espacio apretado y baja al soltarlo. Reacción: lo rápido que cambia de una a otra (más bajo = más pesada y difícil).</p>';
+fp.innerHTML=SL.map(([n,k,a,b,st,u])=>'<label>'+n+'<span id="fv_'+k+'"></span></label><input type="range" min="'+a+'" max="'+b+'" step="'+st+'" data-k="'+k+'" data-u="'+u+'">').join('')+'<p>Pujada i caiguda: a quina velocitat puja amb Espai premut i baixa en deixar-lo anar. Reacció: com de ràpid canvia d\'una a l\'altra (més baix = més pesada i difícil).</p>';
 fp.querySelectorAll('input').forEach(i=>{const k=i.dataset.k,show=()=>{$('fv_'+k).textContent=(+i.value).toFixed(1)+' '+i.dataset.u;};i.value=getV(k);show();
   i.addEventListener('input',()=>{setV(k,+i.value);show();});i.addEventListener('change',()=>i.blur());i.addEventListener('pointerdown',e=>e.stopPropagation());});
 fb.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();fp.classList.toggle('on');});
@@ -2132,7 +2132,7 @@ function mushHit(py){                                     // llamada en el aire,
   for(const M of MUSH){const t=capTop(M,S.pos.x,S.pos.z);if(t<-1e8)continue;
     if(py>=t-0.03&&S.y<=t){S.y=t;sfx('boing');S.vy=M.bv*(S.jumpHeld?1:0.86);S.bounced=true;S.airT=0;S.glide=false;M.sp.v-=3.2;SP.squat.v=-1.6;
       for(let i=0;i<10;i++)emit('dust',S.pos.x,t+0.05,S.pos.z,1,{sp:1.8,size:0.08,color:pick(['#ffd6f0','#fff3b0','#e6c8ff'])});
-      if(!MUSH.told){MUSH.told=1;toast('Al bajar, mantén '+(matchMedia('(pointer:coarse)').matches?'«Saltar»':'Espacio')+' para planear con el vestido',4000);}
+      if(!MUSH.told){MUSH.told=1;toast('En baixar, mantén '+(matchMedia('(pointer:coarse)').matches?'«Saltar»':'Espai')+' per planejar amb el vestit',4000);}
       return true;}}
   return false;
 }
@@ -2157,12 +2157,12 @@ for(let i=0;i<10;i++){const a=i/10*TAU;addFruit(GT.x+Math.sin(a)*19,GT.y+27+Math
 for(let i=1;i<8;i++){const k=i/8,x=lerp(OX,GT.x,k),z=lerp(OZ-12,GT.z+20,k);addFruit(x,lerp(OY+16,GT.y+20,k)+Math.sin(k*PI)*4,z);} // camino aéreo
 function eat(f){f.alive=false;f.dead=0;sfx('eat');TURBO.v=Math.min(TURBO.max,TURBO.v+TURBO.fruit);TURBO.flash=1;
   for(let i=0;i<8;i++)emit('dust',f.g.position.x,f.g.position.y,f.g.position.z,1,{sp:1.6,size:0.07,color:pick(['#fff3b0','#ffd6f0','#c8ffd6'])});
-  if(!FRUIT.told){FRUIT.told=1;toast('¡Ñam! La fruta llena el turbo · '+(matchMedia('(pointer:coarse)').matches?'mantén «Turbo»':'mantén T'),3500);}}
+  if(!FRUIT.told){FRUIT.told=1;toast('Nyam! La fruita omple el turbo · '+(matchMedia('(pointer:coarse)').matches?'mantén «Turbo»':'mantén T'),3500);}}
 
 /* ---------- turbo ---------- */
 function turboUse(dt,fly){
   if(!turboOn()||!TURBO.held)return false;
-  if(TURBO.v<=0){if(S.t-TURBO.emptyT>3){TURBO.emptyT=S.t;toast('Sin turbo: come fruta para llenarlo',2000);}return false;}
+  if(TURBO.v<=0){if(S.t-TURBO.emptyT>3){TURBO.emptyT=S.t;toast('Sense turbo: menja fruita per omplir-lo',2000);}return false;}
   TURBO.v=Math.max(0,TURBO.v-(fly?TURBO.drainFly:TURBO.drainFoot)*dt);if(S.t-(TURBO.sndT||-9)>0.6)sfx('turbo');TURBO.sndT=S.t;TURBO.on=true;return true;
 }
 
@@ -2177,12 +2177,12 @@ function mountAir(){
   broomTo('fly');SP.squat.v=-1.2;sfx('fly');
   for(let i=0;i<12;i++)emit('dust',S.pos.x,S.y+0.4,S.pos.z,1,{sp:1.4,size:0.07,color:pick(['#e6c8ff','#ffd6f0','#c8e8ff'])});
   if(Math.hypot(BN.x-S.pos.x,BN.z-S.pos.z)<4.5&&S.y-BN.gy<3){BN.riding=true;BN.root.rotation.order='YXZ';}
-  $('bjump').textContent='Subir';
+  $('bjump').textContent='Pujar';
 }
 function groundLaunch(){FL.phase='prep';FL.pt=0;S.prep=0;S.speed*=0.5;}
 function tryFly(){
-  if(FL.state==='stand'){toast('Primero coge la escoba de la terraza del torreón',2200);return;}
-  if(!canMountHere()){if(!FL.on)toast('Aquí no se puede volar',1500);return;}
+  if(FL.state==='stand'){toast('Primer agafa l\'escombra de la terrassa del torreó',2200);return;}
+  if(!canMountHere()){if(!FL.on)toast('Aquí no es pot volar',1500);return;}
   if(S.air)mountAir();else groundLaunch();
 }
 addEventListener('keydown',e=>{
@@ -2250,7 +2250,7 @@ function glideBody(dt){
 /* ---------- arranque de esta prueba: en las setas, con la escoba ya a la espalda ---------- */
 if(DEMO==='turbo'){const M=MUSH[0];S.pos.set(M.x+3.2,0,M.z+5.2);S.y=gY(S.pos.x,S.pos.z);S.yaw=S.tyaw=Math.atan2(M.x-S.pos.x,M.z-S.pos.z);
   broomTo('back');cam.yaw=S.yaw+PI+0.2;cam.pitch=0.3;camT.set(S.pos.x,S.y+0.72,S.pos.z);
-  setTimeout(()=>toast(matchMedia('(pointer:coarse)').matches?'Salta a la seta · al saltar con la escoba sale «Volar» · «Turbo» gasta fruta':'Salta a la seta · Ctrl+Mayús+Espacio: volar · T: turbo',7000),500);}
+  setTimeout(()=>toast(matchMedia('(pointer:coarse)').matches?'Salta al bolet · en saltar amb l\'escombra surt «Volar» · «Turbo» gasta fruita':'Salta al bolet · Ctrl+Maj+Espai: volar · T: turbo',7000),500);}
 
 /* ===== 50_juego.js ===== */
 /* =====================================================================
@@ -2367,7 +2367,7 @@ function stepMove(dt){
   S.acc+=((S.speed-prev)/dt-S.acc)*(1-Math.exp(-dt*12));
   // ascensor
   if(!liftIdle()){const d=lift.tgt-lift.y;lift.y+=Math.sign(d)*Math.min(Math.abs(d),1.6*dt);
-    if(Math.abs(lift.tgt-lift.y)<0.01){lift.y=lift.tgt;if(lift.riding){lift.riding=false;toast(lift.y<-1?'El dormitorio de la bruja':'La sala del trono',1800);}}}
+    if(Math.abs(lift.tgt-lift.y)<0.01){lift.y=lift.tgt;if(lift.riding){lift.riding=false;toast(lift.y<-1?'El dormitori de la bruixa':'La sala del tron',1800);}}}
   lift.g.position.y=lift.y;
   lift.door+=((lift.y<=BY+0.01&&liftIdle()?1:0)-lift.door)*(1-Math.exp(-dt*4));tubeDoor.rotation.y=-lift.door*1.75;
   if(lift.riding){S.y=OY+lift.y;S.vy=0;S.air=false;S.jumpReq=false;S.speed=0;return;}
@@ -2411,10 +2411,10 @@ function actions(){
   ctxA.set(S.pos.x,S.y+1.75,S.pos.z);
   {const pa=potionActions();if(pa)return pa;}       // pociones: libro, botes, caldero, armario (55_pociones.js)
   {const fa=flightActions();if(fa)return fa;}
-  if(mode==='forest'){if(uniDist()<2.5){ctxCap='Unicornio';ctxA.set(UNI.x,uni.g.position.y+2.0,UNI.z);return ['acariciar'];}return [];}
+  if(mode==='forest'){if(uniDist()<2.5){ctxCap='Unicorn';ctxA.set(UNI.x,uni.g.position.y+2.0,UNI.z);return ['acariciar'];}return [];}
   const l=toLoc(S.pos.x,S.pos.z,S.y);
   if(liftIdle()){
-    if(onLift()){ctxCap='El trono es el ascensor';return [lift.y>-0.1?'bajar':'subir'];}
+    if(onLift()){ctxCap='El tron és l\'ascensor';return [lift.y>-0.1?'bajar':'subir'];}
     if(l.y<-2.6&&lift.y>BY+0.1&&dLiftB()<4.2){ctxCap='Ascensor';return ['llamar'];}
     if(Math.abs(l.y)<0.3&&lift.y<-0.1&&dLiftB()<4.2&&keyAt(l.x,l.z,l.y)===0){ctxCap='Ascensor';return ['llamar'];}
   }
@@ -2424,19 +2424,19 @@ function actions(){
 }
 const ACT={
   abrir(){if(ctxDoor){ctxDoor.tgt=1;sfx('door');}},
-  cerrar(){const d=ctxDoor;if(!d)return;const l=toLoc(S.pos.x,S.pos.z,S.y);if(inDoorRect(d,l.x,l.z,-0.25)){toast('Apártate de la puerta para cerrarla',1800);return;}d.tgt=0;sfx('door');},
+  cerrar(){const d=ctxDoor;if(!d)return;const l=toLoc(S.pos.x,S.pos.z,S.y);if(inDoorRect(d,l.x,l.z,-0.25)){toast('Aparta\'t de la porta per tancar-la',1800);return;}d.tgt=0;sfx('door');},
   bajar(){lift.tgt=BY;lift.riding=true;sfx('lift');},subir(){lift.tgt=0;lift.riding=true;sfx('lift');},
   llamar(){lift.tgt=S.y-OY<-2.6?BY:0;sfx('lift');},
-  escoba(){broomTo('back');toast('Ve al borde de la terraza y pulsa Espacio para lanzarte',4200);},
+  escoba(){broomTo('back');toast('Ves a la vora de la terrassa i prem Espai per llançar-te',4200);},
   lanzarse(){startLaunch();},
   acariciar(){act={type:'pet',t:0,hb:0};S.tyaw=Math.atan2(UNI.x+Math.sin(UNI.yaw)*0.6-S.pos.x,UNI.z+Math.cos(UNI.yaw)*0.6-S.pos.z);S.speed=0;}
 };
-const LAB={abrir:'Abrir',cerrar:'Cerrar',bajar:'Bajar',subir:'Subir',llamar:'Llamar',acariciar:'Acariciar',escoba:'Coger la escoba',lanzarse:'¡Lanzarse!'};
+const LAB={abrir:'Obrir',cerrar:'Tancar',bajar:'Baixar',subir:'Pujar',llamar:'Cridar',acariciar:'Acariciar',escoba:'Agafar l\'escombra',lanzarse:'Llançar-se!'};
 function stepAct(dt){
   if(!act)return;act.t+=dt;
   if(act.type==='pet'){uni.happy=1;act.hb-=dt;
     if(act.hb<0&&act.t>0.5){act.hb=0.38;uni.head.getWorldPosition(tv);heart(lerp(tv.x,S.pos.x,rr(0.1,0.5)),tv.y+rr(0.1,0.4),lerp(tv.z,S.pos.z,rr(0.1,0.5)));}
-    if(act.t>3.4){act=null;toast('Al unicornio le ha gustado');}}
+    if(act.t>3.4){act=null;toast('A l\'unicorn li ha agradat');}}
 }
 let ctxKey='';
 function renderCtx(){
@@ -2454,9 +2454,10 @@ addEventListener('keydown',e=>{if(e.key.toLowerCase()==='e'&&!e.repeat){const a=
 
 /* ---------- saltar a cualquier sitio ---------- */
 const TP={Bosque:[-0.6,10.5,null],Estanque:[2.6,6.0,null],'Torreón':[OX,OZ+12.5,OY],Trono:[OX,OZ+3.5,OY],Terraza:[OX,OZ+3,OY+L(3)],'Sótano':[OX,OZ+5.5,OY+BY],Puente:[RXB+BL+1.6,BZ,null],'Árbol':[GT.x,GT.z+13,null],Cueva:[GT.x,GT.z+0.6,null],Setas:[MUSH[0].x+3.2,MUSH[0].z+5.2,null],Casa:[...hW(H1,-0.6,1.2),null],Casita:[...hW(H2,0.3,1.0),null]};
+const TP_CA={Bosque:'Bosc',Estanque:'Estany','Torreón':'Torreó',Trono:'Tron',Terraza:'Terrassa','Sótano':'Soterrani',Puente:'Pont','Árbol':'Arbre',Cueva:'Cova',Setas:'Bolets',Casa:'Casa',Casita:'Caseta'};
 function teleport(name){const t=TP[name];if(!t||lift.riding)return;act=null;if(FL.on||FL.phase)endFlight();S.pos.set(t[0],0,t[1]);S.y=t[2]===null?gY(t[0],t[1]):t[2];S.vy=0;S.air=false;S.speed=0;S.prep=-1;
   mode=inTowerZone(S.pos.x,S.pos.z,S.y)?'tower':'forest';camT.set(S.pos.x,S.y+0.72,S.pos.z);}
-Object.keys(TP).forEach(n=>{const b=document.createElement('button');b.textContent=n;b.addEventListener('pointerdown',e=>{e.preventDefault();teleport(n);});$('chips').appendChild(b);});
+Object.keys(TP).forEach(n=>{const b=document.createElement('button');b.textContent=TP_CA[n]||n;b.addEventListener('pointerdown',e=>{e.preventDefault();teleport(n);});$('chips').appendChild(b);});
 
 /* ---------- luces, visibilidad y vida del torreón ---------- */
 const pl1=new THREE.PointLight('#ff9a48',0,13,1.5),pl2=new THREE.PointLight('#ff9a48',0,13,1.5);scene.add(pl1);scene.add(pl2);
@@ -2470,7 +2471,7 @@ const LIGHTS={
   cave:[[GT.x-OX,GT.y+2.6-OY,GT.z-OZ,'#6fd8ff',1.1],[GT.x-OX,GT.y+0.9-OY,GT.z-2.2-OZ,'#c07aff',0.85],'#6a64a8','#3e3048',0.55],
   house:[[0,0,0,'#cfd8ff',0.6],[0,0,0,'#ffcf8a',0.3],'#c2b8e6','#8a7262',0.82]
 };
-const NAMES={'-1':'el dormitorio de la bruja',0:'la sala del trono',1:'la habitación de Bruna',2:'la cocina del caldero',3:'la terraza',t:'la escalera'};
+const NAMES={'-1':'el dormitori de la bruixa',0:'la sala del tron',1:'l\'habitació de la Bruna',2:'la cuina del calder',3:'la terrassa',t:'l\'escala'};
 const _col=new THREE.Color();let isBase=false;
 function towerAnim(dt){
   const t=S.t;
@@ -2499,9 +2500,9 @@ function towerAnim(dt){
   hemi.color.lerp(_col.set(cfg[2]),e);hemi.groundColor.lerp(_col.set(cfg[3]),e);hemi.intensity+=(cfg[4]-hemi.intensity)*e;
   // nombre del sitio
   let nm;
-  if(FL.on)nm='volando · '+Math.max(0,Math.round(S.y-fGround(S.pos.x,S.pos.z,S.y).g))+' m';
+  if(FL.on)nm='volant · '+Math.max(0,Math.round(S.y-fGround(S.pos.x,S.pos.z,S.y).g))+' m';
   else if(mode==='forest')nm=forestName();
-  else nm=curKey==='out'?'el claro del torreón':NAMES[curKey]||'';
+  else nm=curKey==='out'?'el clar del torreó':NAMES[curKey]||'';
   if($('cnt').textContent!==nm)$('cnt').textContent=nm;
 }
 
@@ -2541,168 +2542,168 @@ window.__j={render:()=>renderer.render(scene,camera),step:(n,dt)=>{for(let i=0;i
    lift (tarima del trono, se mueve con el ascensor), local (coordenadas del torreón).
    ===================================================================== */
 const NIVEL1={
-  nombre:'Nivel 1',
+  nombre:'Nivell 1',
   pociones:[
-    {id:'arcoiris',nombre:'Poción Arcoíris',poder:'Controla el clima',
-     receta:'Cinco botes de colores, uno tras otro. No se remueve: así queda en capas, como un arcoíris.',
+    {id:'arcoiris',nombre:'Poció Arcoíris',poder:'Controla el temps',
+     receta:'Cinc pots de colors, l\'un darrere l\'altre. No es remena: així queda en capes, com un arc de Sant Martí.',
      mezclar:false,
-     premio:{ropa:'barret',nombre:'el sombrero de bruja'},
+     premio:{ropa:'barret',nombre:'el barret de bruixa'},
      poderes:['sol','lluvia'],
-     diario:['He hecho la poción Arcoíris: ¡controlo el clima!',
-             'Para lanzar un conjuro: toca la varita y elige «Sol» o «Lluvia».',
-             'El sol da calor. La lluvia riega las plantas.'],
+     diario:['He fet la poció Arcoíris: controlo el temps!',
+             'Per llançar un conjur: toca la vareta i tria «Sol» o «Pluja».',
+             'El sol fa calor. La pluja rega les plantes.'],
      ingredientes:[
-       {id:'rojo',nombre:'Bote rojo',color:'#e23b3b',sala:2,
-        vaga:'Algo rojo descansa donde huele a sopa de bruja.',
-        clara:'El bote rojo está en la estantería de la cocina del caldero, en una balda baja.',
+       {id:'rojo',nombre:'Pot vermell',color:'#e23b3b',sala:2,
+        vaga:'Una cosa vermella descansa on fa olor de sopa de bruixa.',
+        clara:'El pot vermell és a la prestatgeria de la cuina del calder, en una balda baixa.',
         spot:{type:'shelf',lvl:2,x:-1.05,row:1}},
-       {id:'amarillo',nombre:'Bote amarillo',color:'#f0d436',sala:3,
-        vaga:'Algo amarillo toma el aire fresco, arriba del todo.',
-        clara:'El bote amarillo está en la terraza, en lo alto del torreón.',
+       {id:'amarillo',nombre:'Pot groc',color:'#f0d436',sala:3,
+        vaga:'Una cosa groga pren la fresca, ben amunt de tot.',
+        clara:'El pot groc és a la terrassa, a dalt de tot del torreó.',
         spot:{type:'local',lvl:3,x:3.3,z:3.1}},
-       {id:'verde',nombre:'Bote verde',color:'#4fd04a',sala:1,
-        vaga:'Algo verde se esconde detrás de unas puertas que crujen.',
-        clara:'El bote verde está dentro del armario de tu habitación. ¡Ábrelo!',
+       {id:'verde',nombre:'Pot verd',color:'#4fd04a',sala:1,
+        vaga:'Una cosa verda s\'amaga darrere d\'unes portes que grinyolen.',
+        clara:'El pot verd és dins l\'armari de la teva habitació. Obre\'l!',
         spot:{type:'ward',lvl:1,x:0.45,y:1.02}},
-       {id:'azul',nombre:'Bote azul',color:'#3f6fe0',sala:0,
-        vaga:'Algo azul viaja arriba y abajo sin moverse del sitio.',
-        clara:'El bote azul está en la tarima del trono, la que hace de ascensor.',
+       {id:'azul',nombre:'Pot blau',color:'#3f6fe0',sala:0,
+        vaga:'Una cosa blava viatja amunt i avall sense moure\'s de lloc.',
+        clara:'El pot blau és a la tarima del tron, la que fa d\'ascensor.',
         spot:{type:'lift',x:1.25,z:0.55}},
-       {id:'violeta',nombre:'Bote violeta',color:'#a050e0',sala:'t',
-        vaga:'Algo violeta da vueltas y vueltas… como una escalera.',
-        clara:'El bote violeta está en un hueco de la escalera de caracol.',
+       {id:'violeta',nombre:'Pot violeta',color:'#a050e0',sala:'t',
+        vaga:'Una cosa violeta fa voltes i més voltes… com una escala.',
+        clara:'El pot violeta és en un replà de l\'escala de cargol.',
         spot:{type:'local',lvl:'t'}}
      ]},
-    {id:'parinuris',nombre:'Magiculis Parinuris',poder:'Domina las plantas salvajes, como las setas y las carnívoras',
-     receta:'Cinco cosas de plantas y bichos. Échalas al caldero y remueve con el dedo, dando vueltas, hasta que se mezcle todo.',
+    {id:'parinuris',nombre:'Magiculis Parinuris',poder:'Domina les plantes salvatges, com els bolets i les carnívores',
+     receta:'Cinc coses de plantes i bestioles. Tira-les al calder i remena amb el dit, fent voltes, fins que tot es barregi.',
      mezclar:true,color:'#6fd06a',
-     premio:{ropa:'vestit',nombre:'el vestido de bruja'},
+     premio:{ropa:'vestit',nombre:'el vestit de bruixa'},
      poderes:['setas','plantas'],
-     diario:['He hecho la poción Magiculis Parinuris: ¡domino las plantas salvajes!',
-             'Si salto encima de una seta gigante, salgo disparada hacia arriba. Al bajar, mantén «Saltar» para planear.',
-             'Las plantas carnívoras ya no intentan comerme: ahora me hacen caricias.'],
+     diario:['He fet la poció Magiculis Parinuris: domino les plantes salvatges!',
+             'Si salto damunt d\'un bolet gegant, surto disparada cap amunt. En baixar, mantén «Saltar» per planejar.',
+             'Les plantes carnívores ja no em volen menjar: ara em fan carícies.'],
      ingredientes:[
        {id:'baba',nombre:'Baba de planta carnívora',color:'#a8e05a',sala:'-1',accion:true,
-        vaga:'Babean cuando tienen calor.',
-        clara:'La planta carnívora más grande está en el dormitorio de la bruja (baja con el ascensor del trono). Lánzale «Sol» con la varita y, cuando babee, ofrécele el bote. ¡Esquívala!'},
-       {id:'pelo',nombre:'Pelo de ratón',color:'#9a9aa6',sala:2,accion:true,
-        vaga:'El ratón no quiere ser la merienda de nadie que haga la fotosíntesis… pero a veces se le olvida si tiene queso cerca.',
-        clara:'Coge queso de la despensa de la cocina: el ratón te seguirá. Llévalo al dormitorio de la bruja y deja el queso detrás de la planta grande. ¡Ella hará de pinzas!'},
-       {id:'polen',nombre:'Polen de las flores',color:'#ffd84a',sala:'out',
-        vaga:'Algo dorado baila con el viento, cerca del agua.',
-        clara:'Hay una flor grande que brilla junto al estanque de las ranas. Su polen es dorado.',
+        vaga:'Bavegen quan tenen calor.',
+        clara:'La planta carnívora més gran és al dormitori de la bruixa (baixa amb l\'ascensor del tron). Llança-li «Sol» amb la vareta i, quan bavegi, ofereix-li el pot. Esquiva-la!'},
+       {id:'pelo',nombre:'Pèl de ratolí',color:'#9a9aa6',sala:2,accion:true,
+        vaga:'El ratolí no vol ser el berenar de ningú que faci la fotosíntesi… però de vegades se n\'oblida si té formatge a la vora.',
+        clara:'Agafa formatge del rebost de la cuina: el ratolí et seguirà. Porta\'l al dormitori de la bruixa i deixa el formatge darrere de la planta gran. Ella farà de pinces!'},
+       {id:'polen',nombre:'Pol·len de les flors',color:'#ffd84a',sala:'out',
+        vaga:'Una cosa daurada balla amb el vent, a prop de l\'aigua.',
+        clara:'Hi ha una flor gran que brilla al costat de l\'estany de les granotes. El seu pol·len és daurat.',
         spot:{type:'flor',x:-3.4,z:5.6}},
-       {id:'musgo',nombre:'Musgo de las rocas',color:'#5f9a3a',sala:'out',
-        vaga:'Algo verde y blandito duerme encima de una piedra.',
-        clara:'En el claro del unicornio hay una roca con musgo verde por encima.',
+       {id:'musgo',nombre:'Molsa de les roques',color:'#5f9a3a',sala:'out',
+        vaga:'Una cosa verda i tova dorm damunt d\'una pedra.',
+        clara:'Al clar de l\'unicorn hi ha una roca amb molsa verda per sobre.',
         spot:{type:'roca',x:2.6,z:-6.4}},
-       {id:'mariquita',nombre:'Mariquita de siete puntos',color:'#e23b3b',sala:'out',
-        vaga:'Entre muchas que suben y bajan, solo una tiene siete puntos.',
-        clara:'Las mariquitas suben por el tronco del árbol azul, a la izquierda del claro. Busca la que brilla: es la de siete puntos.',
+       {id:'mariquita',nombre:'Marieta de set punts',color:'#e23b3b',sala:'out',
+        vaga:'Entre moltes que pugen i baixen, només una té set punts.',
+        clara:'Les marietes pugen pel tronc de l\'arbre blau, a l\'esquerra del clar. Busca la que brilla: és la de set punts.',
         spot:{type:'mariquita'}}
      ]},
-    {id:'arbolerums',nombre:'Magicus Arbolerums',poder:'Hace crecer los árboles frutales y da más fruta',
-     receta:'Cinco cosas que hacen crecer los árboles. Échalas al caldero y remueve con el dedo, dando vueltas.',
+    {id:'arbolerums',nombre:'Magicus Arbolerums',poder:'Fa créixer els arbres fruiters i dona més fruita',
+     receta:'Cinc coses que fan créixer els arbres. Tira-les al calder i remena amb el dit, fent voltes.',
      mezclar:true,color:'#c0e05a',
-     premio:{ropa:'sabates',nombre:'los zapatos con alas'},
+     premio:{ropa:'sabates',nombre:'les sabates amb ales'},
      poderes:['turbo'],
-     diario:['He hecho la poción Magicus Arbolerums: ¡los árboles frutales crecen y dan fruta!',
-             'Si como fruta, se me llena el turbo. Mantén «Turbo» para correr muchísimo; se gasta si no como.',
-             'El unicornio me ha dicho que tiene mucha fuerza en las patas de atrás: me ayudará si lo necesito.'],
+     diario:['He fet la poció Magicus Arbolerums: els arbres fruiters creixen i donen fruita!',
+             'Si menjo fruita, s\'omple el turbo. Mantén «Turbo» per córrer moltíssim; es gasta si no menjo.',
+             'L\'unicorn m\'ha dit que té molta força a les potes del darrere: m\'ajudarà si ho necessito.'],
      ingredientes:[
-       {id:'caca',nombre:'Caca de unicornio',color:'#ff8fd0',sala:'out',accion:true,
-        vaga:'No tiene ganas porque no ha comido la fruta que le gusta.',
-        clara:'Prueba a darle de comer al unicornio cosas diferentes: bayas, manzanas, setas o hierba. Están por el claro. ¡Cuando levante la cola, pon el bote!'},
-       {id:'gusano',nombre:'Gusano de tierra',color:'#e08a8a',sala:'out',accion:true,
-        vaga:'Yo sé cavar, pero no puedo mover esta roca.',
-        clara:'Hay una roca grande sobre tierra blanda, cerca del camino. Empújala y yo cavaré. ¡El gusano sale y se esconde muy rápido!'},
-       {id:'huesos',nombre:'Huesos de la cesta de fruta',color:'#b07a4a',sala:2,
-        vaga:'Algo pequeño y duro espera dentro de algo dulce, donde se cocina.',
-        clara:'En la cocina del caldero hay una cesta de fruta en el suelo. Coge los huesos.',
+       {id:'caca',nombre:'Caca d\'unicorn',color:'#ff8fd0',sala:'out',accion:true,
+        vaga:'No en té ganes perquè no ha menjat la fruita que li agrada.',
+        clara:'Prova de donar a l\'unicorn coses diferents: baies, pomes, bolets o herba. Són pel clar. Quan aixequi la cua, posa-hi el pot!'},
+       {id:'gusano',nombre:'Cuc de terra',color:'#e08a8a',sala:'out',accion:true,
+        vaga:'Jo sé cavar, però no puc moure aquesta roca.',
+        clara:'Hi ha una roca grossa sobre terra tova, a prop del camí. Empeny-la i jo cavaré. El cuc surt i s\'amaga molt de pressa!'},
+       {id:'huesos',nombre:'Pinyols de la cistella de fruita',color:'#b07a4a',sala:2,
+        vaga:'Una cosa petita i dura espera dins d\'una cosa dolça, on es cuina.',
+        clara:'A la cuina del calder hi ha una cistella de fruita a terra. Agafa\'n els pinyols.',
         spot:{type:'cesta'}},
-       {id:'savia',nombre:'Savia del árbol azul',color:'#5fb0ff',sala:'out',
-        vaga:'Un árbol llora gotas azules y brillantes.',
-        clara:'El árbol azul, a la izquierda del claro (el de las mariquitas), tiene una gota de savia en el tronco.',
+       {id:'savia',nombre:'Saba de l\'arbre blau',color:'#5fb0ff',sala:'out',
+        vaga:'Un arbre plora gotes blaves i brillants.',
+        clara:'L\'arbre blau, a l\'esquerra del clar (el de les marietes), té una gota de saba al tronc.',
         spot:{type:'savia'}},
-       {id:'polvo',nombre:'Polvo de ala de mariposa',color:'#ffe680',sala:'out',
-        vaga:'Una mariposa dorada deja un rastro que brilla.',
-        clara:'Hay una mariposa dorada que vuela bajito por el claro del unicornio. Acércate y coge el polvo de sus alas.',
+       {id:'polvo',nombre:'Pols d\'ala de papallona',color:'#ffe680',sala:'out',
+        vaga:'Una papallona daurada deixa un rastre que brilla.',
+        clara:'Hi ha una papallona daurada que vola baixet pel clar de l\'unicorn. Acosta-t\'hi i agafa la pols de les seves ales.',
         spot:{type:'mariposa'}}
      ]},
-    {id:'aeolum',nombre:'Aeolum Pogicolum',poder:'Controla el agua y el aire',pendiente:true,
-     premio:{ropa:'escombra',nombre:'la escoba'},poderes:['escoba'],
-     ingredientes:['Risa de rana','Escamas de pez raro','Agua del lago hasta la raya','Flor de loto','Escarcha'].map(n=>({nombre:n}))},
-    {id:'lumus',nombre:'Lumus Controlarum',poder:'Controla la luz',pendiente:true,
-     premio:{ropa:'gat',nombre:'el certificado de bruja y el Gato'},poderes:[],
-     ingredientes:['Pelo de unicornio','La cosa rara que brilla','Luciérnagas en un bote','Seta luminosa','Cera de la vela'].map(n=>({nombre:n}))}
+    {id:'aeolum',nombre:'Aeolum Pogicolum',poder:'Controla l\'aigua i l\'aire',pendiente:true,
+     premio:{ropa:'escombra',nombre:'l\'escombra'},poderes:['escoba'],
+     ingredientes:['Rialla de granota','Escates de peix rar','Aigua del llac fins a la ratlla','Flor de lotus','Gebre'].map(n=>({nombre:n}))},
+    {id:'lumus',nombre:'Lumus Controlarum',poder:'Controla la llum',pendiente:true,
+     premio:{ropa:'gat',nombre:'el certificat de bruixa i el Gat'},poderes:[],
+     ingredientes:['Pèl d\'unicorn','La cosa rara que brilla','Lluernes en un pot','Bolet lluminós','Cera de l\'espelma'].map(n=>({nombre:n}))}
   ]
 };
 
-/* Textos de la historia (la voz del torreón y el Conillet) */
+/* Textos de la història (la veu del torreó i el Conillet), en català */
 const TXT={
-  voz:'La voz del torreón',
+  voz:'La veu del torreó',
   conill:'Conillet',
-  bienvenida:['Bruna… te estaba esperando. Te he esperado desde que naciste.',
-              'Para volver a casa tendrás que convertirte en bruja. Te enseñaré.',
-              'Tu primera tarea: la poción Arcoíris. Sube a la cocina del caldero y lee el libro de conjuros.'],
-  hola:['¡Hola, Bruna! Soy Conillet. Te ayudaré con pistas.',
-        'Cuando me brille la cola, tengo un mensaje para ti: míralo en tu libreta.',
-        'La libreta es el botón de arriba a la izquierda.'],
-  leido:'¡Ya sabes qué necesitas! Están dibujados en tu libreta. Si no encuentras algo, pregúntame en el chat.',
-  todo:'¡Ya tienes los cinco botes! Vuelve a la cocina y échalos al caldero, uno detrás de otro.',
-  hecha:['¡Lo has conseguido, Bruna! La poción Arcoíris ya es tuya.',
-         'Ahora puedes llamar al sol y a la lluvia con tu varita.',
-         'Y en tu armario te espera un regalo…'],
-  regalo:'¡Mira en el armario de tu habitación! Hay algo para ti.',
-  fin:'¡Qué bien te queda el sombrero! Prueba la varita y, cuando quieras, vuelve a la sala del trono: la voz tiene otra tarea para ti.',
-  // tareas que da la voz en la sala del trono (índice = poción)
+  bienvenida:['Bruna… t\'he estat esperant. T\'he estat esperant des que vas néixer.',
+              'Per tornar a casa t\'hauràs de convertir en bruixa. Jo t\'ensenyaré.',
+              'La teva primera tasca: la poció Arcoíris. Puja a la cuina del calder i llegeix el llibre de conjurs.'],
+  hola:['Hola, Bruna! Soc en Conillet. T\'ajudaré amb pistes.',
+        'Quan em brilli la cua, tinc un missatge per a tu: mira\'l a la teva llibreta.',
+        'La llibreta és el botó de l\'esquerra, damunt del joystick.'],
+  leido:'Ja saps què necessites! Ho tens dibuixat a la llibreta. Si no trobes alguna cosa, pregunta-m\'ho al xat.',
+  todo:'Ja ho tens tot! Torna a la cuina i tira-ho al calder, una cosa darrere l\'altra.',
+  hecha:['Ho has aconseguit, Bruna! La poció Arcoíris ja és teva.',
+         'Ara pots cridar el sol i la pluja amb la vareta.',
+         'I al teu armari t\'espera un regal…'],
+  regalo:'Mira a l\'armari de la teva habitació! Hi ha una cosa per a tu.',
+  fin:'Que bé que et queda el barret! Prova la vareta i, quan vulguis, torna a la sala del tron: la veu té una altra tasca per a tu.',
+  // tasques que dona la veu a la sala del tron (índex = poció)
   tarea:[null,
-    ['Muy bien, Bruna. Ya sabes llamar al sol y a la lluvia.',
-     'Ahora aprenderás a dominar las plantas salvajes: la poción Magiculis Parinuris.',
-     'Esta vez no basta con recoger: algunas cosas tendrás que ingeniártelas. Lee el libro en la cocina.'],
-    ['Ya dominas las plantas, Bruna. Ahora toca algo muy importante: comer bien.',
-     'La poción Magicus Arbolerums hace crecer los árboles frutales.',
-     'Necesitarás la ayuda de los animales del bosque. Lee el libro en la cocina.']],
+    ['Molt bé, Bruna. Ja saps cridar el sol i la pluja.',
+     'Ara aprendràs a dominar les plantes salvatges: la poció Magiculis Parinuris.',
+     'Aquesta vegada no n\'hi ha prou de recollir: algunes coses te les hauràs d\'enginyar. Llegeix el llibre a la cuina.'],
+    ['Ja domines les plantes, Bruna. Ara toca una cosa molt important: menjar bé.',
+     'La poció Magicus Arbolerums fa créixer els arbres fruiters.',
+     'Necessitaràs l\'ajuda dels animals del bosc. Llegeix el llibre a la cuina.']],
   felicita:[null,
-    ['¡Magnífico! Las plantas ya te obedecen.',
-     'Las setas gigantes te harán saltar muy alto y las carnívoras te harán caricias.',
-     'En tu armario hay algo nuevo para ti.'],
-    ['¡Qué maravilla! Ahora que has visto lo importante que es comer bien, te doy el poder de la fruta.',
-     'Cuando comas fruta podrás correr muchísimo, como un turbo. Pero se gasta si no comes más.',
-     'Mira en el armario: tengo un regalo para tus pies.']],
-  construccion:'La siguiente poción todavía está en construcción. ¡Pronto podrás seguir!',
-  remover:'Remueve con el dedo: dibuja círculos sobre el caldero',
-  // poción 2
-  pinzas:'Bruna: «Necesitaría unas pinzas para quitarle un pelo… ¿Dónde he visto yo algo que pellizque?»',
-  pistaPinzas:'¿Puede tener boca algo que hace la fotosíntesis? 🌱',
-  ratonSigue:'¡El ratón huele el queso y te sigue!',
-  babea:'¡Con el calor, la planta babea! Ofrécele el bote, y esquívala cuando se lance.',
-  calor:'La planta tiene frío. Quizá con un poco de sol…',
-  esquiva:'¡ESQUIVA!',
-  fallo:'¡Ñac! La planta te ha echado hasta el ascensor. No pasa nada: inténtalo otra vez.',
-  babaOk:'¡La planta ha mordido el bote y lo ha llenado de baba!',
-  peloOk:'¡La planta le ha arrancado un pelo al ratón y lo ha escupido!',
-  regalo2:'¡Mira otra vez en el armario de tu habitación!',
-  fin2:'¡Estás guapísima de bruja! Prueba a saltar encima de una seta gigante del bosque.',
-  fin3:'¡Zapatos con alas! Come fruta del bosque y mantén «Turbo» para correr como el viento.',
-  regalo3:'¡Mira en el armario otra vez! Es algo para tus pies.',
-  // poción 3
-  unicornio:'Unicornio',
-  comida:{baya:'una baya lila',manzana:'una manzana',seta:'una seta',hierba:'hierba'},
-  coger:{baya:'Coger bayas',manzana:'Coger una manzana',seta:'Coger una seta',hierba:'Coger hierba'},
+    ['Magnífic! Les plantes ja t\'obeeixen.',
+     'Els bolets gegants et faran saltar molt amunt i les carnívores et faran carícies.',
+     'Al teu armari hi ha una cosa nova per a tu.'],
+    ['Quina meravella! Ara que has vist com és d\'important menjar bé, et dono el poder de la fruita.',
+     'Quan mengis fruita podràs córrer moltíssim, com un turbo. Però es gasta si no en menges més.',
+     'Mira a l\'armari: tinc un regal per als teus peus.']],
+  construccion:'La poció següent encara s\'està construint. Aviat podràs continuar!',
+  remover:'Remena amb el dit: dibuixa cercles damunt del calder',
+  // poció 2
+  pinzas:'Bruna: «Necessitaria unes pinces per treure-li un pèl… On he vist jo alguna cosa que pessigui?»',
+  pistaPinzas:'Pot tenir boca una cosa que fa la fotosíntesi? 🌱',
+  ratonSigue:'El ratolí fa olor de formatge i et segueix!',
+  babea:'Amb la calor, la planta baveja! Ofereix-li el pot, i esquiva-la quan es llanci.',
+  calor:'La planta té fred. Potser amb una mica de sol…',
+  esquiva:'ESQUIVA!',
+  fallo:'Ñac! La planta t\'ha fet fora fins a l\'ascensor. No passa res: torna-ho a provar.',
+  babaOk:'La planta ha mossegat el pot i l\'ha omplert de baba!',
+  peloOk:'La planta ha arrencat un pèl al ratolí i l\'ha escopit!',
+  regalo2:'Mira un altre cop a l\'armari de la teva habitació!',
+  fin2:'Estàs guapíssima de bruixa! Prova de saltar damunt d\'un bolet gegant del bosc.',
+  fin3:'Sabates amb ales! Menja fruita del bosc i mantén «Turbo» per córrer com el vent.',
+  regalo3:'Torna a mirar a l\'armari! És una cosa per als teus peus.',
+  // poció 3
+  unicornio:'Unicorn',
+  comida:{baya:'una baia lila',manzana:'una poma',seta:'un bolet',hierba:'herba'},
+  coger:{baya:'Agafar baies',manzana:'Agafar una poma',seta:'Agafar un bolet',hierba:'Agafar herba'},
   uniDice:{
-    seta:['¡Eeecs, qué asco! ¿Te crees que estoy mal de la cabeza?'],
-    manzana:['Gracias, la manzana es astringente y muy sana.','Pero hoy no me ayuda nada, ¿eh? Necesito otra cosa.'],
-    hierba:['Ei, guapa, que no soy un caballo, ¿eh? ¿Qué te has creído?'],
-    baya:['¡Gracias! Estas bayas lilas son buenísimas para… ya sabes.','¡Uy! Creo que ya viene…']},
-  uniGracias:['Gracias, Bruna. Hacía tres días que no hacía caca.','Si necesitas ayuda, tengo mucha fuerza en las patas de atrás: puedo romper cosas.'],
-  uniFalsa:'Uy, falsa alarma… ¿Me das otra baya?',
-  ponBote:'¡Levanta la cola! ¡Pon el bote, rápido!',
-  gusanoSale:'¡Ha salido el gusano! ¡Cógelo rápido!',
-  gusanoSeEsconde:'¡Se ha escondido! Pide al Conillet que cave otra vez.',
-  roca:'¡Uf! La roca se ha movido. La tierra de debajo está blandita.'
+    seta:['Eeecs, quin fàstic! Et creus que estic tocat del bolet?'],
+    manzana:['Gràcies, la poma és astringent i molt sana.','Però avui no m\'ajuda gens, eh? Necessito una altra cosa.'],
+    hierba:['Ei, maca, que no soc pas un cavall, jo. Què t\'has cregut?'],
+    baya:['Gràcies! Estan bones per cagar-se!','Ups… crec que ja ve…']},
+  uniGracias:['Ups, quina pudor! Gràcies, Bruna: feia tres dies que no feia caca.','Si necessites ajuda, tinc molta força a les potes del darrere: puc trencar coses.'],
+  uniFalsa:'Ui, falsa alarma… Em dones una altra baia?',
+  ponBote:'Aixeca la cua! Posa-hi el pot, ràpid!',
+  gusanoSale:'Ha sortit el cuc! Agafa\'l de pressa!',
+  gusanoSeEsconde:'S\'ha amagat! Demana al Conillet que torni a cavar.',
+  roca:'Uf! La roca s\'ha mogut. La terra de sota és toveta.'
 };
-TXT.felicita[0]=TXT.hecha;     // la poción 1 usa el texto «hecha»
+TXT.felicita[0]=TXT.hecha;     // la poció 1 fa servir el text «hecha»
 
 /* ===== 55_pociones.js ===== */
 /* =====================================================================
@@ -2861,9 +2862,9 @@ const shadowBottle=()=>`<svg viewBox="0 0 64 64"><path d="M26 10h12M27 10v14c-8 
 const hatSvg=`<svg viewBox="0 0 64 64"><path d="M8 48c10 4 38 4 48 0-6-2-11-3-14-3L36 10c-2-3-5-2-6 0l-8 35c-4 0-9 1-14 3z" fill="#3a2a4a" stroke="#4a3a30" stroke-width="2"/><path d="M23 40c6 1.5 13 1.5 18 0" stroke="#b07ae0" stroke-width="4" fill="none"/></svg>`;
 {
   const hud=document.createElement('div');hud.id='hud';hud.className='ui';
-  hud.innerHTML=`<button class="hb" id="bnote" aria-label="Libreta">${ICON.nb}<span class="bdg"></span></button><button class="hb" id="bsack" aria-label="Saco">${ICON.sack}</button><button class="hb" id="bsnd" aria-label="Sonido">${ICON.snd}</button>`;
+  hud.innerHTML=`<button class="hb" id="bnote" aria-label="Llibreta">${ICON.nb}<span class="bdg"></span></button><button class="hb" id="bsack" aria-label="Sac">${ICON.sack}</button><button class="hb" id="bsnd" aria-label="So">${ICON.snd}</button>`;
   document.body.appendChild(hud);
-  const w=document.createElement('button');w.id='bwand';w.className='hb ui';w.setAttribute('aria-label','Varita');w.innerHTML=ICON.wand;document.body.appendChild(w);
+  const w=document.createElement('button');w.id='bwand';w.className='hb ui';w.setAttribute('aria-label','Vareta');w.innerHTML=ICON.wand;document.body.appendChild(w);
   const sp=document.createElement('div');sp.id='spells';sp.className='ui';document.body.appendChild(sp);
   const d=document.createElement('div');d.id='dlg';d.className='ui';d.innerHTML='<b></b><p></p><i>toca ▶</i>';document.body.appendChild(d);
   const mini=document.createElement('div');mini.id='mini';mini.className='ui';document.body.appendChild(mini);
@@ -2897,7 +2898,7 @@ function nextLine(){
 /* ---------- el Conillet: mensajes en el chat de la libreta ---------- */
 BN.tail.material=BN.tail.material.clone();BN.tail.material.emissive=new THREE.Color('#7dff6a');BN.tail.material.emissiveIntensity=0;
 const bnGlow=halo(BN.root,0,0.22,0,1.3,'#9dff8a',0);
-function conill(text,quiet){GS.chat.push(text);GS.unread++;saveGame();badges();if(!quiet){sfx('notify');toast('Conillet tiene un mensaje · mira la libreta',2600);}}
+function conill(text,quiet){GS.chat.push(text);GS.unread++;saveGame();badges();if(!quiet){sfx('notify');toast('En Conillet té un missatge · mira la llibreta',2600);}}
 function badges(){
   const b=$('bnote').querySelector('.bdg');b.textContent=GS.unread;b.style.display=GS.unread?'flex':'none';
 }
@@ -2967,7 +2968,7 @@ const dressSaved=[];
 function wearDress(){if(dressSaved.length)return;const c=LM('#2f2440'),s=LM('#3a2a52',{side:THREE.DoubleSide});
   B.root.traverse(o=>{if(o.isMesh&&o.material&&o.material.map&&o!==hatB){dressSaved.push([o,o.material]);o.material=o.material.side===THREE.DoubleSide?s:c;}});}
 // premios de cada poción: qué aparece en el armario y qué pasa al ponérselo
-const REWARD={barret:{w:hatW,lab:'Ponerse el sombrero',wear(){hatB.visible=true;}},vestit:{w:dressW,lab:'Ponerse el vestido',wear:wearDress}};
+const REWARD={barret:{w:hatW,lab:'Posar-se el barret',wear(){hatB.visible=true;}},vestit:{w:dressW,lab:'Posar-se el vestit',wear:wearDress}};
 // libro de conjuros (sobre la mesa de la cocina) y caldero
 const BOOK=new THREE.Vector3().setFromMatrixPosition(at(3.5,2,2.6,-0.6).multiply(TRS(-0.15,0.76,0)));
 const bookGlow=halo(G[2],BOOK.x,BOOK.y+0.25,BOOK.z,1.4,'#ffe08a',0);
@@ -3003,19 +3004,19 @@ function potionActions(){
   const l=toLoc(S.pos.x,S.pos.z,S.y),lx=l.x,lz=l.z,ly=l.y;
   // armario de Bruna
   if(Math.abs(ly-L(1))<0.6){_w.setFromMatrixPosition(WARD_M.clone().multiply(TRS(0,0,0.9)));
-    if(Math.hypot(lx-_w.x,lz-_w.z)<1.7){ctxCap='Armario';ctxA.set(_w.x+OX,OY+L(1)+2.6,_w.z+OZ);
+    if(Math.hypot(lx-_w.x,lz-_w.z)<1.7){ctxCap='Armari';ctxA.set(_w.x+OX,OY+L(1)+2.6,_w.z+OZ);
       if(!GS.wardOpen)return ['armario'];
       if(ph==='premio'){LAB.ponerse=REWARD[POT().premio.ropa].lab;return ['ponerse'];}}}
   // libro
-  if(ph!=='inicio'&&Math.abs(ly-L(2))<0.6&&Math.hypot(lx-BOOK.x,lz-BOOK.z)<1.8){ctxCap='Libro de conjuros';ctxA.set(BOOK.x+OX,BOOK.y+OY+0.9,BOOK.z+OZ);return ['leer'];}
+  if(ph!=='inicio'&&Math.abs(ly-L(2))<0.6&&Math.hypot(lx-BOOK.x,lz-BOOK.z)<1.8){ctxCap='Llibre de conjurs';ctxA.set(BOOK.x+OX,BOOK.y+OY+0.9,BOOK.z+OZ);return ['leer'];}
   // caldero
   if(Math.abs(ly-L(2))<0.6&&Math.hypot(lx-KC.x,lz-KC.z)<2.3){
     ctxA.set(KC.x+OX,OY+L(2)+2.2,KC.z+OZ);
-    if(busy&&GS.bag.some(inPot)&&GS.layers.length<5){ctxCap='Caldero · '+GS.layers.length+'/5';return ['echar'];}
-    if(ph==='remover'){ctxCap='Caldero';return ['remover'];}}
+    if(busy&&GS.bag.some(inPot)&&GS.layers.length<5){ctxCap='Calder · '+GS.layers.length+'/5';return ['echar'];}
+    if(ph==='remover'){ctxCap='Calder';return ['remover'];}}
   return null;
 }
-Object.assign(LAB,{coger:'Coger',armario:'Abrir el armario',ponerse:'Ponérselo',leer:'Leer',echar:'Echar al caldero',remover:'Remover'});
+Object.assign(LAB,{coger:'Agafar',armario:'Obrir l\'armari',ponerse:'Posar-s\'ho',leer:'Llegir',echar:'Tirar al calder',remover:'Remenar'});
 // dar un ingrediente: lo apunta en la libreta y, si ya están todos, toca ir al caldero
 function giveIngredient(id,x,y,z){const ing=findIng(id);if(!ing||GS.got[id])return;GS.got[id]=true;GS.bag.push(id);sfx('pick');
   if(x!==undefined)for(let i=0;i<10;i++)emit('dust',x,y+0.2,z,1,{sp:1.2,size:0.07,color:ing.color});
@@ -3027,7 +3028,7 @@ Object.assign(ACT,{
   armario(){GS.wardOpen=true;saveGame();sfx('open');},
   ponerse(){const P=POT(),r=P.premio.ropa,R=REWARD[r];if(!R)return;R.w.visible=false;R.wear();GS.clothes.push(r);GS.phase='fin';saveGame();sfx('magic');
     for(let i=0;i<14;i++)emit('dust',S.pos.x,S.y+1.4,S.pos.z,1,{sp:1.4,size:0.08,color:pick(['#c98aff','#ffd84a','#fff3b0'])});
-    GS.diary.push('Ya tengo '+P.premio.nombre+'.');saveGame();setTimeout(()=>conill([TXT.fin,TXT.fin2,TXT.fin3][GS.pot]||TXT.fin2),1200);},
+    GS.diary.push('Ja tinc '+P.premio.nombre+'.');saveGame();setTimeout(()=>conill([TXT.fin,TXT.fin2,TXT.fin3][GS.pot]||TXT.fin2),1200);},
   leer(){openBook();},
   echar(){const i=GS.bag.findIndex(inPot);if(i<0)return;const id=GS.bag.splice(i,1)[0],ing=findIng(id);
     const g=mkPot(ing.color,1.3);scene.add(g);g.position.set(S.pos.x,S.y+1.1,S.pos.z);
@@ -3073,9 +3074,9 @@ function openStir(){
 /* ---------- libro de conjuros ---------- */
 function openBook(){
   const P=POT(),rd=$('read');sfx('page');
-  const right=P.pendiente?'<h3>Próximamente</h3><p>Esta poción aún está en construcción.</p>':
-    '<h3>Ingredientes</h3><ul>'+P.ingredientes.map(i=>`<li style="display:flex;align-items:center;gap:8px;justify-content:center"><span style="width:16px;height:16px;border-radius:50%;background:${i.color};display:inline-block;border:2px solid #4a2f22"></span>${i.nombre}</li>`).join('')+'</ul>';
-  rd.innerHTML=`<div id="spread"><div class="pg"><h3>Libro de conjuros</h3><h2>${P.nombre}</h2><p style="font-size:17px;margin:0">${P.poder}.</p><p style="font-size:16px;margin:0;opacity:.85">${P.receta||''}</p></div><div class="pg">${right}</div></div><button id="closeRead">${GS.phase==='leer'?'Apuntar en la libreta':'Cerrar'}</button>`;
+  const right=P.pendiente?'<h3>Aviat</h3><p>Aquesta poció encara s\'està construint.</p>':
+    '<h3>Ingredients</h3><ul>'+P.ingredientes.map(i=>`<li style="display:flex;align-items:center;gap:8px;justify-content:center"><span style="width:16px;height:16px;border-radius:50%;background:${i.color};display:inline-block;border:2px solid #4a2f22"></span>${i.nombre}</li>`).join('')+'</ul>';
+  rd.innerHTML=`<div id="spread"><div class="pg"><h3>Llibre de conjurs</h3><h2>${P.nombre}</h2><p style="font-size:17px;margin:0">${P.poder}.</p><p style="font-size:16px;margin:0;opacity:.85">${P.receta||''}</p></div><div class="pg">${right}</div></div><button id="closeRead">${GS.phase==='leer'?'Apuntar-ho a la llibreta':'Tancar'}</button>`;
   rd.classList.add('on');
   $('closeRead').addEventListener('click',()=>{rd.classList.remove('on');
     if(GS.phase==='leer'){GS.phase='recoger';saveGame();sfx('write');setTimeout(()=>{openNotebook('pot');setTimeout(()=>conill(TXT.leido),900);},300);}});
@@ -3088,26 +3089,26 @@ function renderNotebook(){
   const P=POT(),read=!['inicio','leer','tarea'].includes(GS.phase),ov=$('ovNb');
   let body='';
   if(nbTab==='pot'){
-    if(GS.phase==='inicio')body='<h2>Mi libreta</h2><div class="sub">Aquí apuntaré las recetas, lo que aprenda y los mensajes del Conillet.</div><p class="entry">Todavía no tengo ninguna tarea. Quizá en el torreón…</p>';
-    else{body=`<h2>${P.nombre}</h2><div class="sub">${read?'Lo que necesito (toca un hueco vacío para pedir pista)':'Lee el libro de conjuros en la cocina del caldero para saber qué necesitas.'}</div><div class="slots">`+
+    if(GS.phase==='inicio')body='<h2>La meva llibreta</h2><div class="sub">Aquí apuntaré les receptes, el que aprengui i els missatges d\'en Conillet.</div><p class="entry">Encara no tinc cap tasca. Potser al torreó…</p>';
+    else{body=`<h2>${P.nombre}</h2><div class="sub">${read?'El que necessito (toca un forat buit per demanar una pista)':'Llegeix el llibre de conjurs a la cuina del calder per saber què necessites.'}</div><div class="slots">`+
       P.ingredientes.map(i=>{const got=GS.got[i.id];
         if(!read)return '<div class="slot q">?</div>';
         return `<div class="slot ${got?'got':''}" data-ask="${got?'':i.id}">${got?bottle(i.color):shadowBottle()}<div class="lbl">${i.nombre}</div></div>`;}).join('')+'</div>';
       if(GS.layers.length)body+=`<p class="entry" style="margin-top:12px">En el caldero: ${GS.layers.length} de 5.</p>`;}
   }else if(nbTab==='diary'){
-    body='<h2>Diario</h2>'+(GS.diary.length?GS.diary.map(t=>`<p class="entry">· ${t}</p>`).join(''):'<p class="entry">Aún no he aprendido ningún conjuro.</p>')+'<button class="reset" id="rst">Empezar la partida de nuevo</button>';
+    body='<h2>Diari</h2>'+(GS.diary.length?GS.diary.map(t=>`<p class="entry">· ${t}</p>`).join(''):'<p class="entry">Encara no he après cap conjur.</p>')+'<button class="reset" id="rst">Tornar a començar la partida</button>';
   }else{
-    body='<h2>Chat con Conillet</h2>'+(GS.chat.length?GS.chat.map(t=>`<div class="msg"><b>${TXT.conill}</b>${t}</div>`).join(''):'<p class="entry">Aún no hay mensajes.</p>');
-    const miss=missing();if(miss&&(GS.phase==='recoger'))body+=`<button class="ask" id="askC">Conillet, ¿dónde está ${miss.nombre.toLowerCase().replace('bote','el bote')}?</button>`;
+    body='<h2>Xat amb en Conillet</h2>'+(GS.chat.length?GS.chat.map(t=>`<div class="msg"><b>${TXT.conill}</b>${t}</div>`).join(''):'<p class="entry">Encara no hi ha missatges.</p>');
+    const miss=missing();if(miss&&(GS.phase==='recoger'))body+=`<button class="ask" id="askC">Conillet, on és «${miss.nombre}»?</button>`;
     GS.unread=0;saveGame();badges();
   }
-  ov.innerHTML=`<div id="nbk"><button class="cls" id="nbX">✕</button><div class="tabs"><button data-t="pot" class="${nbTab==='pot'?'on':''}">Poción</button><button data-t="diary" class="${nbTab==='diary'?'on':''}">Diario</button><button data-t="chat" class="${nbTab==='chat'?'on':''}">Chat<span class="bdg">${GS.unread}</span></button></div><div class="pane">${body}</div></div>`;
+  ov.innerHTML=`<div id="nbk"><button class="cls" id="nbX">✕</button><div class="tabs"><button data-t="pot" class="${nbTab==='pot'?'on':''}">Poció</button><button data-t="diary" class="${nbTab==='diary'?'on':''}">Diari</button><button data-t="chat" class="${nbTab==='chat'?'on':''}">Xat<span class="bdg">${GS.unread}</span></button></div><div class="pane">${body}</div></div>`;
   ov.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{sfx('page');nbTab=b.dataset.t;renderNotebook();}));
   const cb=ov.querySelector('.tabs [data-t=chat] .bdg');cb.style.display=GS.unread&&nbTab!=='chat'?'flex':'none';
   $('nbX').addEventListener('click',()=>closeOv(ov));
   ov.querySelectorAll('[data-ask]').forEach(s=>{if(s.dataset.ask)s.addEventListener('click',()=>{askHint(s.dataset.ask);nbTab='chat';renderNotebook();});});
   const a=$('askC');if(a)a.addEventListener('click',()=>{askHint(missing().id);renderNotebook();});
-  const r=$('rst');if(r)r.addEventListener('click',()=>{if(confirm('¿Seguro? Se borrará la partida y empezarás desde el bosque.')){try{localStorage.removeItem(SAVE);}catch(e){}location.reload();}});
+  const r=$('rst');if(r)r.addEventListener('click',()=>{if(confirm('N\'estàs segura? S\'esborrarà la partida i tornaràs a començar des del bosc.')){try{localStorage.removeItem(SAVE);}catch(e){}location.reload();}});
   const pane=ov.querySelector('.pane');if(nbTab==='chat')pane.scrollTop=pane.scrollHeight;
 }
 const missing=()=>{const P=POT();if(P.pendiente)return null;
@@ -3115,22 +3116,22 @@ const missing=()=>{const P=POT();if(P.pendiente)return null;
 // pistas en dos capas: primero vaga; si insistes, la clara y te guía
 function askHint(id){const ing=POT().ingredientes.find(i=>i.id===id);if(!ing)return;
   const n=(GS.hint[id]||0)+1;GS.hint[id]=n;
-  if(n===1)conill(ing.vaga+' (Si no lo encuentras, pregúntame otra vez.)',true);
-  else{conill(ing.clara+' Te acompaño: cuanto más cerca, más brillo y más salto.',true);GS.guide=id;}
+  if(n===1)conill(ing.vaga+' (Si no ho trobes, torna-m\'ho a preguntar.)',true);
+  else{conill(ing.clara+' T\'acompanyo: com més a prop, més brillo i més salto.',true);GS.guide=id;}
   GS.unread=0;sfx('notify');saveGame();badges();}
 // mini-libreta: el dibujo a lápiz al conseguir un ingrediente (la recompensa)
 let miniT=0;
-function miniDraw(ing){const m=$('mini');m.innerHTML=bottle(ing.color,'draw')+'<span>'+ing.nombre+'<br><small style="font-size:13px;opacity:.7">apuntado en la libreta</small></span>';
+function miniDraw(ing){const m=$('mini');m.innerHTML=bottle(ing.color,'draw')+'<span>'+ing.nombre+'<br><small style="font-size:13px;opacity:.7">apuntat a la llibreta</small></span>';
   m.classList.remove('on');void m.offsetWidth;m.classList.add('on');sfx('write');clearTimeout(miniT);miniT=setTimeout(()=>m.classList.remove('on'),3200);}
 
 /* ---------- saco ---------- */
 function openSack(){const ov=$('ovSack'),P=POT();
   const items=GS.bag.map(id=>P.ingredientes.find(i=>i.id===id)).filter(Boolean);
-  ov.innerHTML=`<div id="sack"><button class="cls" id="skX">✕</button><h2>El saco</h2>${items.length?'<div class="items">'+items.map(i=>`<div class="it">${bottle(i.color)}<div>${i.nombre}</div></div>`).join('')+'</div>':'<div class="empty">El saco está vacío.</div>'}</div>`;
+  ov.innerHTML=`<div id="sack"><button class="cls" id="skX">✕</button><h2>El sac</h2>${items.length?'<div class="items">'+items.map(i=>`<div class="it">${bottle(i.color)}<div>${i.nombre}</div></div>`).join('')+'</div>':'<div class="empty">El sac és buit.</div>'}</div>`;
   ov.classList.add('on');$('skX').addEventListener('click',()=>closeOv(ov));}
 
 /* ---------- varita y conjuros ---------- */
-const SPELL_LAB={sol:'Sol',lluvia:'Lluvia'};
+const SPELL_LAB={sol:'Sol',lluvia:'Pluja'};
 function wandUI(){const list=Object.keys(SPELL_LAB).filter(k=>POW[k]&&(PLAY||true));
   $('bwand').style.display=list.length?'flex':'none';
   $('spells').innerHTML=list.map(k=>`<button data-s="${k}">${SPELL_LAB[k]}</button>`).join('');
@@ -3188,7 +3189,7 @@ function gameStep(dt){
   let glow=0;
   if(GS.guide&&!GS.got[GS.guide]&&targetPos(GS.guide,_w)){
     const d=Math.hypot(_w.x-S.pos.x,_w.z-S.pos.z)+Math.abs(_w.y-S.y)*2.5;glow=sat(1-d/16);
-    const band=d<3?3:d<7?2:d<12?1:0;if(band!==guideBand&&tAcc>1){if(band>guideBand&&band>0)toast(['','Conillet: templado…','Conillet: ¡caliente, caliente!','Conillet: ¡que te quemas!'][band],1600);guideBand=band;}
+    const band=d<3?3:d<7?2:d<12?1:0;if(band!==guideBand&&tAcc>1){if(band>guideBand&&band>0)toast(['','Conillet: tebi…','Conillet: calent, calent!','Conillet: que et cremes!'][band],1600);guideBand=band;}
     if(d<3&&!FL.on){BN.root.position.y+=Math.abs(Math.sin(t*7))*0.3;}}
   bnGlow.material.opacity+=(glow*0.9-bnGlow.material.opacity)*(1-Math.exp(-dt*4));
   spellStep(dt);
@@ -3333,16 +3334,16 @@ function potionExtraActions(){
   if(mode!=='tower'||BABA.st)return null;
   const l=toLoc(S.pos.x,S.pos.z,S.y);
   // cocina: coger queso de la despensa
-  if(Math.abs(l.y-L(2))<0.6&&!GS.got.pelo&&!GS.cheese&&MOUSE.st!=='corre'&&Math.hypot(l.x-PANTRY.x,l.z-PANTRY.z)<1.7){ctxCap='Despensa';ctxA.set(OX+PANTRY.x,OY+L(2)+1.9,OZ+PANTRY.z);return ['queso'];}
+  if(Math.abs(l.y-L(2))<0.6&&!GS.got.pelo&&!GS.cheese&&MOUSE.st!=='corre'&&Math.hypot(l.x-PANTRY.x,l.z-PANTRY.z)<1.7){ctxCap='Rebost';ctxA.set(OX+PANTRY.x,OY+L(2)+1.9,OZ+PANTRY.z);return ['queso'];}
   // sótano: la planta grande
   if(l.y<-2.6){const d=Math.hypot(l.x-BIGP.x,l.z-BIGP.z);
     if(d<2.6&&GS.cheese&&MOUSE.st==='sigue'){ctxCap='Planta carnívora';ctxA.set(OX+BIGP.x,OY+BY+2.6,OZ+BIGP.z);return ['dejarQueso'];}
     if(d<2.6&&!GS.got.baba){ctxCap='Planta carnívora';ctxA.set(OX+BIGP.x,OY+BY+2.6,OZ+BIGP.z);return ['ofrecer'];}}
   return null;
 }
-Object.assign(LAB,{queso:'Coger queso',dejarQueso:'Dejar el queso',ofrecer:'Ofrecer el bote'});
+Object.assign(LAB,{queso:'Agafar formatge',dejarQueso:'Deixar el formatge',ofrecer:'Oferir el pot'});
 Object.assign(ACT,{
-  queso(){GS.cheese=true;saveGame();sfx('pick');toast('Tienes queso. ¿Quién tendrá hambre?',2500);},
+  queso(){GS.cheese=true;saveGame();sfx('pick');toast('Tens formatge. Qui deu tenir gana?',2500);},
   dejarQueso(){GS.cheese=false;saveGame();
     const ox=BIGP.x,oz=BIGP.z,dl=Math.hypot(ox,oz)||1,cx=ox+ox/dl*0.9,cz=oz+oz/dl*0.9;      // detrás de la planta (hacia la pared)
     dropCheese.position.set(OX+cx,OY+BY+0.02,OZ+cz);dropCheese.visible=true;MOUSE.st='corre';MOUSE.t=0;
@@ -3479,7 +3480,7 @@ let shoesOn=false;
 function wearShoes(){if(shoesOn)return;shoesOn=true;
   [B.legL,B.legR].forEach((L0,i)=>{L0.foot.traverse(o=>{if(o.isMesh&&o.material&&o.material.color&&o.material.color.getHexString()==='34303f')o.material=LM('#5a3a8a');});
     const w=wingG();w.position.set((i?-1:1)*0.07,0.0,-0.02);w.rotation.z=(i?1:-1)*0.6;L0.foot.add(w);});}
-REWARD.sabates={w:shoesW,lab:'Ponerse los zapatos',wear:wearShoes};
+REWARD.sabates={w:shoesW,lab:'Posar-se les sabates',wear:wearShoes};
 if(GS.clothes.includes('sabates'))wearShoes();
 
 /* ---------- acciones ---------- */
@@ -3490,16 +3491,16 @@ function p3Actions(){
   // unicornio con la cola levantada: poner el bote
   if(UST.st==='cola'&&nearUni){ctxCap=TXT.unicornio;ctxA.set(uni.g.position.x,uni.g.position.y+2.2,uni.g.position.z);return ['bote'];}
   if(!GS.got.caca){
-    if(nearUni&&GS.food){LAB.dar='Darle '+TXT.comida[GS.food];ctxCap=TXT.unicornio;ctxA.set(UNI.x,uni.g.position.y+2.2,UNI.z);return ['dar'];}
+    if(nearUni&&GS.food){LAB.dar='Donar-li '+TXT.comida[GS.food];ctxCap=TXT.unicornio;ctxA.set(UNI.x,uni.g.position.y+2.2,UNI.z);return ['dar'];}
     for(const k in FOODS){const f=FOODS[k];if(Math.hypot(S.pos.x-f.x,S.pos.z-f.z)<1.6&&GS.food!==k){LAB['f_'+k]=TXT.coger[k];ctxCap='';ctxA.set(f.x,f.y+1.4,f.z);return ['f_'+k];}}}
   // roca y gusano
   if(!GS.got.gusano){const d=Math.hypot(S.pos.x-ROCK.home.x,S.pos.z-ROCK.home.z);
-    if(ROCK.wst==='fuera'&&d<2.6){ctxCap='Gusano';ctxA.set(ROCK.home.x,ROCK.home.y+1.2,ROCK.home.z);return ['gusano'];}
-    if(!ROCK.moved&&Math.hypot(S.pos.x-ROCK.g.position.x,S.pos.z-ROCK.g.position.z)<2.2){ctxCap='Roca grande';ctxA.set(ROCK.g.position.x,ROCK.g.position.y+1.7,ROCK.g.position.z);return ['empujar'];}
-    if(ROCK.moved&&!ROCK.wst&&d<2.6){ctxCap='Tierra blanda';ctxA.set(ROCK.home.x,ROCK.home.y+1.2,ROCK.home.z);return ['cavar'];}}
+    if(ROCK.wst==='fuera'&&d<2.6){ctxCap='Cuc';ctxA.set(ROCK.home.x,ROCK.home.y+1.2,ROCK.home.z);return ['gusano'];}
+    if(!ROCK.moved&&Math.hypot(S.pos.x-ROCK.g.position.x,S.pos.z-ROCK.g.position.z)<2.2){ctxCap='Roca grossa';ctxA.set(ROCK.g.position.x,ROCK.g.position.y+1.7,ROCK.g.position.z);return ['empujar'];}
+    if(ROCK.moved&&!ROCK.wst&&d<2.6){ctxCap='Terra tova';ctxA.set(ROCK.home.x,ROCK.home.y+1.2,ROCK.home.z);return ['cavar'];}}
   return null;
 }
-Object.assign(LAB,{bote:'Poner el bote',dar:'Darle',empujar:'Empujar la roca',cavar:'Conillet, ¡cava!',gusano:'Coger el gusano'});
+Object.assign(LAB,{bote:'Posar el pot',dar:'Donar-li',empujar:'Empènyer la roca',cavar:'Conillet, cava!',gusano:'Agafar el cuc'});
 for(const k in FOOD_C)ACT['f_'+k]=()=>{GS.food=k;saveGame();sfx('pick');};
 Object.assign(ACT,{
   dar(){feedUni();},

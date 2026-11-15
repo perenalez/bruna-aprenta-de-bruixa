@@ -81,7 +81,7 @@ let shoesOn=false;
 function wearShoes(){if(shoesOn)return;shoesOn=true;
   [B.legL,B.legR].forEach((L0,i)=>{L0.foot.traverse(o=>{if(o.isMesh&&o.material&&o.material.color&&o.material.color.getHexString()==='34303f')o.material=LM('#5a3a8a');});
     const w=wingG();w.position.set((i?-1:1)*0.07,0.0,-0.02);w.rotation.z=(i?1:-1)*0.6;L0.foot.add(w);});}
-REWARD.sabates={w:shoesW,lab:'Ponerse los zapatos',wear:wearShoes};
+REWARD.sabates={w:shoesW,lab:'Posar-se les sabates',wear:wearShoes};
 if(GS.clothes.includes('sabates'))wearShoes();
 
 /* ---------- acciones ---------- */
@@ -92,16 +92,16 @@ function p3Actions(){
   // unicornio con la cola levantada: poner el bote
   if(UST.st==='cola'&&nearUni){ctxCap=TXT.unicornio;ctxA.set(uni.g.position.x,uni.g.position.y+2.2,uni.g.position.z);return ['bote'];}
   if(!GS.got.caca){
-    if(nearUni&&GS.food){LAB.dar='Darle '+TXT.comida[GS.food];ctxCap=TXT.unicornio;ctxA.set(UNI.x,uni.g.position.y+2.2,UNI.z);return ['dar'];}
+    if(nearUni&&GS.food){LAB.dar='Donar-li '+TXT.comida[GS.food];ctxCap=TXT.unicornio;ctxA.set(UNI.x,uni.g.position.y+2.2,UNI.z);return ['dar'];}
     for(const k in FOODS){const f=FOODS[k];if(Math.hypot(S.pos.x-f.x,S.pos.z-f.z)<1.6&&GS.food!==k){LAB['f_'+k]=TXT.coger[k];ctxCap='';ctxA.set(f.x,f.y+1.4,f.z);return ['f_'+k];}}}
   // roca y gusano
   if(!GS.got.gusano){const d=Math.hypot(S.pos.x-ROCK.home.x,S.pos.z-ROCK.home.z);
-    if(ROCK.wst==='fuera'&&d<2.6){ctxCap='Gusano';ctxA.set(ROCK.home.x,ROCK.home.y+1.2,ROCK.home.z);return ['gusano'];}
-    if(!ROCK.moved&&Math.hypot(S.pos.x-ROCK.g.position.x,S.pos.z-ROCK.g.position.z)<2.2){ctxCap='Roca grande';ctxA.set(ROCK.g.position.x,ROCK.g.position.y+1.7,ROCK.g.position.z);return ['empujar'];}
-    if(ROCK.moved&&!ROCK.wst&&d<2.6){ctxCap='Tierra blanda';ctxA.set(ROCK.home.x,ROCK.home.y+1.2,ROCK.home.z);return ['cavar'];}}
+    if(ROCK.wst==='fuera'&&d<2.6){ctxCap='Cuc';ctxA.set(ROCK.home.x,ROCK.home.y+1.2,ROCK.home.z);return ['gusano'];}
+    if(!ROCK.moved&&Math.hypot(S.pos.x-ROCK.g.position.x,S.pos.z-ROCK.g.position.z)<2.2){ctxCap='Roca grossa';ctxA.set(ROCK.g.position.x,ROCK.g.position.y+1.7,ROCK.g.position.z);return ['empujar'];}
+    if(ROCK.moved&&!ROCK.wst&&d<2.6){ctxCap='Terra tova';ctxA.set(ROCK.home.x,ROCK.home.y+1.2,ROCK.home.z);return ['cavar'];}}
   return null;
 }
-Object.assign(LAB,{bote:'Poner el bote',dar:'Darle',empujar:'Empujar la roca',cavar:'Conillet, ¡cava!',gusano:'Coger el gusano'});
+Object.assign(LAB,{bote:'Posar el pot',dar:'Donar-li',empujar:'Empènyer la roca',cavar:'Conillet, cava!',gusano:'Agafar el cuc'});
 for(const k in FOOD_C)ACT['f_'+k]=()=>{GS.food=k;saveGame();sfx('pick');};
 Object.assign(ACT,{
   dar(){feedUni();},

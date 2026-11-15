@@ -50,7 +50,7 @@ function mushHit(py){                                     // llamada en el aire,
   for(const M of MUSH){const t=capTop(M,S.pos.x,S.pos.z);if(t<-1e8)continue;
     if(py>=t-0.03&&S.y<=t){S.y=t;sfx('boing');S.vy=M.bv*(S.jumpHeld?1:0.86);S.bounced=true;S.airT=0;S.glide=false;M.sp.v-=3.2;SP.squat.v=-1.6;
       for(let i=0;i<10;i++)emit('dust',S.pos.x,t+0.05,S.pos.z,1,{sp:1.8,size:0.08,color:pick(['#ffd6f0','#fff3b0','#e6c8ff'])});
-      if(!MUSH.told){MUSH.told=1;toast('Al bajar, mantén '+(matchMedia('(pointer:coarse)').matches?'«Saltar»':'Espacio')+' para planear con el vestido',4000);}
+      if(!MUSH.told){MUSH.told=1;toast('En baixar, mantén '+(matchMedia('(pointer:coarse)').matches?'«Saltar»':'Espai')+' per planejar amb el vestit',4000);}
       return true;}}
   return false;
 }
@@ -75,12 +75,12 @@ for(let i=0;i<10;i++){const a=i/10*TAU;addFruit(GT.x+Math.sin(a)*19,GT.y+27+Math
 for(let i=1;i<8;i++){const k=i/8,x=lerp(OX,GT.x,k),z=lerp(OZ-12,GT.z+20,k);addFruit(x,lerp(OY+16,GT.y+20,k)+Math.sin(k*PI)*4,z);} // camino aéreo
 function eat(f){f.alive=false;f.dead=0;sfx('eat');TURBO.v=Math.min(TURBO.max,TURBO.v+TURBO.fruit);TURBO.flash=1;
   for(let i=0;i<8;i++)emit('dust',f.g.position.x,f.g.position.y,f.g.position.z,1,{sp:1.6,size:0.07,color:pick(['#fff3b0','#ffd6f0','#c8ffd6'])});
-  if(!FRUIT.told){FRUIT.told=1;toast('¡Ñam! La fruta llena el turbo · '+(matchMedia('(pointer:coarse)').matches?'mantén «Turbo»':'mantén T'),3500);}}
+  if(!FRUIT.told){FRUIT.told=1;toast('Nyam! La fruita omple el turbo · '+(matchMedia('(pointer:coarse)').matches?'mantén «Turbo»':'mantén T'),3500);}}
 
 /* ---------- turbo ---------- */
 function turboUse(dt,fly){
   if(!turboOn()||!TURBO.held)return false;
-  if(TURBO.v<=0){if(S.t-TURBO.emptyT>3){TURBO.emptyT=S.t;toast('Sin turbo: come fruta para llenarlo',2000);}return false;}
+  if(TURBO.v<=0){if(S.t-TURBO.emptyT>3){TURBO.emptyT=S.t;toast('Sense turbo: menja fruita per omplir-lo',2000);}return false;}
   TURBO.v=Math.max(0,TURBO.v-(fly?TURBO.drainFly:TURBO.drainFoot)*dt);if(S.t-(TURBO.sndT||-9)>0.6)sfx('turbo');TURBO.sndT=S.t;TURBO.on=true;return true;
 }
 
@@ -95,12 +95,12 @@ function mountAir(){
   broomTo('fly');SP.squat.v=-1.2;sfx('fly');
   for(let i=0;i<12;i++)emit('dust',S.pos.x,S.y+0.4,S.pos.z,1,{sp:1.4,size:0.07,color:pick(['#e6c8ff','#ffd6f0','#c8e8ff'])});
   if(Math.hypot(BN.x-S.pos.x,BN.z-S.pos.z)<4.5&&S.y-BN.gy<3){BN.riding=true;BN.root.rotation.order='YXZ';}
-  $('bjump').textContent='Subir';
+  $('bjump').textContent='Pujar';
 }
 function groundLaunch(){FL.phase='prep';FL.pt=0;S.prep=0;S.speed*=0.5;}
 function tryFly(){
-  if(FL.state==='stand'){toast('Primero coge la escoba de la terraza del torreón',2200);return;}
-  if(!canMountHere()){if(!FL.on)toast('Aquí no se puede volar',1500);return;}
+  if(FL.state==='stand'){toast('Primer agafa l\'escombra de la terrassa del torreó',2200);return;}
+  if(!canMountHere()){if(!FL.on)toast('Aquí no es pot volar',1500);return;}
   if(S.air)mountAir();else groundLaunch();
 }
 addEventListener('keydown',e=>{
@@ -168,4 +168,4 @@ function glideBody(dt){
 /* ---------- arranque de esta prueba: en las setas, con la escoba ya a la espalda ---------- */
 if(DEMO==='turbo'){const M=MUSH[0];S.pos.set(M.x+3.2,0,M.z+5.2);S.y=gY(S.pos.x,S.pos.z);S.yaw=S.tyaw=Math.atan2(M.x-S.pos.x,M.z-S.pos.z);
   broomTo('back');cam.yaw=S.yaw+PI+0.2;cam.pitch=0.3;camT.set(S.pos.x,S.y+0.72,S.pos.z);
-  setTimeout(()=>toast(matchMedia('(pointer:coarse)').matches?'Salta a la seta · al saltar con la escoba sale «Volar» · «Turbo» gasta fruta':'Salta a la seta · Ctrl+Mayús+Espacio: volar · T: turbo',7000),500);}
+  setTimeout(()=>toast(matchMedia('(pointer:coarse)').matches?'Salta al bolet · en saltar amb l\'escombra surt «Volar» · «Turbo» gasta fruita':'Salta al bolet · Ctrl+Maj+Espai: volar · T: turbo',7000),500);}
