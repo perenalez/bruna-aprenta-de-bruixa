@@ -5,7 +5,8 @@
    - Con la escoba a la espalda: Control+Mayús+Espacio despega desde cualquier sitio; en el móvil, al saltar aparece «Volar».
    ===================================================================== */
 const TURBO={v:35,max:100,on:false,held:false,drainFoot:14,drainFly:18,fruit:20,foot:6.6,fly:16,emptyT:-9,sparkT:0};
-const TURBO_LEVEL=DEMO==='turbo';       // en el juego completo: solo en el nivel que lo tenga
+const TURBO_LEVEL=DEMO==='turbo';       // en el juego completo: llega con la poción 3 (POW.turbo)
+const turboOn=()=>TURBO_LEVEL||POW.turbo;
 
 /* ---------- setas gigantes ---------- */
 const MUSH=[];
@@ -78,7 +79,7 @@ function eat(f){f.alive=false;f.dead=0;sfx('eat');TURBO.v=Math.min(TURBO.max,TUR
 
 /* ---------- turbo ---------- */
 function turboUse(dt,fly){
-  if(!TURBO_LEVEL||!TURBO.held)return false;
+  if(!turboOn()||!TURBO.held)return false;
   if(TURBO.v<=0){if(S.t-TURBO.emptyT>3){TURBO.emptyT=S.t;toast('Sin turbo: come fruta para llenarlo',2000);}return false;}
   TURBO.v=Math.max(0,TURBO.v-(fly?TURBO.drainFly:TURBO.drainFoot)*dt);if(S.t-(TURBO.sndT||-9)>0.6)sfx('turbo');TURBO.sndT=S.t;TURBO.on=true;return true;
 }
@@ -131,7 +132,7 @@ function turboStep(dt){
   const t=S.t;
   // fruta: flota, gira, se come y vuelve a crecer
   const hx=S.pos.x,hy=S.y+(FL.on?0.55:0.65),hz=S.pos.z,rr2=FL.on?1.25:0.9;
-  for(const f of FRUIT){if(!TURBO_LEVEL){f.g.visible=false;continue;}
+  for(const f of FRUIT){if(!turboOn()){f.g.visible=false;continue;}
     if(f.alive){f.g.position.y=f.y+Math.sin(t*2+f.ph)*0.08;f.g.rotation.y=t*1.3+f.ph;
       if(f.s<1)f.s=Math.min(1,f.s+dt*2);f.g.scale.setScalar(1.25*ease(f.s));
       const dx=f.g.position.x-hx,dy=f.g.position.y-hy,dz=f.g.position.z-hz;
@@ -145,6 +146,7 @@ function turboStep(dt){
   const fov=38+(TURBO.on?9:0)*Math.min(1,S.speed/6);if(Math.abs(camera.fov-fov)>0.05){camera.fov+=(fov-camera.fov)*(1-Math.exp(-dt*4));camera.updateProjectionMatrix();}
   // barra
   TURBO.flash=Math.max(0,(TURBO.flash||0)-dt*2.5);
+  {const on=turboOn();if(on!==TURBO.shown){TURBO.shown=on;$('tbar').style.display=on?'':'none';$('bturbo').style.display=on?'':'none';if(on)FRUIT.forEach(f=>{if(f.alive)f.g.visible=true;});}}
   const w=Math.round(TURBO.v/TURBO.max*100);if(w!==lastTurboW){lastTurboW=w;document.querySelector('#tbar .tf').style.width=w+'%';$('bturbo').classList.toggle('off',w<=0);}
   document.querySelector('#tbar .tf').style.filter=TURBO.flash>0?'brightness('+(1+TURBO.flash)+')':'';
   // botón «Volar»: aparece mientras salta con la escoba a la espalda

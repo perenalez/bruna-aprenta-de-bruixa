@@ -107,7 +107,7 @@ function babaStep(dt){
 
 /* ---------- acciones de la poción 2 ---------- */
 function potionExtraActions(){
-  if(!p2on())return null;
+  if(!p2on())return p3Actions();
   if(mode!=='tower'||BABA.st)return null;
   const l=toLoc(S.pos.x,S.pos.z,S.y);
   // cocina: coger queso de la despensa
@@ -130,7 +130,7 @@ Object.assign(ACT,{
 
 /* ---------- bucle ---------- */
 function potionExtraStep(dt){
-  const t=S.t;
+  const t=S.t;p3Step(dt);
   pantryCheese.visible=!GS.cheese&&!GS.got.pelo;handCheese.visible=GS.cheese;
   if(FLOR2.pol&&FLOR2.pol.visible)if(R()<dt*3){FLOR2.pol.getWorldPosition(_w);emit('dust',_w.x,_w.y,_w.z,1,{sp:0.4,size:0.05,color:'#ffe680'});}
   babaStep(dt);

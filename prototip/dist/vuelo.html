@@ -2087,7 +2087,8 @@ fp.addEventListener('pointerdown',e=>e.stopPropagation());
    - Con la escoba a la espalda: Control+Mayús+Espacio despega desde cualquier sitio; en el móvil, al saltar aparece «Volar».
    ===================================================================== */
 const TURBO={v:35,max:100,on:false,held:false,drainFoot:14,drainFly:18,fruit:20,foot:6.6,fly:16,emptyT:-9,sparkT:0};
-const TURBO_LEVEL=DEMO==='turbo';       // en el juego completo: solo en el nivel que lo tenga
+const TURBO_LEVEL=DEMO==='turbo';       // en el juego completo: llega con la poción 3 (POW.turbo)
+const turboOn=()=>TURBO_LEVEL||POW.turbo;
 
 /* ---------- setas gigantes ---------- */
 const MUSH=[];
@@ -2160,7 +2161,7 @@ function eat(f){f.alive=false;f.dead=0;sfx('eat');TURBO.v=Math.min(TURBO.max,TUR
 
 /* ---------- turbo ---------- */
 function turboUse(dt,fly){
-  if(!TURBO_LEVEL||!TURBO.held)return false;
+  if(!turboOn()||!TURBO.held)return false;
   if(TURBO.v<=0){if(S.t-TURBO.emptyT>3){TURBO.emptyT=S.t;toast('Sin turbo: come fruta para llenarlo',2000);}return false;}
   TURBO.v=Math.max(0,TURBO.v-(fly?TURBO.drainFly:TURBO.drainFoot)*dt);if(S.t-(TURBO.sndT||-9)>0.6)sfx('turbo');TURBO.sndT=S.t;TURBO.on=true;return true;
 }
@@ -2213,7 +2214,7 @@ function turboStep(dt){
   const t=S.t;
   // fruta: flota, gira, se come y vuelve a crecer
   const hx=S.pos.x,hy=S.y+(FL.on?0.55:0.65),hz=S.pos.z,rr2=FL.on?1.25:0.9;
-  for(const f of FRUIT){if(!TURBO_LEVEL){f.g.visible=false;continue;}
+  for(const f of FRUIT){if(!turboOn()){f.g.visible=false;continue;}
     if(f.alive){f.g.position.y=f.y+Math.sin(t*2+f.ph)*0.08;f.g.rotation.y=t*1.3+f.ph;
       if(f.s<1)f.s=Math.min(1,f.s+dt*2);f.g.scale.setScalar(1.25*ease(f.s));
       const dx=f.g.position.x-hx,dy=f.g.position.y-hy,dz=f.g.position.z-hz;
@@ -2227,6 +2228,7 @@ function turboStep(dt){
   const fov=38+(TURBO.on?9:0)*Math.min(1,S.speed/6);if(Math.abs(camera.fov-fov)>0.05){camera.fov+=(fov-camera.fov)*(1-Math.exp(-dt*4));camera.updateProjectionMatrix();}
   // barra
   TURBO.flash=Math.max(0,(TURBO.flash||0)-dt*2.5);
+  {const on=turboOn();if(on!==TURBO.shown){TURBO.shown=on;$('tbar').style.display=on?'':'none';$('bturbo').style.display=on?'':'none';if(on)FRUIT.forEach(f=>{if(f.alive)f.g.visible=true;});}}
   const w=Math.round(TURBO.v/TURBO.max*100);if(w!==lastTurboW){lastTurboW=w;document.querySelector('#tbar .tf').style.width=w+'%';$('bturbo').classList.toggle('off',w<=0);}
   document.querySelector('#tbar .tf').style.filter=TURBO.flash>0?'brightness('+(1+TURBO.flash)+')':'';
   // botón «Volar»: aparece mientras salta con la escoba a la espalda
@@ -2599,9 +2601,34 @@ const NIVEL1={
         clara:'Las mariquitas suben por el tronco del árbol azul, a la izquierda del claro. Busca la que brilla: es la de siete puntos.',
         spot:{type:'mariquita'}}
      ]},
-    {id:'arbolerums',nombre:'Magicus Arbolerums',poder:'Hace crecer los árboles frutales',pendiente:true,
-     premio:{ropa:'sabates',nombre:'los zapatos con alas'},poderes:['turbo'],
-     ingredientes:['Caca de unicornio','Gusano de tierra','Huesos de la cesta de fruta','Savia del árbol azul','Polvo de ala de mariposa'].map(n=>({nombre:n}))},
+    {id:'arbolerums',nombre:'Magicus Arbolerums',poder:'Hace crecer los árboles frutales y da más fruta',
+     receta:'Cinco cosas que hacen crecer los árboles. Échalas al caldero y remueve con el dedo, dando vueltas.',
+     mezclar:true,color:'#c0e05a',
+     premio:{ropa:'sabates',nombre:'los zapatos con alas'},
+     poderes:['turbo'],
+     diario:['He hecho la poción Magicus Arbolerums: ¡los árboles frutales crecen y dan fruta!',
+             'Si como fruta, se me llena el turbo. Mantén «Turbo» para correr muchísimo; se gasta si no como.',
+             'El unicornio me ha dicho que tiene mucha fuerza en las patas de atrás: me ayudará si lo necesito.'],
+     ingredientes:[
+       {id:'caca',nombre:'Caca de unicornio',color:'#ff8fd0',sala:'out',accion:true,
+        vaga:'No tiene ganas porque no ha comido la fruta que le gusta.',
+        clara:'Prueba a darle de comer al unicornio cosas diferentes: bayas, manzanas, setas o hierba. Están por el claro. ¡Cuando levante la cola, pon el bote!'},
+       {id:'gusano',nombre:'Gusano de tierra',color:'#e08a8a',sala:'out',accion:true,
+        vaga:'Yo sé cavar, pero no puedo mover esta roca.',
+        clara:'Hay una roca grande sobre tierra blanda, cerca del camino. Empújala y yo cavaré. ¡El gusano sale y se esconde muy rápido!'},
+       {id:'huesos',nombre:'Huesos de la cesta de fruta',color:'#b07a4a',sala:2,
+        vaga:'Algo pequeño y duro espera dentro de algo dulce, donde se cocina.',
+        clara:'En la cocina del caldero hay una cesta de fruta en el suelo. Coge los huesos.',
+        spot:{type:'cesta'}},
+       {id:'savia',nombre:'Savia del árbol azul',color:'#5fb0ff',sala:'out',
+        vaga:'Un árbol llora gotas azules y brillantes.',
+        clara:'El árbol azul, a la izquierda del claro (el de las mariquitas), tiene una gota de savia en el tronco.',
+        spot:{type:'savia'}},
+       {id:'polvo',nombre:'Polvo de ala de mariposa',color:'#ffe680',sala:'out',
+        vaga:'Una mariposa dorada deja un rastro que brilla.',
+        clara:'Hay una mariposa dorada que vuela bajito por el claro del unicornio. Acércate y coge el polvo de sus alas.',
+        spot:{type:'mariposa'}}
+     ]},
     {id:'aeolum',nombre:'Aeolum Pogicolum',poder:'Controla el agua y el aire',pendiente:true,
      premio:{ropa:'escombra',nombre:'la escoba'},poderes:['escoba'],
      ingredientes:['Risa de rana','Escamas de pez raro','Agua del lago hasta la raya','Flor de loto','Escarcha'].map(n=>({nombre:n}))},
@@ -2632,11 +2659,17 @@ const TXT={
   tarea:[null,
     ['Muy bien, Bruna. Ya sabes llamar al sol y a la lluvia.',
      'Ahora aprenderás a dominar las plantas salvajes: la poción Magiculis Parinuris.',
-     'Esta vez no basta con recoger: algunas cosas tendrás que ingeniártelas. Lee el libro en la cocina.']],
+     'Esta vez no basta con recoger: algunas cosas tendrás que ingeniártelas. Lee el libro en la cocina.'],
+    ['Ya dominas las plantas, Bruna. Ahora toca algo muy importante: comer bien.',
+     'La poción Magicus Arbolerums hace crecer los árboles frutales.',
+     'Necesitarás la ayuda de los animales del bosque. Lee el libro en la cocina.']],
   felicita:[null,
     ['¡Magnífico! Las plantas ya te obedecen.',
      'Las setas gigantes te harán saltar muy alto y las carnívoras te harán caricias.',
-     'En tu armario hay algo nuevo para ti.']],
+     'En tu armario hay algo nuevo para ti.'],
+    ['¡Qué maravilla! Ahora que has visto lo importante que es comer bien, te doy el poder de la fruta.',
+     'Cuando comas fruta podrás correr muchísimo, como un turbo. Pero se gasta si no comes más.',
+     'Mira en el armario: tengo un regalo para tus pies.']],
   construccion:'La siguiente poción todavía está en construcción. ¡Pronto podrás seguir!',
   remover:'Remueve con el dedo: dibuja círculos sobre el caldero',
   // poción 2
@@ -2650,7 +2683,24 @@ const TXT={
   babaOk:'¡La planta ha mordido el bote y lo ha llenado de baba!',
   peloOk:'¡La planta le ha arrancado un pelo al ratón y lo ha escupido!',
   regalo2:'¡Mira otra vez en el armario de tu habitación!',
-  fin2:'¡Estás guapísima de bruja! Prueba a saltar encima de una seta gigante del bosque.'
+  fin2:'¡Estás guapísima de bruja! Prueba a saltar encima de una seta gigante del bosque.',
+  fin3:'¡Zapatos con alas! Come fruta del bosque y mantén «Turbo» para correr como el viento.',
+  regalo3:'¡Mira en el armario otra vez! Es algo para tus pies.',
+  // poción 3
+  unicornio:'Unicornio',
+  comida:{baya:'una baya lila',manzana:'una manzana',seta:'una seta',hierba:'hierba'},
+  coger:{baya:'Coger bayas',manzana:'Coger una manzana',seta:'Coger una seta',hierba:'Coger hierba'},
+  uniDice:{
+    seta:['¡Eeecs, qué asco! ¿Te crees que estoy mal de la cabeza?'],
+    manzana:['Gracias, la manzana es astringente y muy sana.','Pero hoy no me ayuda nada, ¿eh? Necesito otra cosa.'],
+    hierba:['Ei, guapa, que no soy un caballo, ¿eh? ¿Qué te has creído?'],
+    baya:['¡Gracias! Estas bayas lilas son buenísimas para… ya sabes.','¡Uy! Creo que ya viene…']},
+  uniGracias:['Gracias, Bruna. Hacía tres días que no hacía caca.','Si necesitas ayuda, tengo mucha fuerza en las patas de atrás: puedo romper cosas.'],
+  uniFalsa:'Uy, falsa alarma… ¿Me das otra baya?',
+  ponBote:'¡Levanta la cola! ¡Pon el bote, rápido!',
+  gusanoSale:'¡Ha salido el gusano! ¡Cógelo rápido!',
+  gusanoSeEsconde:'¡Se ha escondido! Pide al Conillet que cave otra vez.',
+  roca:'¡Uf! La roca se ha movido. La tierra de debajo está blandita.'
 };
 TXT.felicita[0]=TXT.hecha;     // la poción 1 usa el texto «hecha»
 
@@ -2729,6 +2779,8 @@ function sfx(name,k){
     case 'talk':tone(480+Math.random()*120,t,0.07,{type:'triangle',vol:0.05});break;
     case 'sun':tone(392,t,1.4,{type:'triangle',vol:0.07,attack:0.3});tone(587,t+0.1,1.3,{type:'triangle',vol:0.05,attack:0.3});arp(t+0.2,[784,988,1175,1568],0.08,{vol:0.05,dur:0.5});break;
     case 'rain':noise(t,3.5,{freq:4000,type:'highpass',vol:0.06,attack:0.5});for(let i=0;i<12;i++)noise(t+0.3+Math.random()*3,0.03,{freq:2500+Math.random()*2000,q:3,vol:0.04});break;
+    case 'pet':noise(t,0.6,{freq:140,to:70,type:'lowpass',q:6,vol:0.3,attack:0.02});tone(95,t,0.5,{type:'sawtooth',to:55,vol:0.05});break;
+    case 'dig':for(let i=0;i<4;i++)noise(t+i*0.16,0.1,{freq:500,type:'lowpass',vol:0.12});break;
     case 'click':tone(820,t,0.04,{vol:0.05,type:'triangle'});break;
   }
 }
@@ -2975,7 +3027,7 @@ Object.assign(ACT,{
   armario(){GS.wardOpen=true;saveGame();sfx('open');},
   ponerse(){const P=POT(),r=P.premio.ropa,R=REWARD[r];if(!R)return;R.w.visible=false;R.wear();GS.clothes.push(r);GS.phase='fin';saveGame();sfx('magic');
     for(let i=0;i<14;i++)emit('dust',S.pos.x,S.y+1.4,S.pos.z,1,{sp:1.4,size:0.08,color:pick(['#c98aff','#ffd84a','#fff3b0'])});
-    GS.diary.push('Ya tengo '+P.premio.nombre+'.');saveGame();setTimeout(()=>conill(GS.pot===0?TXT.fin:TXT.fin2),1200);},
+    GS.diary.push('Ya tengo '+P.premio.nombre+'.');saveGame();setTimeout(()=>conill([TXT.fin,TXT.fin2,TXT.fin3][GS.pot]||TXT.fin2),1200);},
   leer(){openBook();},
   echar(){const i=GS.bag.findIndex(inPot);if(i<0)return;const id=GS.bag.splice(i,1)[0],ing=findIng(id);
     const g=mkPot(ing.color,1.3);scene.add(g);g.position.set(S.pos.x,S.y+1.1,S.pos.z);
@@ -2996,7 +3048,7 @@ function potionDone(){
   setTimeout(()=>{sfx('success');beamT=0;if(GS.pot===0)rainbow.visible=true;
     setTimeout(()=>say(TXT.voz,TXT.felicita[GS.pot],()=>{
       P.diario.forEach(t=>GS.diary.push(t));GS.phase='premio';saveGame();wandUI();
-      sfx('magic');setTimeout(()=>conill(GS.pot===0?TXT.regalo:TXT.regalo2),900);}),1600);},700);
+      sfx('magic');setTimeout(()=>conill([TXT.regalo,TXT.regalo2,TXT.regalo3][GS.pot]||TXT.regalo2),900);}),1600);},700);
 }
 // empezar la poción siguiente: la voz la encarga en la sala del trono
 function startPotion(i){GS.pot=i;GS.phase='leer';GS.got={};GS.bag=[];GS.layers=[];GS.hint={};GS.guide=null;clearCauldron();saveGame();}
@@ -3277,7 +3329,7 @@ function babaStep(dt){
 
 /* ---------- acciones de la poción 2 ---------- */
 function potionExtraActions(){
-  if(!p2on())return null;
+  if(!p2on())return p3Actions();
   if(mode!=='tower'||BABA.st)return null;
   const l=toLoc(S.pos.x,S.pos.z,S.y);
   // cocina: coger queso de la despensa
@@ -3300,7 +3352,7 @@ Object.assign(ACT,{
 
 /* ---------- bucle ---------- */
 function potionExtraStep(dt){
-  const t=S.t;
+  const t=S.t;p3Step(dt);
   pantryCheese.visible=!GS.cheese&&!GS.got.pelo;handCheese.visible=GS.cheese;
   if(FLOR2.pol&&FLOR2.pol.visible)if(R()<dt*3){FLOR2.pol.getWorldPosition(_w);emit('dust',_w.x,_w.y,_w.z,1,{sp:0.4,size:0.05,color:'#ffe680'});}
   babaStep(dt);
@@ -3342,6 +3394,158 @@ function potionExtraStep(dt){
 }
 
 Object.assign(window.__j,{MOUSE,BABA,BIGP,PANTRY,HOLE,dodge});
+
+/* ===== 57_pocion3.js ===== */
+/* =====================================================================
+   POCIÓN 3 · MAGICUS ARBOLERUMS — lo que tiene de especial
+   - Caca de unicornio: probar comidas (bayas, manzana, seta, hierba). Con las bayas lilas da vueltas, se tira un pedo
+     y levanta la cola: hay que poner el bote a tiempo. Después ofrece su fuerza (para la cueva del árbol, poción 5).
+   - Gusano: empujar la roca grande; el Conillet cava; el gusano sale unos segundos.
+   - Recoger: huesos de la cesta de fruta (cocina), savia del árbol azul, polvo de la mariposa dorada.
+   - Premio: zapatos con alas. Poder: turbo con la fruta.
+   ===================================================================== */
+const P3=NIVEL1.pociones[2];
+const p3on=()=>PLAY&&GS.pot===2&&(GS.phase==='recoger'||GS.phase==='caldero');
+const placeAt=(x,z,r)=>{const [a,b]=freeSpot(x,z,r);return {x:a,z:b,y:gY(a,b)};};
+
+/* ---------- comida para el unicornio (se puede coger siempre) ---------- */
+const FOODS={},FOOD_C={baya:'#a050e0',manzana:'#e8434f',seta:'#e8506a',hierba:'#6fbf5a'};
+function foodMesh(k,s){const g=new THREE.Group(),c=FOOD_C[k];
+  if(k==='baya')[[0,0,0],[0.06,-0.03,0.02],[-0.05,-0.03,0.03],[0.01,-0.05,-0.05]].forEach(p=>mk(SPH(0.045,10,8),LM(c),p[0],p[1],p[2],g));
+  else if(k==='manzana'){mk(SPH(0.09,14,10),LM(c),0,0,0,g).scale.y=0.9;mk(new THREE.CylinderGeometry(0.008,0.01,0.06,5),LM('#6b4430'),0,0.09,0,g);}
+  else if(k==='seta'){mk(new THREE.CylinderGeometry(0.03,0.04,0.1,8),LM('#f3e6cf'),0,0,0,g);const c2=mk(new THREE.SphereGeometry(0.08,12,8,0,TAU,0,PI/2),LM(c),0,0.05,0,g);c2.scale.y=0.7;}
+  else for(let i=0;i<5;i++){const b=mk(new THREE.ConeGeometry(0.02,0.18,4),LM(c),(i-2)*0.025,0.06,0,g);b.rotation.z=(i-2)*0.2;}
+  g.scale.setScalar(s||1);g.traverse(o=>{if(o.isMesh)o.castShadow=true;});return g;}
+{ // arbusto de bayas lilas
+  const p=placeAt(-0.4,-6.4,0.8),g=new THREE.Group();g.position.set(p.x,p.y,p.z);world.add(g);
+  [[0,0.45,0,0.55],[0.35,0.35,0.2,0.4],[-0.35,0.35,-0.1,0.42],[0.1,0.7,-0.2,0.38]].forEach(([x,y,z,r])=>mk(SPH(r,12,10),LM('#4f7a3a'),x,y,z,g));
+  for(let i=0;i<14;i++){const a=i*2.4,h=0.3+(i%5)*0.12;mk(SPH(0.05,8,6),LM('#a050e0',{emissive:'#7020c0',emissiveIntensity:0.3}),Math.sin(a)*0.55,h,Math.cos(a)*0.5,g);}
+  g.traverse(o=>{if(o.isMesh)o.castShadow=true;});COL.push({x:p.x,z:p.z,r:0.7});FOODS.baya={x:p.x,z:p.z,y:p.y};}
+{ // manzanas caídas
+  const p=placeAt(-5.6,-6.0,0.5);[[0,0],[0.3,0.15],[-0.2,0.25]].forEach(([dx,dz])=>{const m=foodMesh('manzana',1.4);m.position.set(p.x+dx,p.y+0.12,p.z+dz);world.add(m);});FOODS.manzana=p;}
+{ // seta pequeña
+  const p=placeAt(1.8,-0.8,0.3),m=foodMesh('seta',2.2);m.position.set(p.x,p.y+0.1,p.z);world.add(m);FOODS.seta=p;}
+{ // hierba alta
+  const p=placeAt(-5.0,-0.6,0.3),m=foodMesh('hierba',3.0);m.position.set(p.x,p.y,p.z);world.add(m);FOODS.hierba=p;}
+const handFood={};for(const k in FOOD_C){const m=foodMesh(k,1.2);m.position.set(-0.14,-0.02,0.24);m.visible=false;B.chest.add(m);handFood[k]=m;}
+
+/* ---------- el unicornio ---------- */
+const UST={st:null,t:0};
+const handJar=mkPot(ing3('caca').color,0.9);handJar.visible=false;handJar.position.set(0.12,-0.05,0.25);B.chest.add(handJar);handJar.userData.halo.material.opacity=0;
+function ing3(id){return P3.ingredientes.find(i=>i.id===id);}
+TARGETS.caca=v=>{v.set(uni.g.position.x,uni.g.position.y+1,uni.g.position.z);return true;};
+function feedUni(){
+  const k=GS.food;GS.food=null;saveGame();sfx('eat');
+  say(TXT.unicornio,TXT.uniDice[k],()=>{if(k==='baya'){UST.st='paseo';UST.t=0;}});
+}
+function poopNow(){UST.st='caca';UST.t=0;handJar.visible=true;act={type:'uni',t:0};S.speed=0;
+  const tl=new THREE.Vector3();uni.tail.getWorldPosition(tl);S.tyaw=Math.atan2(tl.x-S.pos.x,tl.z-S.pos.z);}
+const poops=[];
+
+/* ---------- la roca y el gusano ---------- */
+const ROCK={g:new THREE.Group(),moved:0,mv:0,from:null,to:null,col:null,worm:null,wst:null,wt:0,dig:null};
+{ const p=placeAt(5.2,1.0,1.2);ROCK.home={x:p.x,z:p.z,y:p.y};
+  const soil=new THREE.Mesh(new THREE.CircleGeometry(0.9,20),LM('#5a3a26'));soil.rotation.x=-PI/2;soil.position.set(p.x,p.y+0.02,p.z);world.add(soil);
+  const r=mk(new THREE.DodecahedronGeometry(0.85,1),LM('#7e7888'),0,0.55,0,ROCK.g);r.scale.set(1.15,0.8,1);r.castShadow=true;
+  ROCK.g.position.set(p.x,p.y,p.z);world.add(ROCK.g);ROCK.col={x:p.x,z:p.z,r:1.0};COL.push(ROCK.col);
+  const w=new THREE.Group();for(let i=0;i<6;i++)mk(SPH(0.05,10,8),LM('#e88a8a'),0,i*0.07,0,w);w.position.set(p.x,p.y-0.4,p.z);w.visible=false;world.add(w);ROCK.worm=w;}
+TARGETS.gusano=v=>{v.set(ROCK.home.x,ROCK.home.y+0.5,ROCK.home.z);return true;};
+function startDig(){ROCK.dig={t:0};}
+
+/* ---------- huesos, savia, mariposa dorada ---------- */
+{ // cesta de fruta en la cocina
+  const x=-1.6,z=4.6,y=L(2),b=TBatch();b.base=TRS(x,y,z);
+  b.cyl('#a8783a',0,0.14,0,0.36,0.28,12);b.cyl('#8a5d2a',0,0.29,0,0.38,0.03,12);b.base=null;b.mesh(G[2]);col(2,x,z,0.42);
+  [['#e8434f',0.12,0.32,0.05],['#f0a040',-0.1,0.33,0.08],['#ffd84a',0.0,0.36,-0.12],['#8a4fd0',0.15,0.31,-0.12]].forEach(([c,dx,dy,dz])=>{const m=mk(SPH(0.11,12,10),LM(c),x+dx,y+dy,z+dz,G[2]);m.castShadow=true;});
+  const seeds=new THREE.Group();seeds.position.set(x,y+0.47,z);G[2].add(seeds);for(let i=0;i<4;i++){const s=mk(SPH(1,8,6),LM('#8a5a30'),(i-1.5)*0.06,0,(i%2)*0.04,seeds);s.scale.set(0.035,0.022,0.05);}
+  registerItem('huesos',seeds,{halo:0.7});if(GS.got.huesos||GS.done.includes(2))seeds.visible=false;}
+{ // gota de savia en el tronco del árbol azul
+  const p=T1.curve.getPointAt(0.12),ang=0.9,r=0.5-0.3*Math.pow(0.12,0.8)+0.04,v=new THREE.Vector3(p.x+Math.sin(ang)*r,p.y,p.z+Math.cos(ang)*r).applyMatrix4(T1.M);
+  const g=new THREE.Group();g.position.copy(v);world.add(g);const d=mk(SPH(0.07,12,10),LM('#5fb0ff',{emissive:'#3080ff',emissiveIntensity:0.6,transparent:true,opacity:0.9}),0,0,0,g);d.scale.set(1,1.6,1);
+  registerItem('savia',g,{nobob:true,halo:0.8});if(GS.got.savia||GS.done.includes(2))g.visible=false;}
+const BFLY={g:new THREE.Group(),wl:new THREE.Group(),wr:new THREE.Group()};
+{ const wing=new THREE.ShapeGeometry(new THREE.Shape([[0,0],[0.05,0.16],[0.2,0.2],[0.26,0.08],[0.16,-0.02],[0.2,-0.12],[0.08,-0.15]].map(p=>new THREE.Vector2(p[0],p[1]))));wing.rotateX(-PI/2);
+  const m=new THREE.MeshBasicMaterial({color:'#ffd84a',side:THREE.DoubleSide});BFLY.wl.add(new THREE.Mesh(wing,m));const w2=new THREE.Mesh(wing,m);w2.scale.x=-1;BFLY.wr.add(w2);
+  mk(SPH(1,6,5),LM('#5a3a1a'),0,0,0,BFLY.g).scale.set(0.022,0.022,0.11);BFLY.g.add(BFLY.wl);BFLY.g.add(BFLY.wr);BFLY.g.scale.setScalar(2.2);world.add(BFLY.g);
+  registerItem('polvo',BFLY.g,{nobob:true,halo:0.6});if(GS.got.polvo||GS.done.includes(2))BFLY.g.visible=false;}
+
+/* ---------- zapatos con alas ---------- */
+const wingG=()=>{const g=new THREE.Group(),m=LM('#fffdf6',{emissive:'#ffffff',emissiveIntensity:0.2});
+  [[0,0.04,-0.02,0.07],[0,0.02,-0.06,0.055],[0,0.0,-0.09,0.04]].forEach(([x,y,z,r])=>{const f=mk(SPH(1,8,6),m,x,y,z,g);f.scale.set(0.012,r*0.55,r);f.rotation.x=0.5;});return g;};
+const shoesW=new THREE.Group();
+{ [-1,1].forEach(s=>{const sh=mk(RBox(0.108,0.074,0.2,0.034),LM('#5a3a8a'),s*0.09,0,0,shoesW);const w=wingG();w.position.set(s*0.15,0.04,-0.02);w.rotation.z=-s*0.5;shoesW.add(w);});
+  shoesW.scale.setScalar(2.2);shoesW.position.setFromMatrixPosition(WARD_M.clone().multiply(TRS(-0.4,1.1,0.45)));shoesW.rotation.y=PI+0.05;shoesW.visible=false;G[1].add(shoesW);}
+let shoesOn=false;
+function wearShoes(){if(shoesOn)return;shoesOn=true;
+  [B.legL,B.legR].forEach((L0,i)=>{L0.foot.traverse(o=>{if(o.isMesh&&o.material&&o.material.color&&o.material.color.getHexString()==='34303f')o.material=LM('#5a3a8a');});
+    const w=wingG();w.position.set((i?-1:1)*0.07,0.0,-0.02);w.rotation.z=(i?1:-1)*0.6;L0.foot.add(w);});}
+REWARD.sabates={w:shoesW,lab:'Ponerse los zapatos',wear:wearShoes};
+if(GS.clothes.includes('sabates'))wearShoes();
+
+/* ---------- acciones ---------- */
+function p3Actions(){
+  if(!p3on()||(UST.st&&UST.st!=='cola')||ROCK.dig||ROCK.mv)return null;
+  if(mode!=='forest')return null;
+  const nearUni=uniDist()<2.7;
+  // unicornio con la cola levantada: poner el bote
+  if(UST.st==='cola'&&nearUni){ctxCap=TXT.unicornio;ctxA.set(uni.g.position.x,uni.g.position.y+2.2,uni.g.position.z);return ['bote'];}
+  if(!GS.got.caca){
+    if(nearUni&&GS.food){LAB.dar='Darle '+TXT.comida[GS.food];ctxCap=TXT.unicornio;ctxA.set(UNI.x,uni.g.position.y+2.2,UNI.z);return ['dar'];}
+    for(const k in FOODS){const f=FOODS[k];if(Math.hypot(S.pos.x-f.x,S.pos.z-f.z)<1.6&&GS.food!==k){LAB['f_'+k]=TXT.coger[k];ctxCap='';ctxA.set(f.x,f.y+1.4,f.z);return ['f_'+k];}}}
+  // roca y gusano
+  if(!GS.got.gusano){const d=Math.hypot(S.pos.x-ROCK.home.x,S.pos.z-ROCK.home.z);
+    if(ROCK.wst==='fuera'&&d<2.6){ctxCap='Gusano';ctxA.set(ROCK.home.x,ROCK.home.y+1.2,ROCK.home.z);return ['gusano'];}
+    if(!ROCK.moved&&Math.hypot(S.pos.x-ROCK.g.position.x,S.pos.z-ROCK.g.position.z)<2.2){ctxCap='Roca grande';ctxA.set(ROCK.g.position.x,ROCK.g.position.y+1.7,ROCK.g.position.z);return ['empujar'];}
+    if(ROCK.moved&&!ROCK.wst&&d<2.6){ctxCap='Tierra blanda';ctxA.set(ROCK.home.x,ROCK.home.y+1.2,ROCK.home.z);return ['cavar'];}}
+  return null;
+}
+Object.assign(LAB,{bote:'Poner el bote',dar:'Darle',empujar:'Empujar la roca',cavar:'Conillet, ¡cava!',gusano:'Coger el gusano'});
+for(const k in FOOD_C)ACT['f_'+k]=()=>{GS.food=k;saveGame();sfx('pick');};
+Object.assign(ACT,{
+  dar(){feedUni();},
+  bote(){if(UST.st!=='cola')return;poopNow();},
+  empujar(){const g=ROCK.g.position,a=Math.atan2(g.x-S.pos.x,g.z-S.pos.z);ROCK.from=g.clone();ROCK.to=new THREE.Vector3(g.x+Math.sin(a)*1.5,0,g.z+Math.cos(a)*1.5);
+    const[x,z]=freeSpot(ROCK.to.x,ROCK.to.z,0.9);ROCK.to.set(x,gY(x,z),z);ROCK.mv=0.001;act={type:'push',t:0};S.tyaw=a;S.speed=0;sfx('door');},
+  cavar(){startDig();},
+  gusano(){ROCK.wst=null;ROCK.worm.visible=false;giveIngredient('gusano',ROCK.home.x,ROCK.home.y+0.3,ROCK.home.z);}
+});
+
+/* ---------- bucle ---------- */
+function p3Step(dt){
+  const t=S.t;
+  for(const k in handFood)handFood[k].visible=GS.food===k;
+  // mariposa dorada: vuela bajito en círculos por el claro y deja polvo brillante
+  if(BFLY.g.visible){const a=t*0.35,c={x:-0.5,z:-1.5};BFLY.g.position.set(c.x+Math.sin(a)*3.2+Math.sin(a*2.3)*0.6,gY(c.x,c.z)+1.25+Math.sin(t*1.7)*0.25,c.z+Math.cos(a)*2.6);
+    BFLY.g.rotation.y=a+PI/2;const fl=Math.sin(t*12)*0.8;BFLY.wl.rotation.z=fl;BFLY.wr.rotation.z=-fl;
+    if(R()<dt*8)emit('dust',BFLY.g.position.x,BFLY.g.position.y,BFLY.g.position.z,1,{sp:0.2,size:0.04,color:'#ffe680'});}
+  // unicornio
+  const u=uni.g;
+  if(UST.st){UST.t+=dt;}
+  if(UST.st==='paseo'){const a=UST.t*1.4,r=1.3;u.position.set(UNI.x+Math.sin(a)*r-Math.sin(0)*r,landH(UNI.x+Math.sin(a)*r,UNI.z+Math.cos(a)*r-r),UNI.z+Math.cos(a)*r-r);
+    u.rotation.y=a+PI/2;uni.rig.position.y=Math.abs(Math.sin(UNI.x+UST.t*8))*0.06;
+    if(UST.t>1.6&&!UST.pet){UST.pet=1;sfx('pet');for(let i=0;i<10;i++)emit('dust',u.position.x-Math.sin(u.rotation.y)*1,u.position.y+1.1,u.position.z-Math.cos(u.rotation.y)*1,1,{sp:0.8,size:0.12,color:'#c8e070'});}
+    if(UST.t>4.5){UST.st='cola';UST.t=0;UST.pet=0;u.position.set(UNI.x,landH(UNI.x,UNI.z),UNI.z);u.rotation.y=UNI.yaw;uni.rig.position.y=0;toast(TXT.ponBote,3000);sfx('notify');}}
+  else if(UST.st==='cola'){uni.tail.rotation.x=-1.3;if(UST.t>6){UST.st=null;say(TXT.unicornio,TXT.uniFalsa);}}
+  else if(UST.st==='caca'){uni.tail.rotation.x=-1.3;
+    if(UST.t>0.3&&poops.length<7&&UST.t>0.3+poops.length*0.18){const c=['#ff5f6a','#ff9a4a','#ffd84a','#7fe07a','#5fb0ff','#7a6aff','#c98aff'][poops.length],m=mk(SPH(0.07,10,8),LM(c,{emissive:c,emissiveIntensity:0.4}),0,0,0,world);
+      uni.tail.getWorldPosition(_w);m.position.copy(_w);poops.push({m,v:0});sfx('click');}
+    for(const p of poops){p.v-=9*dt;p.m.position.y+=p.v*dt;if(p.m.position.y<S.y+0.9){p.m.visible=false;}}
+    if(UST.t>2.2){poops.forEach(p=>world.remove(p.m));poops.length=0;UST.st=null;act=null;handJar.visible=false;
+      giveIngredient('caca',S.pos.x,S.y+1,S.pos.z);GS.flags.uniHelp=1;saveGame();say(TXT.unicornio,TXT.uniGracias);}}
+  // la roca: se desliza al empujarla
+  if(ROCK.mv){ROCK.mv=Math.min(1,ROCK.mv+dt/1.2);const u2=ROCK.mv*ROCK.mv*(3-2*ROCK.mv);ROCK.g.position.lerpVectors(ROCK.from,ROCK.to,u2);ROCK.g.rotation.z=-u2*0.6;
+    ROCK.col.x=ROCK.g.position.x;ROCK.col.z=ROCK.g.position.z;
+    if(ROCK.mv>=1){ROCK.mv=0;ROCK.moved=1;act=null;toast(TXT.roca,2600);setTimeout(startDig,900);}}
+  // el Conillet cava
+  if(ROCK.dig){const D=ROCK.dig;D.t+=dt;const h=ROCK.home;BN.x=h.x+0.35;BN.z=h.z+0.35;BN.root.position.set(BN.x,h.y,BN.z);BN.root.rotation.y=Math.atan2(-0.35,-0.35);
+    BN.body.rotation.x=0.5;BN.fore.forEach((f,i)=>f.rotation.x=Math.sin(t*22+i*PI)*0.9);
+    if(R()<dt*20)emit('dust',h.x,h.y+0.1,h.z,1,{sp:1.2,size:0.08,color:'#7a5236'});if(Math.floor(D.t*6)!==Math.floor((D.t-dt)*6))sfx('dig');
+    if(D.t>2.2){ROCK.dig=null;BN.body.rotation.x=0;BN.fore.forEach(f=>f.rotation.x=0);ROCK.wst='fuera';ROCK.wt=0;ROCK.worm.visible=true;toast(TXT.gusanoSale,2600);sfx('pick');}}
+  if(ROCK.wst==='fuera'){ROCK.wt+=dt;const h=ROCK.home,up=Math.min(1,ROCK.wt*3)*(ROCK.wt>3.2?Math.max(0,1-(ROCK.wt-3.2)*3):1);
+    ROCK.worm.position.set(h.x,h.y-0.35+up*0.45,h.z);ROCK.worm.children.forEach((c,i)=>c.position.x=Math.sin(t*8+i*0.8)*0.03*i);
+    if(ROCK.wt>3.5){ROCK.wst=null;ROCK.worm.visible=false;toast(TXT.gusanoSeEsconde,3000);}}
+}
+Object.assign(window.__j,{UST,ROCK,FOODS,BFLY,uni,UNI});
 
 })();
 </script>

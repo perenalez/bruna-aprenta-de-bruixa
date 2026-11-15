@@ -72,6 +72,8 @@ function sfx(name,k){
     case 'talk':tone(480+Math.random()*120,t,0.07,{type:'triangle',vol:0.05});break;
     case 'sun':tone(392,t,1.4,{type:'triangle',vol:0.07,attack:0.3});tone(587,t+0.1,1.3,{type:'triangle',vol:0.05,attack:0.3});arp(t+0.2,[784,988,1175,1568],0.08,{vol:0.05,dur:0.5});break;
     case 'rain':noise(t,3.5,{freq:4000,type:'highpass',vol:0.06,attack:0.5});for(let i=0;i<12;i++)noise(t+0.3+Math.random()*3,0.03,{freq:2500+Math.random()*2000,q:3,vol:0.04});break;
+    case 'pet':noise(t,0.6,{freq:140,to:70,type:'lowpass',q:6,vol:0.3,attack:0.02});tone(95,t,0.5,{type:'sawtooth',to:55,vol:0.05});break;
+    case 'dig':for(let i=0;i<4;i++)noise(t+i*0.16,0.1,{freq:500,type:'lowpass',vol:0.12});break;
     case 'click':tone(820,t,0.04,{vol:0.05,type:'triangle'});break;
   }
 }
@@ -318,7 +320,7 @@ Object.assign(ACT,{
   armario(){GS.wardOpen=true;saveGame();sfx('open');},
   ponerse(){const P=POT(),r=P.premio.ropa,R=REWARD[r];if(!R)return;R.w.visible=false;R.wear();GS.clothes.push(r);GS.phase='fin';saveGame();sfx('magic');
     for(let i=0;i<14;i++)emit('dust',S.pos.x,S.y+1.4,S.pos.z,1,{sp:1.4,size:0.08,color:pick(['#c98aff','#ffd84a','#fff3b0'])});
-    GS.diary.push('Ya tengo '+P.premio.nombre+'.');saveGame();setTimeout(()=>conill(GS.pot===0?TXT.fin:TXT.fin2),1200);},
+    GS.diary.push('Ya tengo '+P.premio.nombre+'.');saveGame();setTimeout(()=>conill([TXT.fin,TXT.fin2,TXT.fin3][GS.pot]||TXT.fin2),1200);},
   leer(){openBook();},
   echar(){const i=GS.bag.findIndex(inPot);if(i<0)return;const id=GS.bag.splice(i,1)[0],ing=findIng(id);
     const g=mkPot(ing.color,1.3);scene.add(g);g.position.set(S.pos.x,S.y+1.1,S.pos.z);
@@ -339,7 +341,7 @@ function potionDone(){
   setTimeout(()=>{sfx('success');beamT=0;if(GS.pot===0)rainbow.visible=true;
     setTimeout(()=>say(TXT.voz,TXT.felicita[GS.pot],()=>{
       P.diario.forEach(t=>GS.diary.push(t));GS.phase='premio';saveGame();wandUI();
-      sfx('magic');setTimeout(()=>conill(GS.pot===0?TXT.regalo:TXT.regalo2),900);}),1600);},700);
+      sfx('magic');setTimeout(()=>conill([TXT.regalo,TXT.regalo2,TXT.regalo3][GS.pot]||TXT.regalo2),900);}),1600);},700);
 }
 // empezar la poción siguiente: la voz la encarga en la sala del trono
 function startPotion(i){GS.pot=i;GS.phase='leer';GS.got={};GS.bag=[];GS.layers=[];GS.hint={};GS.guide=null;clearCauldron();saveGame();}

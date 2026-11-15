@@ -127,7 +127,8 @@ Al joc complet s'ha d'activar a partir del **nivell 4**. Encara no hi ha sistema
 - **Fases de la poció:** `inicio` → (sala del tron: parla la veu) `leer` → (llibre) `recoger` → (5 pots) `caldero` → (caldero) `hecha` → `premio` (barret a l'armari) → `fin1`.
 - **Fases genèriques:** després de `fin`, en tornar a la sala del tron la veu encarrega la poció següent (`startPotion`). Si té `mezclar`, després del 5è ingredient cal `remover` (girar el dit sobre el caldero). El premi de cada poció és a `REWARD` (barret, vestit…).
 - **Poció 2** (`56_pocion2.js`): flor amb pol·len, roca amb molsa i marieta de 7 punts al bosc (`registerItem`); despensa amb formatge i el ratolí que segueix la Bruna (`MOUSE`); la planta carnívora gran del soterrani (`BIGP`), que babeja amb el conjur Sol i s'ha d'esquivar (`BABA`, botó «¡ESQUIVA!»).
-- **Proves:** `tests/pocion1.mjs` i `tests/pocion2.mjs` (`npm run test:pociones`).
+- **Poció 3** (`57_pocion3.js`): menjar per a l'unicorn (baies, poma, bolet, herba; només les baies lila funcionen), passeig, pet i cua aixecada per posar el pot (`UST`); la roca que s'empeny i el Conillet que cava el cuc (`ROCK`); pinyols a la cistella de la cuina, saba a l'arbre blau (`T1`) i la papallona daurada (`BFLY`). Premi: sabates amb ales (`wearShoes`). Poder: turbo amb fruita (`POW.turbo`, `turboOn()` a `46`).
+- **Proves:** `tests/pocion1.mjs`, `tests/pocion2.mjs` i `tests/pocion3.mjs` (`npm run test:pociones`).
 - **Idioma:** els textos encara són en castellà; s'han de passar al català (decisió del Pere).
 - **Simplificacions pendents:** la llibreta s'obre com una finestra (encara no amb la càmera a les mans de la Bruna) i la bruixa adulta encara és només una veu amb bafarades.
 
