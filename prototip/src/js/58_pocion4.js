@@ -90,6 +90,7 @@ function endFish(){FISH.st=null;act=null;FISH.rod.visible=false;FISH.bob.visible
 
 /* ---------- acciones ---------- */
 function p4Actions(){
+  if(PLAY&&GS.pot===4)return p5Actions();
   if(!p4on()||FISH.st||miniOn)return null;
   if(mode!=='forest')return null;
   FROG.g.getWorldPosition(_w);const dF=Math.hypot(S.pos.x-_w.x,S.pos.z-_w.z);
@@ -121,7 +122,7 @@ const swirls=[];{const m=new THREE.MeshBasicMaterial({color:'#dff4ff',transparen
 
 /* ---------- bucle ---------- */
 function p4Step(dt){
-  const t=S.t,on=p4on();
+  const t=S.t,on=p4on();p5Step(dt);
   handHairy.visible=!!GS.hairy&&!GS.got.rialla&&GS.pot===3;HAIRY.g.visible=!GS.hairy&&!GS.got.rialla;
   // la escoba aparece en la terraza cuando ya se puede volar
   if(PLAY&&POW.escoba&&FL.state==='stand'&&!broom.g.visible)broom.g.visible=true;
@@ -132,7 +133,7 @@ function p4Step(dt){
     if(FR.t>6){FR.st=null;FROG.rig.position.y=0;}}
   for(let i=FR.bub.length-1;i>=0;i--){const b=FR.bub[i];b.t+=dt;b.m.position.y+=dt*0.6;b.m.position.x+=Math.sin(t*3+i)*dt*0.2;if(b.t>3){world.remove(b.m);FR.bub.splice(i,1);}}
   // llavors: aparecen con la tarea y se cogen al pasar (en el aire, rebotando en la seta)
-  const wantSeeds=on&&!GS.got.escates;SEEDS.g.visible=wantSeeds&&SEEDS.away<=0;if(SEEDS.away>0)SEEDS.away-=dt;
+  const wantSeeds=(on&&!GS.got.escates)||(PLAY&&GS.pot===4&&(GS.phase==='recoger'||GS.phase==='caldero')&&!GS.flags.planted&&GS.seeds<=0);SEEDS.g.visible=wantSeeds&&SEEDS.away<=0;if(SEEDS.away>0)SEEDS.away-=dt;
   if(SEEDS.g.visible){SEEDS.g.rotation.y=Math.sin(t*0.8)*0.3;const p=SEEDS.g.position;if(Math.hypot(S.pos.x-p.x,S.y+0.7-p.y,S.pos.z-p.z)<1.4){GS.seeds+=3;saveGame();SEEDS.away=20;sfx('pick');toast(TXT.semillas,2600);
     for(let i=0;i<10;i++)emit('dust',p.x,p.y,p.z,1,{sp:1.3,size:0.07,color:'#ffe08a'});}}
   // pez dorado

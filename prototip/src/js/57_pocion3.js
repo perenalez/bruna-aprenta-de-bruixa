@@ -86,7 +86,7 @@ if(GS.clothes.includes('sabates'))wearShoes();
 
 /* ---------- acciones ---------- */
 function p3Actions(){
-  if(PLAY&&GS.pot===3)return p4Actions();
+  if(PLAY&&GS.pot>=3)return p4Actions();
   if(!p3on()||(UST.st&&UST.st!=='cola')||ROCK.dig||ROCK.mv)return null;
   if(mode!=='forest')return null;
   const nearUni=uniDist()<2.7;

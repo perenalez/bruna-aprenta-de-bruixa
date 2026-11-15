@@ -11,7 +11,9 @@ Joc 3D per a navegador, amb prioritat al mòbil. L'encàrrec complet és a
   `prototip/CLAUDE.md` amb l'arquitectura: llegeix-lo abans de tocar el codi.
 - Fet: moviment de la Bruna i el Conill, bosc, vall, torreó, cases, cova, vol
   amb escombra, turbo, bolets saltadors i planeig.
-- Encara no hi ha la dinàmica del nivell 1 (pocions, ingredients, accions).
+- El nivell 1 és jugable sencer: les 5 pocions, en català, amb tests automàtics.
+  Pendent: la bruixa adulta (ara és una veu), la llibreta en pla subjectiu,
+  Vite i la publicació a GitHub Pages.
 - Els prototips anteriors en HTML solt són a `prototip/referencia/`.
 
 ## Primers passos

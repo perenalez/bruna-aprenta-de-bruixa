@@ -35,6 +35,7 @@ await ir(OX, OZ + 11, 'claro del torreón');
 await ir(OX + 8, -52, 'rodear el torreón');
 await ir(OX + 9.5, -62, 'norte del torreón');
 await ir(OX + 6, -71, 'cruce del valle');
+await page.evaluate(() => window.__j.openCave && window.__j.openCave());   // la cueva empieza tapada con tablas (poción 5)
 await ir(GT.x, GT.z + 9, 'raíces del árbol');
 await ir(GT.x, GT.z + 5, 'túnel de la cueva');
 await ir(GT.x, GT.z + 0.4, 'dentro de la cueva');

@@ -76,6 +76,8 @@ function sfx(name,k){
     case 'dig':for(let i=0;i<4;i++)noise(t+i*0.16,0.1,{freq:500,type:'lowpass',vol:0.12});break;
     case 'giggle':for(let i=0;i<8;i++)tone(700+(i%2)*260+Math.random()*80,t+i*0.09,0.08,{type:'triangle',vol:0.07,to:900});break;
     case 'water':noise(t,0.5,{freq:900,to:1600,q:1.5,vol:0.08,attack:0.05});break;
+    case 'sneeze':noise(t,0.12,{freq:1800,q:0.8,vol:0.08});noise(t+0.5,0.35,{freq:3000,to:900,q:0.7,vol:0.3,attack:0.01});break;
+    case 'crack':for(let i=0;i<5;i++)noise(t+i*0.07,0.12,{freq:400+Math.random()*400,type:'lowpass',vol:0.25});break;
     case 'click':tone(820,t,0.04,{vol:0.05,type:'triangle'});break;
   }
 }
@@ -322,7 +324,7 @@ Object.assign(ACT,{
   armario(){GS.wardOpen=true;saveGame();sfx('open');},
   ponerse(){const P=POT(),r=P.premio.ropa,R=REWARD[r];if(!R)return;R.w.visible=false;R.wear();GS.clothes.push(r);GS.phase='fin';saveGame();sfx('magic');
     for(let i=0;i<14;i++)emit('dust',S.pos.x,S.y+1.4,S.pos.z,1,{sp:1.4,size:0.08,color:pick(['#c98aff','#ffd84a','#fff3b0'])});
-    GS.diary.push('Ja tinc '+P.premio.nombre+'.');saveGame();setTimeout(()=>conill([TXT.fin,TXT.fin2,TXT.fin3,TXT.fin4][GS.pot]||TXT.fin2),1200);},
+    GS.diary.push('Ja tinc '+P.premio.nombre+'.');saveGame();setTimeout(()=>conill([TXT.fin,TXT.fin2,TXT.fin3,TXT.fin4,TXT.fin5][GS.pot]||TXT.fin2),1200);},
   leer(){openBook();},
   echar(){const i=GS.bag.findIndex(inPot);if(i<0)return;const id=GS.bag.splice(i,1)[0],ing=findIng(id);
     const g=mkPot(ing.color,1.3);scene.add(g);g.position.set(S.pos.x,S.y+1.1,S.pos.z);
@@ -343,10 +345,10 @@ function potionDone(){
   setTimeout(()=>{sfx('success');beamT=0;if(GS.pot===0)rainbow.visible=true;
     setTimeout(()=>say(TXT.voz,TXT.felicita[GS.pot],()=>{
       P.diario.forEach(t=>GS.diary.push(t));GS.phase='premio';saveGame();wandUI();
-      sfx('magic');setTimeout(()=>conill([TXT.regalo,TXT.regalo2,TXT.regalo3,TXT.regalo4][GS.pot]||TXT.regalo2),900);}),1600);},700);
+      sfx('magic');setTimeout(()=>conill([TXT.regalo,TXT.regalo2,TXT.regalo3,TXT.regalo4,TXT.regalo5][GS.pot]||TXT.regalo2),900);}),1600);},700);
 }
 function finishReward(){const P=POT();GS.clothes.push(P.premio.ropa);GS.phase='fin';GS.diary.push('Ja tinc '+P.premio.nombre+'.');saveGame();sfx('magic');
-  setTimeout(()=>conill([TXT.fin,TXT.fin2,TXT.fin3,TXT.fin4][GS.pot]||TXT.fin2),1200);}
+  setTimeout(()=>conill([TXT.fin,TXT.fin2,TXT.fin3,TXT.fin4,TXT.fin5][GS.pot]||TXT.fin2),1200);}
 // empezar la poción siguiente: la voz la encarga en la sala del trono
 function startPotion(i){GS.pot=i;GS.phase='leer';GS.got={};GS.bag=[];GS.layers=[];GS.hint={};GS.guide=null;clearCauldron();saveGame();}
 
@@ -427,7 +429,7 @@ function openSack(){const ov=$('ovSack'),P=POT();
   ov.classList.add('on');$('skX').addEventListener('click',()=>closeOv(ov));}
 
 /* ---------- varita y conjuros ---------- */
-const SPELL_LAB={sol:'Sol',lluvia:'Pluja'};
+const SPELL_LAB={sol:'Sol',lluvia:'Pluja',llum:'Llum'};
 function wandUI(){const list=Object.keys(SPELL_LAB).filter(k=>POW[k]&&(PLAY||true));
   $('bwand').style.display=list.length?'flex':'none';
   $('spells').innerHTML=list.map(k=>`<button data-s="${k}">${SPELL_LAB[k]}</button>`).join('');
