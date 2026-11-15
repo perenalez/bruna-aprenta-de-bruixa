@@ -12,10 +12,14 @@ const PLAY=DEMO==='juego';                       // las demos de vuelo y turbo n
 const POW={sol:false,lluvia:false,setas:false,turbo:false,escoba:false};
 if(!PLAY)Object.keys(POW).forEach(k=>POW[k]=true);
 const SAVE='bruna-nivel1-v1';
-const GS={pot:0,phase:'inicio',bag:[],got:{},layers:[],diary:[],chat:[],unread:0,clothes:[],wardOpen:false,hint:{},guide:null};
+const POW_EXTRA={plantas:false};Object.assign(POW,POW_EXTRA);if(!PLAY)POW.plantas=true;
+const GS={pot:0,phase:'inicio',bag:[],got:{},layers:[],diary:[],chat:[],unread:0,clothes:[],wardOpen:false,hint:{},guide:null,done:[],cheese:false,flags:{}};
 function saveGame(){if(!PLAY)return;try{localStorage.setItem(SAVE,JSON.stringify(GS));}catch(e){}}
-function loadGame(){if(!PLAY)return;try{if(/[?&]reset/.test(location.search))localStorage.removeItem(SAVE);const s=localStorage.getItem(SAVE);if(s)Object.assign(GS,JSON.parse(s));}catch(e){}}
+function loadGame(){if(!PLAY)return;try{if(/[?&]reset/.test(location.search))localStorage.removeItem(SAVE);const s=localStorage.getItem(SAVE);if(s)Object.assign(GS,JSON.parse(s));}catch(e){}
+  if(GS.phase==='fin1')GS.phase='fin';                                          // partidas guardadas con la versión anterior
+  if(!GS.done.length&&GS.clothes.includes('barret'))GS.done=[0];}
 loadGame();
+const findIng=id=>{for(const p of NIVEL1.pociones)for(const i of p.ingredientes||[])if(i.id===id)return i;return null;};
 const POT=()=>NIVEL1.pociones[GS.pot];
 
 /* ---------- SONIDO ---------- */
@@ -134,6 +138,7 @@ function musicTick(){
 .it{background:#efe0c0;border-radius:14px;padding:8px 4px;text-align:center;font:700 12px system-ui;color:#4a2f1a}.it svg{width:48px;height:48px}
 .empty{text-align:center;font:600 14px system-ui;color:#4a2f1a;padding:20px}
 #mini{left:50%;top:calc(env(safe-area-inset-top) + 92px);transform:translateX(-50%);background:#fbf3dc;border-radius:12px;padding:8px 14px;box-shadow:0 6px 20px rgba(0,0,0,.4);display:none;align-items:center;gap:10px;font-family:"Bradley Hand","Segoe Print","Marker Felt","Comic Sans MS",cursive;font-size:17px;color:#3f3530;z-index:11}
+#stirBox{text-align:center;color:#fff;font:700 16px system-ui}#stirBox p{margin:0 0 14px}#stirPot{position:relative;width:min(72vw,300px);height:min(72vw,300px);margin:0 auto;border-radius:50%;background:#2b262e;box-shadow:0 0 0 14px #3a343e,0 10px 30px rgba(0,0,0,.5);overflow:hidden;touch-action:none}#stirLiq{position:absolute;inset:16px;border-radius:50%}#stirSpoon{position:absolute;left:50%;top:50%;width:14px;height:46%;margin-left:-7px;background:#8a5d3a;border-radius:7px;transform-origin:50% 0}#stirBar{width:min(72vw,300px);height:12px;margin:18px auto 0;border-radius:6px;background:rgba(255,255,255,.25);overflow:hidden}#stirBar i{display:block;height:100%;width:0;background:#5fd36a}
 #mini.on{display:flex;animation:dl .3s ease-out}#mini svg{width:56px;height:56px}
 `;document.head.appendChild(css);}
 const ICON={
@@ -156,6 +161,7 @@ const hatSvg=`<svg viewBox="0 0 64 64"><path d="M8 48c10 4 38 4 48 0-6-2-11-3-14
   const nb=document.createElement('div');nb.id='ovNb';nb.className='ov';document.body.appendChild(nb);
   const sk=document.createElement('div');sk.id='ovSack';sk.className='ov';document.body.appendChild(sk);
   const rd=document.createElement('div');rd.id='read';document.body.appendChild(rd);
+  const st=document.createElement('div');st.id='ovStir';st.className='ov';document.body.appendChild(st);st.addEventListener('pointerdown',e=>e.stopPropagation());
   const stop=e=>{e.stopPropagation();};
   [hud,w,sp,d,mini,nb,sk,rd].forEach(el=>{el.addEventListener('pointerdown',stop);el.addEventListener('touchstart',stop,{passive:true});});
   $('bnote').addEventListener('click',()=>{sfx('page');openNotebook(GS.unread?'chat':'pot');});
@@ -213,8 +219,14 @@ function placePots(){
     if(base)g.position.setFromMatrixPosition(base);
     if(parent!==TW&&s.type!=='lift')parent.add(g);
     g.userData.by=g.position.y;POTS[ing.id]={g,ing};
-    if(GS.got[ing.id])g.visible=false;}
+    if(GS.got[ing.id]||GS.pot>0)g.visible=false;}
 }
+// otras pociones registran aquí sus objetos recogibles (flor, roca, mariquita, pelo…)
+function registerItem(id,g,o){o=o||{};if(!g.userData.halo&&!o.noHalo)g.userData.halo=halo(g,0,0.1,0,o.halo||0.8,findIng(id).color,0.3);
+  g.userData.by=g.position.y;POTS[id]={g,ing:findIng(id),nobob:!!o.nobob};}
+// dónde está cada cosa (para que el Conillet guíe): objetos recogibles o lo que registre cada poción
+const TARGETS={};
+function targetPos(id,v){if(POTS[id]&&POTS[id].g.visible){POTS[id].g.getWorldPosition(v);return true;}if(TARGETS[id])return TARGETS[id](v);return false;}
 // hueco en la escalera de caracol: rellano del primer piso, junto a la pared de la torrecilla
 const TURRET_SPOT={x:TX+2.18,y:L(1),z:0.72};
 placePots();
@@ -236,6 +248,17 @@ function mkHat(){const g=new THREE.Group(),c=LM('#2f2440'),band=LM('#8a5cc0');
   g.traverse(o=>{if(o.isMesh)o.castShadow=true;});return g;}
 const hatW=mkHat();hatW.position.setFromMatrixPosition(WARD_M.clone().multiply(TRS(-0.45,1.03,0.45)));hatW.rotation.y=PI+0.05;G[1].add(hatW);
 const hatB=mkHat();hatB.position.set(0.0,0.2,-0.01);hatB.rotation.set(-0.08,0,0.1);B.head.add(hatB);
+// vestido de bruja: colgado en el armario y, puesto, cambia la ropa de Bruna (negro de manga larga)
+const dressW=new THREE.Group();{const c=LM('#2f2440'),p=LM('#7a4fb0');
+  mk(new THREE.CylinderGeometry(0.12,0.34,0.75,18),c,0,-0.38,0,dressW);mk(new THREE.CylinderGeometry(0.1,0.12,0.25,14),c,0,0.1,0,dressW);
+  [1,-1].forEach(s=>{const a=mk(new THREE.CylinderGeometry(0.045,0.06,0.45,10),c,s*0.17,-0.05,0,dressW);a.rotation.z=s*0.35;});
+  mk(new THREE.CylinderGeometry(0.125,0.125,0.04,14),p,0,-0.06,0,dressW);mk(new THREE.TorusGeometry(0.06,0.008,6,12,PI),LM('#9a9aa6'),0,0.3,0,dressW);
+  dressW.position.setFromMatrixPosition(WARD_M.clone().multiply(TRS(0.35,1.78,0.45)));dressW.rotation.y=PI+0.05;dressW.visible=false;G[1].add(dressW);}
+const dressSaved=[];
+function wearDress(){if(dressSaved.length)return;const c=LM('#2f2440'),s=LM('#3a2a52',{side:THREE.DoubleSide});
+  B.root.traverse(o=>{if(o.isMesh&&o.material&&o.material.map&&o!==hatB){dressSaved.push([o,o.material]);o.material=o.material.side===THREE.DoubleSide?s:c;}});}
+// premios de cada poción: qué aparece en el armario y qué pasa al ponérselo
+const REWARD={barret:{w:hatW,lab:'Ponerse el sombrero',wear(){hatB.visible=true;}},vestit:{w:dressW,lab:'Ponerse el vestido',wear:wearDress}};
 // libro de conjuros (sobre la mesa de la cocina) y caldero
 const BOOK=new THREE.Vector3().setFromMatrixPosition(at(3.5,2,2.6,-0.6).multiply(TRS(-0.15,0.76,0)));
 const bookGlow=halo(G[2],BOOK.x,BOOK.y+0.25,BOOK.z,1.4,'#ffe08a',0);
@@ -254,59 +277,88 @@ const beam=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.9,30,20,1,true),new T
 beam.position.set(KC.x,L(2)+15,KC.z);TW.add(beam);
 
 /* ---------- acciones de la poción ---------- */
-let ctxPot=null,flying=null;
-const tl=v=>toLoc(v.x,v.z,v.y);
+let ctxPot=null,flying=null,stirOn=false;
+const curIngs=()=>POT().ingredientes||[];
+const inPot=id=>curIngs().some(i=>i.id===id);
 function potionActions(){
-  if(!PLAY||dOn||flying)return null;
-  if(mode!=='tower')return null;
-  const l=toLoc(S.pos.x,S.pos.z,S.y),lx=l.x,lz=l.z,ly=l.y,ph=GS.phase;
-  // botes
-  if(ph==='recoger'||ph==='caldero'){
-    for(const id in POTS){const p=POTS[id];if(GS.got[id]||!p.g.visible)continue;if(p.ing.spot.type==='ward'&&!GS.wardOpen)continue;
+  if(!PLAY||dOn||flying||stirOn)return null;
+  const ph=GS.phase,busy=ph==='recoger'||ph==='caldero';
+  // cosas que se recogen (en el torreón o en el bosque)
+  if(busy){
+    for(const id in POTS){const p=POTS[id];if(GS.got[id]||!p.g.visible||!inPot(id))continue;if(p.ing.spot&&p.ing.spot.type==='ward'&&!GS.wardOpen)continue;
       p.g.getWorldPosition(_w);const dx=_w.x-S.pos.x,dz=_w.z-S.pos.z,dy=_w.y-S.y;
-      if(Math.hypot(dx,dz)<1.45&&dy>-0.4&&dy<1.9){ctxPot=p;ctxCap=p.ing.nombre;ctxA.set(_w.x,_w.y+0.9,_w.z);return ['coger'];}}
+      if(Math.hypot(dx,dz)<1.45&&dy>-0.6&&dy<2.3){ctxPot=p;ctxCap=p.ing.nombre;ctxA.set(_w.x,_w.y+0.9,_w.z);return ['coger'];}}
+    const ex=potionExtraActions();if(ex)return ex;            // acciones complejas de cada poción (56_pocion2.js…)
   }
+  if(mode!=='tower')return null;
+  const l=toLoc(S.pos.x,S.pos.z,S.y),lx=l.x,lz=l.z,ly=l.y;
   // armario de Bruna
   if(Math.abs(ly-L(1))<0.6){_w.setFromMatrixPosition(WARD_M.clone().multiply(TRS(0,0,0.9)));
     if(Math.hypot(lx-_w.x,lz-_w.z)<1.7){ctxCap='Armario';ctxA.set(_w.x+OX,OY+L(1)+2.6,_w.z+OZ);
       if(!GS.wardOpen)return ['armario'];
-      if(ph==='premio')return ['sombrero'];}}
+      if(ph==='premio'){LAB.ponerse=REWARD[POT().premio.ropa].lab;return ['ponerse'];}}}
   // libro
   if(ph!=='inicio'&&Math.abs(ly-L(2))<0.6&&Math.hypot(lx-BOOK.x,lz-BOOK.z)<1.8){ctxCap='Libro de conjuros';ctxA.set(BOOK.x+OX,BOOK.y+OY+0.9,BOOK.z+OZ);return ['leer'];}
   // caldero
-  if(Math.abs(ly-L(2))<0.6&&Math.hypot(lx-KC.x,lz-KC.z)<2.3&&GS.bag.length&&GS.layers.length<5&&(ph==='recoger'||ph==='caldero')){
-    ctxCap='Caldero · '+GS.layers.length+'/5';ctxA.set(KC.x+OX,OY+L(2)+2.2,KC.z+OZ);return ['echar'];}
+  if(Math.abs(ly-L(2))<0.6&&Math.hypot(lx-KC.x,lz-KC.z)<2.3){
+    ctxA.set(KC.x+OX,OY+L(2)+2.2,KC.z+OZ);
+    if(busy&&GS.bag.some(inPot)&&GS.layers.length<5){ctxCap='Caldero · '+GS.layers.length+'/5';return ['echar'];}
+    if(ph==='remover'){ctxCap='Caldero';return ['remover'];}}
   return null;
 }
-Object.assign(LAB,{coger:'Coger',armario:'Abrir el armario',sombrero:'Ponerse el sombrero',leer:'Leer',echar:'Echar al caldero'});
+Object.assign(LAB,{coger:'Coger',armario:'Abrir el armario',ponerse:'Ponérselo',leer:'Leer',echar:'Echar al caldero',remover:'Remover'});
+// dar un ingrediente: lo apunta en la libreta y, si ya están todos, toca ir al caldero
+function giveIngredient(id,x,y,z){const ing=findIng(id);if(!ing||GS.got[id])return;GS.got[id]=true;GS.bag.push(id);sfx('pick');
+  if(x!==undefined)for(let i=0;i<10;i++)emit('dust',x,y+0.2,z,1,{sp:1.2,size:0.07,color:ing.color});
+  if(GS.guide===id)GS.guide=null;
+  miniDraw(ing);saveGame();
+  if(curIngs().every(i=>GS.got[i.id])&&GS.phase==='recoger'){GS.phase='caldero';saveGame();setTimeout(()=>conill(TXT.todo),2600);}}
 Object.assign(ACT,{
-  coger(){const p=ctxPot;if(!p||GS.got[p.ing.id])return;GS.got[p.ing.id]=true;GS.bag.push(p.ing.id);p.g.visible=false;sfx('pick');
-    p.g.getWorldPosition(_w);for(let i=0;i<10;i++)emit('dust',_w.x,_w.y+0.2,_w.z,1,{sp:1.2,size:0.07,color:p.ing.color});
-    if(GS.guide===p.ing.id)GS.guide=null;
-    miniDraw(p.ing);saveGame();
-    const P=POT();if(P.ingredientes.every(i=>GS.got[i.id])&&GS.phase==='recoger'){GS.phase='caldero';saveGame();setTimeout(()=>conill(TXT.todo),2600);}},
+  coger(){const p=ctxPot;if(!p||GS.got[p.ing.id])return;p.g.getWorldPosition(_w);p.g.visible=false;giveIngredient(p.ing.id,_w.x,_w.y,_w.z);},
   armario(){GS.wardOpen=true;saveGame();sfx('open');},
-  sombrero(){hatW.visible=false;hatB.visible=true;GS.clothes.push('barret');GS.phase='fin1';saveGame();sfx('magic');
-    for(let i=0;i<14;i++)emit('dust',S.pos.x,S.y+2,S.pos.z,1,{sp:1.4,size:0.08,color:pick(['#c98aff','#ffd84a','#fff3b0'])});
-    GS.diary.push('Ya tengo mi sombrero de bruja.');saveGame();setTimeout(()=>conill(TXT.fin),1200);},
+  ponerse(){const P=POT(),r=P.premio.ropa,R=REWARD[r];if(!R)return;R.w.visible=false;R.wear();GS.clothes.push(r);GS.phase='fin';saveGame();sfx('magic');
+    for(let i=0;i<14;i++)emit('dust',S.pos.x,S.y+1.4,S.pos.z,1,{sp:1.4,size:0.08,color:pick(['#c98aff','#ffd84a','#fff3b0'])});
+    GS.diary.push('Ya tengo '+P.premio.nombre+'.');saveGame();setTimeout(()=>conill(GS.pot===0?TXT.fin:TXT.fin2),1200);},
   leer(){openBook();},
-  echar(){const id=GS.bag.shift(),ing=POT().ingredientes.find(i=>i.id===id);if(!ing)return;
+  echar(){const i=GS.bag.findIndex(inPot);if(i<0)return;const id=GS.bag.splice(i,1)[0],ing=findIng(id);
     const g=mkPot(ing.color,1.3);scene.add(g);g.position.set(S.pos.x,S.y+1.1,S.pos.z);
-    flying={g,t:0,from:g.position.clone(),to:new THREE.Vector3(KC.x+OX,OY+L(2)+1.05,KC.z+OZ),ing};S.tyaw=Math.atan2(flying.to.x-S.pos.x,flying.to.z-S.pos.z);sfx('jump');saveGame();}
+    flying={g,t:0,from:g.position.clone(),to:new THREE.Vector3(KC.x+OX,OY+L(2)+1.05,KC.z+OZ),ing};S.tyaw=Math.atan2(flying.to.x-S.pos.x,flying.to.z-S.pos.z);sfx('jump');saveGame();},
+  remover(){openStir();}
 });
 function landInCauldron(ing){
   GS.layers.push(ing.id);addLayer(ing.color,GS.layers.length-1);CAUL[2].lm.color.set(ing.color);sfx('splash');
   for(let i=0;i<14;i++)emit('dust',KC.x+OX,OY+L(2)+1.1,KC.z+OZ,1,{sp:1.6,size:0.09,color:ing.color});
   saveGame();
-  if(GS.layers.length===5)potionDone();
+  if(GS.layers.length===5){if(POT().mezclar){GS.phase='remover';saveGame();toast(TXT.remover,4000);}else potionDone();}
 }
+function clearCauldron(){layerMeshes.forEach(m=>CAUL[2].g.remove(m));layerMeshes.length=0;CAUL[2].lm.color.set('#b06ae0');}
+function mixCauldron(c){layerMeshes.forEach(m=>m.material.color.set(c));CAUL[2].lm.color.set(c);}
 let beamT=-1;
 function potionDone(){
-  GS.phase='hecha';saveGame();
-  setTimeout(()=>{sfx('success');beamT=0;rainbow.visible=true;
-    setTimeout(()=>say(TXT.voz,TXT.hecha,()=>{
-      const P=POT();P.poderes.forEach(p=>POW[p]=true);P.diario.forEach(t=>GS.diary.push(t));GS.phase='premio';saveGame();wandUI();
-      sfx('magic');hatW.visible=true;setTimeout(()=>conill(TXT.regalo),900);}),1600);},700);
+  GS.phase='hecha';const P=POT();P.poderes.forEach(p=>POW[p]=true);if(!GS.done.includes(GS.pot))GS.done.push(GS.pot);saveGame();
+  setTimeout(()=>{sfx('success');beamT=0;if(GS.pot===0)rainbow.visible=true;
+    setTimeout(()=>say(TXT.voz,TXT.felicita[GS.pot],()=>{
+      P.diario.forEach(t=>GS.diary.push(t));GS.phase='premio';saveGame();wandUI();
+      sfx('magic');setTimeout(()=>conill(GS.pot===0?TXT.regalo:TXT.regalo2),900);}),1600);},700);
+}
+// empezar la poción siguiente: la voz la encarga en la sala del trono
+function startPotion(i){GS.pot=i;GS.phase='leer';GS.got={};GS.bag=[];GS.layers=[];GS.hint={};GS.guide=null;clearCauldron();saveGame();}
+
+/* ---------- remover el caldero con el dedo ---------- */
+function openStir(){
+  const ov=$('ovStir');stirOn=true;let turns=0,last=null;const need=3*TAU,c0=POT().color||'#6fd06a';
+  ov.innerHTML='<div id="stirBox"><p>'+TXT.remover+'</p><div id="stirPot"><div id="stirLiq"></div><div id="stirSpoon"></div></div><div id="stirBar"><i></i></div></div>';
+  ov.classList.add('on');const pot=$('stirPot'),liq=$('stirLiq'),sp=$('stirSpoon'),bar=ov.querySelector('#stirBar i');
+  const cols=GS.layers.map(id=>findIng(id).color);liq.style.background='conic-gradient('+cols.map((c,i)=>c+' '+(i*20)+'% '+((i+1)*20)+'%').join(',')+')';
+  const ang=e=>{const r=pot.getBoundingClientRect();return Math.atan2(e.clientY-(r.top+r.height/2),e.clientX-(r.left+r.width/2));};
+  const mv=e=>{if(!stirOn)return;const a=ang(e);if(last!==null){let d=a-last;if(d>PI)d-=TAU;if(d<-PI)d+=TAU;turns+=Math.abs(d);
+      if(Math.random()<0.25)sfx('splash');}
+    last=a;const u=Math.min(1,turns/need);bar.style.width=(u*100)+'%';liq.style.transform='rotate('+(turns*57.3)+'deg)';sp.style.transform='rotate('+(a*57.3+90)+'deg)';
+    liq.style.filter='saturate('+(1-u*0.5)+')';liq.style.boxShadow='inset 0 0 0 999px '+c0+Math.round(u*255).toString(16).padStart(2,'0');
+    if(u>=1)finish();};
+  const finish=()=>{if(!stirOn)return;stirOn=false;ov.removeEventListener('pointermove',mv);setTimeout(()=>{ov.classList.remove('on');mixCauldron(c0);potionDone();},500);};
+  ov.addEventListener('pointerdown',e=>{last=ang(e);});ov.addEventListener('pointermove',mv);
+  window.__stir=n=>{turns=need*n;mv({clientX:0,clientY:0});};      // para las pruebas automáticas
 }
 
 /* ---------- libro de conjuros ---------- */
@@ -324,7 +376,7 @@ function openBook(){
 let nbTab='pot';
 function openNotebook(tab){nbTab=tab||nbTab;renderNotebook();$('ovNb').classList.add('on');}
 function renderNotebook(){
-  const P=POT(),read=GS.phase!=='inicio'&&GS.phase!=='leer',ov=$('ovNb');
+  const P=POT(),read=!['inicio','leer','tarea'].includes(GS.phase),ov=$('ovNb');
   let body='';
   if(nbTab==='pot'){
     if(GS.phase==='inicio')body='<h2>Mi libreta</h2><div class="sub">Aquí apuntaré las recetas, lo que aprenda y los mensajes del Conillet.</div><p class="entry">Todavía no tengo ninguna tarea. Quizá en el torreón…</p>';
@@ -381,7 +433,7 @@ const sunG=new THREE.Group();{mk(SPH(0.32,20,14),new THREE.MeshBasicMaterial({co
 const sunL=new THREE.PointLight('#ffcf7a',0,12,1.4);scene.add(sunL);
 const cloudG=new THREE.Group();{const m=LM('#e9ecf6',{emissive:'#9aa4c8',emissiveIntensity:0.3});[[0,0,0,0.5],[0.45,-0.05,0.1,0.38],[-0.45,-0.05,-0.05,0.4],[0.15,0.2,-0.1,0.38],[-0.2,0.15,0.15,0.34]].forEach(([x,y,z,r])=>mk(SPH(r,14,10),m,x,y,z,cloudG));cloudG.visible=false;scene.add(cloudG);}
 const drops=[];{const m=new THREE.MeshBasicMaterial({color:'#bfe4ff',transparent:true,opacity:0.8});for(let i=0;i<40;i++){const d=new THREE.Mesh(new THREE.BoxGeometry(0.02,0.22,0.02),m);d.visible=false;scene.add(d);drops.push({m:d,y:0,x:0,z:0});}}
-function cast(k){spell.type=k;spell.t=0;
+function cast(k){spell.type=k;spell.t=0;onCast(k);
   if(k==='sol'){sfx('sun');sunG.visible=true;}
   if(k==='lluvia'){sfx('rain');cloudG.visible=true;drops.forEach(d=>{d.x=rr(-0.7,0.7);d.z=rr(-0.5,0.5);d.y=rr(0,2.2);d.m.visible=true;});}
   for(let i=0;i<12;i++)emit('dust',S.pos.x,S.y+1.2,S.pos.z,1,{sp:1.3,size:0.07,color:k==='sol'?'#ffd84a':'#bfe4ff'});}
@@ -401,44 +453,59 @@ function gameStep(dt){
   tAcc+=dt;const t=S.t;
   // armario
   ward.open+=((GS.wardOpen?1:0)-ward.open)*(1-Math.exp(-dt*4));for(const d of ward.doors)d.h.rotation.y=d.s*ward.open*1.9;
-  // botes: flotan y brillan
-  for(const id in POTS){const p=POTS[id];if(!p.g.visible)continue;p.g.position.y=p.g.userData.by+0.03+Math.sin(t*2+id.length)*0.025;p.g.rotation.y=t*0.6;
-    p.g.userData.halo.material.opacity=(GS.phase==='recoger'||GS.phase==='caldero')?0.35+0.2*Math.sin(t*3):0.12;}
+  // cosas recogibles: flotan y brillan (las de la poción en curso, más)
+  const busy=GS.phase==='recoger'||GS.phase==='caldero';
+  for(const id in POTS){const p=POTS[id];if(!p.g.visible)continue;
+    if(!p.nobob){p.g.position.y=p.g.userData.by+0.03+Math.sin(t*2+id.length)*0.025;p.g.rotation.y=t*0.6;}
+    if(p.g.userData.halo)p.g.userData.halo.material.opacity=busy&&inPot(id)?0.35+0.2*Math.sin(t*3):0.08;}
   // libro: brilla mientras toca leerlo
   bookGlow.material.opacity=GS.phase==='leer'?0.45+0.25*Math.sin(t*3):0;
-  // sombrero
-  hatW.visible=GS.phase==='premio';hatB.visible=GS.clothes.includes('barret');if(hatW.visible){hatW.rotation.y=PI+0.05+Math.sin(t)*0.2;}
+  // premios: en el armario cuando toca
+  const rw=GS.phase==='premio'?POT().premio.ropa:null;
+  for(const k in REWARD){const R=REWARD[k];R.w.visible=k===rw;if(R.w.visible)R.w.rotation.y=PI+0.05+Math.sin(t)*0.2;}
+  hatB.visible=GS.clothes.includes('barret');
   // bote volando al caldero
   if(flying){flying.t+=dt/0.7;const u=Math.min(1,flying.t);flying.g.position.lerpVectors(flying.from,flying.to,u);flying.g.position.y+=Math.sin(u*PI)*1.2;flying.g.rotation.z=u*8;
     if(u>=1){scene.remove(flying.g);const ing=flying.ing;flying=null;landInCauldron(ing);}}
   // columna de luz
-  if(beamT>=0){beamT+=dt;beam.material.opacity=Math.min(0.55,beamT)*(beamT<4?1:Math.max(0,1-(beamT-4)));beam.rotation.y=beamT;if(beamT>5){beamT=-1;beam.material.opacity=0;}}
+  if(beamT>=0){beamT+=dt;beam.material.color.set(GS.pot===0?'#fff3c0':(POT().color||'#c0ffc0'));beam.material.opacity=Math.min(0.55,beamT)*(beamT<4?1:Math.max(0,1-(beamT-4)));beam.rotation.y=beamT;if(beamT>5){beamT=-1;beam.material.opacity=0;}}
   if(rainbow.visible)rainbow.children.forEach((m,i)=>m.material.opacity=0.42+0.08*Math.sin(t*0.7+i*0.5));
+  // poción 2 hecha: las setas brillan más y las carnívoras hacen caricias
+  if(POW.setas&&!MUSH.glow){MUSH.glow=1;MUSH.forEach(M=>M.cap.traverse(o=>{if(o.isMesh&&o.material.emissive)o.material.emissiveIntensity=0.5;}));}
+  if(POW.plantas&&mode==='tower')for(const p of plants){if(p===BIGP&&babaBusy())continue;p.jaw.rotation.x=-0.1-0.06*Math.sin(t*2+p.ph);p.st.rotation.x=0.15+0.08*Math.sin(t*1.3+p.ph);}
   // Conillet: la cola parpadea si hay mensajes sin leer
   BN.tail.material.emissiveIntensity=GS.unread?(Math.sin(t*9)>0?1.4:0.1):0;
   // te guía: brilla entero y salta cuando estás cerca
   let glow=0;
-  if(GS.guide&&POTS[GS.guide]&&!GS.got[GS.guide]){POTS[GS.guide].g.getWorldPosition(_w);
+  if(GS.guide&&!GS.got[GS.guide]&&targetPos(GS.guide,_w)){
     const d=Math.hypot(_w.x-S.pos.x,_w.z-S.pos.z)+Math.abs(_w.y-S.y)*2.5;glow=sat(1-d/16);
     const band=d<3?3:d<7?2:d<12?1:0;if(band!==guideBand&&tAcc>1){if(band>guideBand&&band>0)toast(['','Conillet: templado…','Conillet: ¡caliente, caliente!','Conillet: ¡que te quemas!'][band],1600);guideBand=band;}
     if(d<3&&!FL.on){BN.root.position.y+=Math.abs(Math.sin(t*7))*0.3;}}
   bnGlow.material.opacity+=(glow*0.9-bnGlow.material.opacity)*(1-Math.exp(-dt*4));
   spellStep(dt);
+  potionExtraStep(dt);
   // historia
-  if(PLAY&&!dOn&&GS.phase==='inicio'&&mode==='tower'&&curKey===0){GS.phase='leer';saveGame();
-    say(TXT.voz,TXT.bienvenida,()=>{TXT.hola.forEach((l,i)=>conill(l,i>0));});}
+  if(PLAY&&!dOn&&mode==='tower'&&curKey===0){
+    if(GS.phase==='inicio'){GS.phase='leer';saveGame();say(TXT.voz,TXT.bienvenida,()=>{TXT.hola.forEach((l,i)=>conill(l,i>0));});}
+    else if(GS.phase==='fin'){const n=GS.pot+1,P=NIVEL1.pociones[n];
+      if(P&&!P.pendiente&&TXT.tarea[n]){startPotion(n);GS.phase='tarea';say(TXT.voz,TXT.tarea[n],()=>{GS.phase='leer';saveGame();});}
+      else if(!GS.flags.toldBuild){GS.flags.toldBuild=1;saveGame();say(TXT.voz,TXT.construccion);}}}
 }
 
 /* ---------- arranque ---------- */
 if(PLAY){
-  if(!POW.escoba){broom.g.visible=false;}
+  if(GS.phase==='tarea')GS.phase='leer';
   // reconstruir la partida guardada
-  NIVEL1.pociones.forEach((p,i)=>{if(i<GS.pot||(i===GS.pot&&['premio','fin1'].includes(GS.phase)))(p.poderes||[]).forEach(k=>POW[k]=true);});
-  GS.layers.forEach((id,i)=>{const ing=POT().ingredientes.find(x=>x.id===id);if(ing){addLayer(ing.color,i);CAUL[2].lm.color.set(ing.color);}});
-  if(GS.layers.length===5)rainbow.visible=true;
-  if(GS.phase==='hecha'){GS.phase='premio';POT().poderes.forEach(k=>POW[k]=true);}
+  GS.done.forEach(i=>(NIVEL1.pociones[i].poderes||[]).forEach(k=>POW[k]=true));
+  if(GS.phase==='hecha')GS.phase='premio';
+  GS.layers.forEach((id,i)=>{const ing=findIng(id);if(ing){addLayer(ing.color,i);CAUL[2].lm.color.set(ing.color);}});
+  if(GS.done.includes(GS.pot)&&POT().mezclar)mixCauldron(POT().color);
+  if(GS.done.includes(0))rainbow.visible=true;
+  if(GS.clothes.includes('vestit'))wearDress();
+  if(!POW.escoba){broom.g.visible=false;}
 }
-hatB.visible=GS.clothes.includes('barret');hatW.visible=GS.phase==='premio';
+hatB.visible=GS.clothes.includes('barret');
 wandUI();badges();
-Object.assign(window.__j,{GS,POW,NIVEL1,POTS,potionActions,keyAt,groundAt,openNotebook,openBook,askHint,cast,sfx,nextLine,TURRET_SPOT,ward});
+Object.assign(window.__j,{GS,POW,NIVEL1,POTS,potionActions,keyAt,groundAt,openNotebook,openBook,askHint,cast,sfx,nextLine,TURRET_SPOT,ward,giveIngredient,startPotion,plants,REWARD});
 Object.defineProperty(window.__j,'dOn',{get:()=>dOn});
+Object.defineProperty(window.__j,'stirOn',{get:()=>stirOn});

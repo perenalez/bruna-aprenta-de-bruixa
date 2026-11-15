@@ -125,7 +125,10 @@ Al joc complet s'ha d'activar a partir del **nivell 4**. Encara no hi ha sistema
 - **Poders bloquejats fins que toquen** (només a `dist/index.html`; a les demos de vol i turbo hi ha tot): l'escombra (poció 4), els bolets saltadors (poció 2) i el turbo (poció 3). Es controlen amb `POW` (`flightActions`, `mushHit`). Sol i Pluja arriben amb la poció 1.
 - **Partida:** es desa a `localStorage` (`bruna-nivel1-v1`). `?reset` a l'URL o «Empezar la partida de nuevo» al diari l'esborren.
 - **Fases de la poció:** `inicio` → (sala del tron: parla la veu) `leer` → (llibre) `recoger` → (5 pots) `caldero` → (caldero) `hecha` → `premio` (barret a l'armari) → `fin1`.
-- **Prova:** `tests/pocion1.mjs` (`npm run test:pociones`) juga la poció 1 sencera.
+- **Fases genèriques:** després de `fin`, en tornar a la sala del tron la veu encarrega la poció següent (`startPotion`). Si té `mezclar`, després del 5è ingredient cal `remover` (girar el dit sobre el caldero). El premi de cada poció és a `REWARD` (barret, vestit…).
+- **Poció 2** (`56_pocion2.js`): flor amb pol·len, roca amb molsa i marieta de 7 punts al bosc (`registerItem`); despensa amb formatge i el ratolí que segueix la Bruna (`MOUSE`); la planta carnívora gran del soterrani (`BIGP`), que babeja amb el conjur Sol i s'ha d'esquivar (`BABA`, botó «¡ESQUIVA!»).
+- **Proves:** `tests/pocion1.mjs` i `tests/pocion2.mjs` (`npm run test:pociones`).
+- **Idioma:** els textos encara són en castellà; s'han de passar al català (decisió del Pere).
 - **Simplificacions pendents:** la llibreta s'obre com una finestra (encara no amb la càmera a les mans de la Bruna) i la bruixa adulta encara és només una veu amb bafarades.
 
 ## Demos (`00a_demo.js`)

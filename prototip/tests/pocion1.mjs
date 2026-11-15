@@ -33,11 +33,11 @@ r = await E(() => { const j = window.__j; const d = j.dOn; for (let i = 0; i < 6
   return { d, ph: j.GS.phase, sol: j.POW.sol, lluvia: j.POW.lluvia, wand: getComputedStyle(document.getElementById('bwand')).display, diario: j.GS.diary.length }; });
 ok(r.d && r.ph === 'premio' && r.sol && r.lluvia && r.wand !== 'none' && r.diario === 3, 'poción hecha: la voz felicita, se aprenden Sol y Lluvia y se apuntan en el diario ' + JSON.stringify(r));
 
-r = await E(new Function(`const j=window.__j;${IR}go(-0.3,-5.6,4.4);const a=j.actions();if(a[0]==='sombrero')j.ACT.sombrero();j.cast('sol');j.step(30);const sol=j.GS.phase;j.cast('lluvia');j.step(30);return {a,ph:j.GS.phase,ropa:j.GS.clothes};`));
-ok(r.a[0] === 'sombrero' && r.ph === 'fin1' && r.ropa.includes('barret'), 'en el armario está el sombrero y Bruna se lo pone ' + JSON.stringify(r));
+r = await E(new Function(`const j=window.__j;${IR}go(-0.3,-5.6,4.4);const a=j.actions();if(a[0]==='ponerse')j.ACT.ponerse();j.cast('sol');j.step(30);const sol=j.GS.phase;j.cast('lluvia');j.step(30);return {a,ph:j.GS.phase,ropa:j.GS.clothes};`));
+ok(r.a[0] === 'ponerse' && r.ph === 'fin' && r.ropa.includes('barret'), 'en el armario está el sombrero y Bruna se lo pone ' + JSON.stringify(r));
 
 r = await E(() => { const s = JSON.parse(localStorage.getItem('bruna-nivel1-v1') || '{}'); return { ph: s.phase, ropa: s.clothes }; });
-ok(r.ph === 'fin1' && r.ropa && r.ropa.includes('barret'), 'la partida queda guardada en el navegador ' + JSON.stringify(r));
+ok(r.ph === 'fin' && r.ropa && r.ropa.includes('barret'), 'la partida queda guardada en el navegador ' + JSON.stringify(r));
 
 await browser.close();
 if (errores.length) { console.error('✗ Errores:\n' + errores.join('\n')); process.exit(1); }
