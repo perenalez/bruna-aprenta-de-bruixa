@@ -24,4 +24,6 @@ for (const [name, demo] of Object.entries(DEMOS)) {
   fs.writeFileSync(path.join(root, 'dist', name + '.html'), html);
   fs.writeFileSync(path.join(root, 'dist', name + '.local.html'), html.split(CDN).join('../vendor/three.min.js'));
 }
+// imágenes (portada…): src/img → dist/img
+{const src=path.join(root,'src','img'),dst=path.join(root,'dist','img');if(fs.existsSync(src)){fs.mkdirSync(dst,{recursive:true});for(const f of fs.readdirSync(src))fs.copyFileSync(path.join(src,f),path.join(dst,f));}}
 console.log(`OK · ${files.length} módulos · ${(bundle.length / 1024).toFixed(0)} KB → dist/{index,vuelo,turbo}.html (+ .local.html)`);
