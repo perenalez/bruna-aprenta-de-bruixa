@@ -12,8 +12,16 @@ Joc 3D per a navegador, amb prioritat al mòbil. L'encàrrec complet és a
 - Fet: moviment de la Bruna i el Conill, bosc, vall, torreó, cases, cova, vol
   amb escombra, turbo, bolets saltadors i planeig.
 - El nivell 1 és jugable sencer: les 5 pocions, en català, amb tests automàtics.
-  Pendent: la bruixa adulta (ara és una veu), la llibreta en pla subjectiu,
-  Vite i la publicació a GitHub Pages.
+  Pendent: la bruixa adulta (ara és una veu), la llibreta en pla subjectiu i Vite.
+
+## Publicació
+
+- Repositori públic: https://github.com/perenalez/bruna-aprenta-de-bruixa
+- **Versió de proves** (GitHub Pages, branca `gh-pages`, carpeta `proves/`):
+  https://perenalez.github.io/bruna-aprenta-de-bruixa/proves/
+- Per publicar els canvis: `bash prototip/tools/publicar-proves.sh` (munta el joc i el puja).
+  Fa servir l'eina `gh` de `.eines/` (no és al repositori; sessió iniciada com a `perenalez`).
+- La versió estable es farà quan en Pere hagi revisat el nivell 1.
 - Els prototips anteriors en HTML solt són a `prototip/referencia/`.
 
 ## Primers passos
