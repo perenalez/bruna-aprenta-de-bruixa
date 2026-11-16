@@ -136,8 +136,9 @@ Al joc complet s'ha d'activar a partir del **nivell 4**. Encara no hi ha sistema
 
 ## Portada (`60_portada.js`)
 
-- Pantalla inicial amb la il·lustració del Pere (`src/img/portada.jpg`; el build la copia a `dist/img/`) que es desplaça lentament, textos amb les fonts Cherry Swash, Fredoka i Kalam (Google Fonts), botó «Juga» (`startGame`) i crèdits. En horitzontal, la imatge sencera al mig i una còpia desenfocada als costats.
-- `?sinportada` a l'URL la salta. La versió amb decorat 3D propi és al commit «Portada del joc».
+- Pantalla inicial amb una escena pròpia (`TSC`, separada del món): torreó, arbre gegant de colors, casa de l'arbre, caseta, riu amb pont i cel rosa; davant, la Bruna de bruixa remenant el calder, el Conillet i una còpia de l'unicorn. La càmera es balanceja (`TITLE.cam`, valors diferents en vertical i horitzontal).
+- El bucle de `50_juego.js` dibuixa `titleScene()||scene` i crida `titleStep`. «Juga» (`startGame`) torna al joc. `?sinportada` a l'URL la salta.
+- Una versió amb la il·lustració del Pere de fons és al commit «Portada amb la il·lustració» (es va descartar de moment).
 
 ## Demos (`00a_demo.js`)
 
