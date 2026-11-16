@@ -134,6 +134,12 @@ Al joc complet s'ha d'activar a partir del **nivell 4**. Encara no hi ha sistema
 - **Idioma:** el joc és en **català** (decisió del Pere). Els textos de la història són a `54_datos_pociones.js` (`TXT`); els noms dels botons de salt ràpid, a `TP_CA` (`50_juego.js`), perquè les claus internes (`Bosque`, `Trono`…) les fan servir els tests.
 - **Simplificacions pendents:** la llibreta s'obre com una finestra (encara no amb la càmera a les mans de la Bruna) i la bruixa adulta encara és només una veu amb bafarades.
 
+## Portada (`60_portada.js`)
+
+- Pantalla inicial amb una escena pròpia (`TSC`, separada del món): torreó, arbre gegant de colors, casa de l'arbre, caseta, riu amb pont i cel rosa; davant, la Bruna de bruixa remenant el calder, el Conillet i una còpia de l'unicorn. La càmera es balanceja (`TITLE.cam`, valors diferents en vertical i horitzontal).
+- El bucle de `50_juego.js` dibuixa `titleScene()||scene` i crida `titleStep`. «Juga» (`startGame`) torna al joc.
+- `?sinportada` a l'URL la salta.
+
 ## Demos (`00a_demo.js`)
 
 `tools/build.mjs` genera tres versions canviant la constant `DEMO`:

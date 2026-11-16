@@ -270,9 +270,9 @@ let last=performance.now();
 function loop(now){
   const dt=clamp((now-last)/1000,0,0.04);last=Math.max(last,now);   // el primer rAF puede llegar con una marca de tiempo anterior: dt negativo
   if(dt<=0){requestAnimationFrame(loop);return;}
-  frame(dt);updateCam(dt);renderCtx();
-  renderer.render(scene,camera);
+  frame(dt);updateCam(dt);titleStep(dt);renderCtx();
+  renderer.render(titleScene()||scene,camera);
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
-window.__j={render:()=>renderer.render(scene,camera),step:(n,dt)=>{for(let i=0;i<n;i++)frame(dt||1/60);updateCam(1);},S,cam,K,input,ACT,actions,teleport,lift,doors,landH,groundY,parts,get mode(){return mode;},get key(){return curKey;},get act(){return act;},OX,OY,OZ,BN,GT,H1,H2,RXB,BZ,BL,trail,gY,waterAt,FL,FLY,broom,canLaunch,TURBO,MUSH,FRUIT,tryFly,canMountHere,get inCave(){return inCave;}};
+window.__j={render:()=>renderer.render(titleScene()||scene,camera),step:(n,dt)=>{for(let i=0;i<n;i++)frame(dt||1/60);updateCam(1);},S,cam,K,input,ACT,actions,teleport,lift,doors,landH,groundY,parts,get mode(){return mode;},get key(){return curKey;},get act(){return act;},OX,OY,OZ,BN,GT,H1,H2,RXB,BZ,BL,trail,gY,waterAt,FL,FLY,broom,canLaunch,TURBO,MUSH,FRUIT,tryFly,canMountHere,get inCave(){return inCave;}};
