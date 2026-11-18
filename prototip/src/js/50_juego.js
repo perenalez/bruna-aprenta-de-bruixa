@@ -107,7 +107,7 @@ function stepMove(dt){
   if(S.skid<=0&&!S.air&&S.speed>RUN*0.8&&Math.abs(dy)>2.2&&ts>0){S.skid=0.3;}
   if(S.skid>0){S.skid-=dt;ts=0;dy=0;S.skE=(S.skE||0)-dt;if(S.skE<0&&S.speed>0.8){S.skE=0.05;burst(S.surf,S.pos.x+Math.sin(S.yaw)*0.15,S.y,S.pos.z+Math.cos(S.yaw)*0.15,0.8,S.yaw);}}
   const rate=clamp(dy*(S.air?4:7.5),-7.5,7.5);S.yaw+=rate*dt;S.turn+=(rate-S.turn)*(1-Math.exp(-dt*10));
-  const prev=S.speed,acc=TURBO.on?8:S.glide?4:S.air?3:(ts>S.speed?(S.speed<WALK?4.5:3.6):(S.skid>0?11:5.5));
+  const prev=S.speed,acc=TURBO.on?12:S.glide?4:S.air?3.5:(ts>S.speed?(S.speed<WALK?9:7.2):(S.skid>0?13:9));   // arrencades i frenades com a Alba
   S.speed+=clamp(ts-S.speed,-acc*dt,acc*dt);
   if(S.prep>=0)S.speed*=Math.exp(-dt*3);
   S.acc+=((S.speed-prev)/dt-S.acc)*(1-Math.exp(-dt*12));

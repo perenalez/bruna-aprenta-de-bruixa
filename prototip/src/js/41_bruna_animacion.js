@@ -16,11 +16,11 @@ function solveLeg(leg,hx,hy,hz,fx,fy,fz,pitch){
 }
 function animate(dt){
   S.t+=dt;const t=S.t,v=S.speed,inW=sat(S.depth/0.3);
-  const w=ease(sat(v/0.5)),run=ease(sat((v-1.5)/1.9)),grounded=!S.air;
+  const w=ease(sat(v/0.5)),run=ease(sat((v-WALK*1.3)/(RUN*0.92-WALK*1.3))),grounded=!S.air;
   // --- ciclo de pasos ---
   // carrera con turbo y sabates màgiques: zancadas larguísimas, el pie apenas toca el suelo y el cuerpo flota
   const dash=P.dash=(P.dash||0)+(((S.dash||(S.air&&P.dash>0.5&&S.speed>8))?1:0)-(P.dash||0))*(1-Math.exp(-dt*6));
-  const duty=lerp(lerp(0.6,0.27,run),0.12,dash),SL=(0.14+0.26*sat(v/WALK)+0.16*run)*(1-0.25*inW)*(1+0.18*dash),f=v>0.05?0.86*v*duty/SL:0;
+  const duty=lerp(lerp(0.6,0.27,run),0.12,dash),SL=(0.14+0.36*sat(v/WALK)+0.2*run)*(1-0.25*inW)*(1+0.18*dash),f=v>0.05?0.86*v*duty/SL:0;
   const ph0=S.ph;S.ph=(S.ph+f*dt)%1;
   const lift=(0.035+0.035*sat(v/WALK)+0.1*run)+0.14*inW+0.1*dash;
   const twist=Math.sin(S.ph*TAU)*(0.07+0.05*run)*w;                         // pelvis: adelanta la cadera del pie que avanza

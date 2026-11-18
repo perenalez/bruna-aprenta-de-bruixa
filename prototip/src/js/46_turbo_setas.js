@@ -4,7 +4,7 @@
    - Setas gigantes: al caer encima, Bruna sale disparada. Bajando, Espacio apretado = planea (el vestido hace de paracaídas).
    - Con la escoba a la espalda: Control+Mayús+Espacio despega desde cualquier sitio; en el móvil, al saltar aparece «Volar».
    ===================================================================== */
-const TURBO={v:35,max:100,on:false,held:false,drainFoot:14,drainFly:18,fruit:20,foot:6.6,footShoes:12,fly:16,emptyT:-9,sparkT:0};
+const TURBO={v:35,max:100,on:false,held:false,drainFoot:14,drainFly:18,fruit:20,foot:8.5,footShoes:13,fly:16,emptyT:-9,sparkT:0};
 const TURBO_LEVEL=DEMO==='turbo';       // en el juego completo: llega con la poción 3 (POW.turbo)
 const turboOn=()=>TURBO_LEVEL||POW.turbo;
 
