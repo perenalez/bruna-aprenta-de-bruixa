@@ -29,3 +29,7 @@ Els fitxers HTML de cada etapa són a `referencia/prototipos_anteriores/`. Cada 
 - **Mascotes:** a la fitxa, el Gat és la «mascota normal» i el Conill la «mascota de bruixa». Al joc només hi ha el Conill.
 - **Prova de vol amb escombra:** https://claude.ai/artifact/XpDQejCu928DaFEXY2cbtb (mòdul `45_vuelo.js`, `FLIGHT_TEST=true`)
 - **Turbo, bolets i planeig:** https://claude.ai/artifact/TspWLUg9gcaRkUF1Q8wEyp (`dist/turbo.html`, mòdul `46_turbo_setas.js`)
+
+## Encàrrec v.1
+
+- **Pas 1 · Portada nova i zona de proves (2026-11-18, branca `encarrec-v1`).** Escena 3D amb els models del joc composta com la il·lustració de referència (Bruna amb vareta, calder, Conill, torreó, unicorn), textos en català, «Juga», targeta «Accedir a la zona de proves» amb «Testejar» i la llista de proves (totes «Aviat»), crèdits «Un joc creat per Ayla Sainz i Pere Nadal» i `v.1`. Afegides la vareta i el torreó amb teulada només per a la portada. Comparació a `docs/portada/comparacio.png`. **OK d'en Pere el 2026-11-18** i publicat a la versió de proves.

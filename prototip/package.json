@@ -7,7 +7,7 @@
   "scripts": {
     "build": "node tools/build.mjs",
     "serve": "node tools/build.mjs && node tools/serve.mjs",
-    "test": "node tools/build.mjs && node tests/smoke.mjs && node tests/recorrido.mjs && node tests/vuelo.mjs && node tests/turbo.mjs && node tests/pocion1.mjs && node tests/pocion2.mjs && node tests/pocion3.mjs && node tests/pocion4.mjs && node tests/pocion5.mjs",
+    "test": "node tools/build.mjs && node tests/smoke.mjs && node tests/portada.mjs && node tests/recorrido.mjs && node tests/vuelo.mjs && node tests/turbo.mjs && node tests/pocion1.mjs && node tests/pocion2.mjs && node tests/pocion3.mjs && node tests/pocion4.mjs && node tests/pocion5.mjs",
     "test:vuelo": "node tools/build.mjs && node tests/vuelo.mjs && node tests/turbo.mjs",
     "test:turbo": "node tools/build.mjs && node tests/turbo.mjs",
     "capturas": "node tools/build.mjs && node tests/capturas.mjs",

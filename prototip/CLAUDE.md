@@ -136,9 +136,12 @@ Al joc complet s'ha d'activar a partir del **nivell 4**. Encara no hi ha sistema
 
 ## Portada (`60_portada.js`)
 
-- Pantalla inicial amb una escena pròpia (`TSC`, separada del món): torreó, arbre gegant de colors, casa de l'arbre, caseta, riu amb pont i cel rosa; davant, la Bruna de bruixa remenant el calder, el Conillet i una còpia de l'unicorn. La càmera es balanceja (`TITLE.cam`, valors diferents en vertical i horitzontal).
-- El bucle de `50_juego.js` dibuixa `titleScene()||scene` i crida `titleStep`. «Juga» (`startGame`) torna al joc. `?sinportada` a l'URL la salta.
-- Una versió amb la il·lustració del Pere de fons és al commit «Portada amb la il·lustració» (es va descartar de moment).
+- Feta segons l'encàrrec v.1, pas 1 (`../ENCARGO-CLAUDE-CODE.md`, referència `../referencias/portada-referencia.png`). Escena pròpia (`TSC`, separada del món) amb els models del joc: Bruna (`buildBruna`, `mkHat`, vestit de bruixa) en pla mitjà mirant l'espectador amb la vareta aixecada, calder davant a l'esquerra, el Conill, el torreó a l'esquerra i l'unicorn (`uni.g.clone()`) a la dreta, arbres de copa taronja (`taperTube` + `blobs` + `PAL.orange`), bolets blancs i blavosos, cel de posta (`TSC.background`, degradat fix a la pantalla).
+- **Peces només de portada** (no existeixen al joc): la vareta amb estrella, l'espiral rosa i el torreó amb teulada cònica taronja. No s'ha tocat cap model original.
+- Animacions subtils a `titleStep`: respiració i parpelleig de la Bruna, vareta que es mou, partícules de la vareta, vapor i bombolles del calder, destellos d'ambient. Càmera fixa (`TITLE.cam`): baixa i mirant una mica amunt; en pantalles més estretes que 0.46 s'allunya; en horitzontal els textos van a l'esquerra i la càmera es desplaça perquè la Bruna quedi a la dreta.
+- HTML: `#tscreen` (textos, «Juga», targeta «Accedir a la zona de proves», crèdits «Un joc creat per Ayla Sainz i Pere Nadal»), `#tver` (v.1) i `#tproves` (zona de proves → «Testejar» → llista `PROVES`, totes desactivades amb «Aviat» → «Tornar»). Per activar una prova, treure el `disabled` del seu botó a `provesView`.
+- El bucle de `50_juego.js` dibuixa `titleScene()||scene` i crida `titleStep`. «Juga» (`startGame`) torna al joc exactament com abans (fov 38). `?sinportada` a l'URL la salta.
+- Test: `tests/portada.mjs` (dins `npm test`). Captures: `node tests/capturas-portada.mjs` → `docs/portada/`.
 
 ## Demos (`00a_demo.js`)
 
