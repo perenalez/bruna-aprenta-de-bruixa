@@ -98,6 +98,16 @@ const salt = await page.evaluate(() => {
 ok(salt.amb > salt.sense * 1.4, `el doble salt no puja més (amb sabates ${salt.amb.toFixed(2)} m, sense ${salt.sense.toFixed(2)} m)`);
 ok(salt.planeja && salt.vy > -2, 'després del doble salt no planeja mantenint premut');
 
+// v.1.2 · turbo amb les sabates màgiques: corre molt més i gairebé sense trepitjar el terra
+const dash = await page.evaluate(() => {
+  const j = window.__j, S = j.S; for (let i = 0; i < 20 && j.dOn; i++) j.nextLine();
+  j.POW.turbo = true; j.teleport('Bosque'); j.step(5); j.TURBO.v = 100; j.K.w = true; j.TURBO.held = true;
+  let toca = 0, n = 0, maxY = 0; for (let i = 0; i < 90; i++) { j.step(1); if (i > 40) { n++; const fl = Math.min(j.B.legL.foot.getWorldPosition(new THREE.Vector3()).y, j.B.legR.foot.getWorldPosition(new THREE.Vector3()).y) - j.S.y; if (fl < 0.09) toca++; } }
+  const sp = S.speed; j.K.w = false; j.TURBO.held = false; j.step(60); return { sp, toca: toca / n };
+});
+ok(dash.sp > 11, 'amb turbo i sabates màgiques no corre molt més (' + dash.sp.toFixed(1) + ' m/s)');
+ok(dash.toca > 0.05 && dash.toca < 0.45, 'amb turbo i sabates ha de tocar el terra només un moment (' + Math.round(dash.toca * 100) + '% del temps)');
+
 // v.1.2 · la primera vegada, en Conillet es posa davant, parla i guia la Bruna pel camí fins al torreó amb una llumeta
 const guia = await page.evaluate(() => {
   const j = window.__j, S = j.S; for (let i = 0; i < 20 && j.dOn; i++) j.nextLine(); j.GS.phase = 'inicio'; j.GS.flags.guia = 0; j.GS.places.length = 0;
@@ -124,4 +134,4 @@ ok(guia.arriba && guia.fi && guia.desat, 'en arribar al torreó la guia no s\'ac
 await browser.close();
 if (errores.length) fallos.push('Errors:\n' + errores.join('\n'));
 if (fallos.length) { console.error('✗ v.1:\n- ' + fallos.join('\n- ')); process.exit(1); }
-console.log('✓ v.1: pot violeta, gat, llocs, hora del dia, Conill, doble salt, Conillet guia', JSON.stringify({ salt: { amb: +salt.amb.toFixed(2), sense: +salt.sense.toFixed(2) } }));
+console.log('✓ v.1: pot violeta, gat, llocs, hora del dia, Conill, doble salt, Conillet guia, turbo amb sabates', JSON.stringify({ salt: { amb: +salt.amb.toFixed(2), sense: +salt.sense.toFixed(2) }, turbo: +dash.sp.toFixed(1), toca: Math.round(dash.toca * 100) + '%' }));

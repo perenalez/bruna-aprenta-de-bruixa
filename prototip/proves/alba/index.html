@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f0e1c2">
+<title>Bruna · Prova: moviment estil Alba</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#f0e1c2;touch-action:none;-webkit-user-select:none;user-select:none;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#load{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#f0e1c2;color:#5a3a2a;z-index:9;transition:opacity .6s}
+#load b{font-size:22px}#load small{opacity:.7}
+#track{width:220px;height:8px;border-radius:9px;background:rgba(90,58,42,.15);overflow:hidden}#bar{height:100%;width:0;background:#c97a4a;border-radius:9px;transition:width .2s}
+#hud{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity .8s;z-index:3}
+#hud.on{opacity:1}
+#title{position:absolute;left:calc(env(safe-area-inset-left) + 16px);top:calc(env(safe-area-inset-top) + 12px);color:#fff;text-shadow:0 1px 4px rgba(60,35,20,.85);font-weight:700;font-size:18px}
+#title small{display:block;font-weight:500;font-size:13px;opacity:.9;margin-top:3px}
+#tools{position:absolute;right:calc(env(safe-area-inset-right) + 12px);top:calc(env(safe-area-inset-top) + 10px);display:flex;gap:6px;align-items:center;pointer-events:auto}
+#tools button{border:0;border-radius:999px;background:rgba(70,45,30,.55);color:#fff;font:600 12px system-ui;padding:7px 12px;cursor:pointer}
+#stats{flex-basis:100%;text-align:right;color:#fff;font-size:11px}#stats:not(:empty):before{content:'';}#stats span{background:rgba(70,45,30,.5);border-radius:999px;padding:3px 10px}#stats:empty{display:none}
+#tools{flex-wrap:wrap;justify-content:flex-end;max-width:calc(100vw - 150px)}
+#motor{background:rgba(255,215,94,.85)!important;color:#5a2e10!important;text-shadow:none!important}
+#fps:empty{display:none}#fps{color:#fff;font-size:12px;background:rgba(70,45,30,.55);border-radius:999px;padding:4px 9px;text-shadow:0 1px 2px rgba(0,0,0,.4);margin-right:4px}
+/* controles: mismos tamaños y estilos que src/index.html del juego */
+.ui{position:fixed;z-index:5}
+#hint{left:50%;top:calc(env(safe-area-inset-top) + 150px);transform:translateX(-50%);background:rgba(255,255,255,.82);color:#3b2c2a;padding:7px 14px;border-radius:999px;font-size:12px;pointer-events:none;transition:opacity .8s;white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
+#joy{left:calc(env(safe-area-inset-left) + 22px);bottom:calc(env(safe-area-inset-bottom) + 28px);width:132px;height:132px;border-radius:50%;background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.55);touch-action:none}
+#knob{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;background:rgba(255,255,255,.9);box-shadow:0 2px 8px rgba(0,0,0,.3);pointer-events:none}
+#acts{right:calc(env(safe-area-inset-right) + 22px);bottom:calc(env(safe-area-inset-bottom) + 28px);display:flex;align-items:flex-end;gap:12px}
+.rb{border:0;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 2px 8px rgba(0,0,0,.3);font:700 13px system-ui;color:#3b2c2a;cursor:pointer;touch-action:manipulation}
+.rb:active{transform:scale(.94);background:#fff}
+#bjump{width:88px;height:88px}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="load"><b>Prova: moviment estil Alba</b><div id="track"><div id="bar"></div></div><small>Esculpint el personatge i plantant l'herba…</small></div>
+<div id="hud">
+  <div id="title">Prova · nou motor<small>moviment estil Alba</small></div>
+  <div id="tools"><span id="fps"></span><button id="motor">Motor: nou</button><button id="pers">Personatge</button><button id="post">Desenfocament: sí</button><button id="sortir">Sortir</button><div id="stats"></div></div>
+</div>
+<div id="hint" class="ui"><span class="touch">Joystick: caminar (a fons, córrer) · arrossega per girar la càmera</span><span class="desk">WASD: caminar · Majúscules: córrer · Espai: saltar · arrossega per girar la càmera</span></div>
+<div id="joy" class="ui"><div id="knob"></div></div>
+<div id="acts" class="ui"><button id="bjump" class="rb">Saltar</button></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/*@@BUNDLE@@*/
+</script>
+</body>
+</html>

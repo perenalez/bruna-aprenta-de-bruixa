@@ -18,14 +18,16 @@ function animate(dt){
   S.t+=dt;const t=S.t,v=S.speed,inW=sat(S.depth/0.3);
   const w=ease(sat(v/0.5)),run=ease(sat((v-1.5)/1.9)),grounded=!S.air;
   // --- ciclo de pasos ---
-  const duty=lerp(0.6,0.27,run),SL=(0.14+0.26*sat(v/WALK)+0.16*run)*(1-0.25*inW),f=v>0.05?0.86*v*duty/SL:0;
+  // carrera con turbo y sabates màgiques: zancadas larguísimas, el pie apenas toca el suelo y el cuerpo flota
+  const dash=P.dash=(P.dash||0)+(((S.dash||(S.air&&P.dash>0.5&&S.speed>8))?1:0)-(P.dash||0))*(1-Math.exp(-dt*6));
+  const duty=lerp(lerp(0.6,0.27,run),0.12,dash),SL=(0.14+0.26*sat(v/WALK)+0.16*run)*(1-0.25*inW)*(1+0.18*dash),f=v>0.05?0.86*v*duty/SL:0;
   const ph0=S.ph;S.ph=(S.ph+f*dt)%1;
-  const lift=(0.035+0.035*sat(v/WALK)+0.1*run)+0.14*inW;
+  const lift=(0.035+0.035*sat(v/WALK)+0.1*run)+0.14*inW+0.1*dash;
   const twist=Math.sin(S.ph*TAU)*(0.07+0.05*run)*w;                         // pelvis: adelanta la cadera del pie que avanza
   // objetivo de la pelvis (rebote vertical)
   const hb=0.5-0.5*Math.cos((S.ph-duty/2)*2*TAU),bobW=-Math.cos(S.ph*2*TAU)*0.013*w*(1-run),bobR=(2*hb-1)*0.05*run;
   const sq=stepS(SP.squat,S.prep>=0?0.2:0,dt);
-  let py=STAND-0.034*w+bobW+bobR-clamp(sq,-0.05,0.2)+Math.sin(t*1.9)*0.004*(1-w);
+  let py=STAND-0.034*w+bobW+bobR-clamp(sq,-0.05,0.2)+Math.sin(t*1.9)*0.004*(1-w)+dash*0.075*hb;   // con dash, vuela entre zancada y zancada
   const airK=P.air===undefined?0:P.air;P.air=airK+((S.air?1:0)-airK)*(1-Math.exp(-dt*(S.air?14:20)));
   // pies
   py=lerp(py,0.44+Math.sin(t*2.2)*0.006,FL.k);                                 // sentada en la escoba
@@ -45,13 +47,14 @@ function animate(dt){
     if(c&&!L.contact&&S.prep<0){const k=sat(v/RUN);let s2=surfHere(wx,wz,S.y);
       sfxStep(s2,k);
       if(s2==='water'||v>1.0||s2==='path'||s2==='sand'||s2==='wood')burst(s2,wx,groundY(wx,wz,S.y),wz,s2==='water'?0.25+0.75*k:(0.2+0.8*k)*(s2==='grass'&&v<2.4?0:1),S.yaw+PI);}
+    if(c&&!L.contact&&dash>0.5)emit('dust',wx,groundY(wx,wz,S.y)+0.04,wz,4,{sp:1.3,size:0.06,color:pick(['#ffe36a','#fff3b0','#c98aff','#ff9ad8'])});   // chispas de las sabates
     L.contact=c;
   }
   if(FL.k>0.01)flightLegs(F);
   // la pelvis no puede subir más de lo que dan las piernas
   pelvisVy+=((py-pelvisY)/Math.max(dt,1e-4)-pelvisVy)*(1-Math.exp(-dt*14));pelvisY=py;
   // --- torso ---
-  const lean=stepS(SP.lean,0.05*w+0.2*run+clamp(S.acc*0.03,-0.22,0.22)-(S.skid>0?0.45:0)+(S.prep>=0?0.2:0),dt);
+  const lean=stepS(SP.lean,0.05*w+0.2*run+0.16*dash+clamp(S.acc*0.03,-0.22,0.22)-(S.skid>0?0.45:0)+(S.prep>=0?0.2:0),dt);
   const bank=stepS(SP.bank,clamp(-S.turn*v*0.035,-0.4,0.4),dt);
   const sway=Math.sin(S.ph*TAU)*0.011*w*(1-run*0.5),roll=Math.cos(S.ph*TAU)*0.032*w;
   B.pelvis.position.set(sway,pelvisY,-lean*0.05);

@@ -16,7 +16,8 @@ Joc 3D per a navegador, amb prioritat al mòbil. L'encàrrec complet és a
 - **Encàrrec v.1** (`ENCARGO-CLAUDE-CODE.md`, referència a `referencias/`), branca `encarrec-v1`.
   Es fa pas a pas i s'espera l'OK d'en Pere a cada pas. Pas 1 (portada nova i zona de proves) fet i
   aprovat. Pas 2 (correccions) fet i publicat com a **v.1.2**.
-  Pas 3 («Crea el teu personatge») fet i publicat. Pas 4 («Saltar nivells», amb subnivells per poció) fet i publicat. Crèdits: «Un joc creat per Ayla Sainz i Pere Nadal» (no «Laia»).
+  Pas 3 («Crea el teu personatge») fet i publicat. Pas 4 («Saltar nivells», amb subnivells per poció) fet i publicat.
+  Passos 5 i 6 units (en Pere): «Nou motor de render · moviment Alba» (`prototip/proves/alba/`), amb botó per comparar motors. Crèdits: «Un joc creat per Ayla Sainz i Pere Nadal» (no «Laia»).
 
 ## Publicació
 

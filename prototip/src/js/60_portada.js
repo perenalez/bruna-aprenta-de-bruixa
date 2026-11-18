@@ -151,7 +151,7 @@ const RAYS='<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M6 9L20 15M3 21
 @media (min-aspect-ratio:1/1) and (max-height:520px){#tscreen .sub{display:none}#tscreen h1{font-size:clamp(40px,13vh,70px)}#tplay{font-size:26px;padding:8px 34px 10px}#tgo{width:60px;height:60px;font-size:9px}}`;document.head.appendChild(css);}
 // pruebas de la zona de proves (se activan a medida que se hacen)
 const PROVA_OPEN={};   // cada prova feta s'hi apunta (62_proves_personatge.js…)
-const PROVES=[{id:'personatge',lab:'Crea el teu personatge'},{id:'nivells',lab:'Saltar nivells'},{id:'render',lab:'Nou motor de render'},{id:'alba',lab:'Moviment estil Alba'}];
+const PROVES=[{id:'personatge',lab:'Crea el teu personatge'},{id:'nivells',lab:'Saltar nivells'},{id:'render',lab:'Nou motor de render · moviment Alba'}];   // en Pere: «el nou render i el moviment Alba són el mateix»
 function showTitleUI(on){['hud','joy','acts','chips','top','hint','bwand','spells','ctx','tbar','frost'].forEach(id=>{const e=$(id);if(e)e.style.visibility=on?'hidden':'';});}
 function provesView(v){const p=$('tproves');if(!p)return;p.classList.toggle('on',!!v);if(!v)return;
   const c=p.querySelector('.card');

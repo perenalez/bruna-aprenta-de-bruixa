@@ -98,7 +98,8 @@ function stepMove(dt){
   mode=inTowerZone(S.pos.x,S.pos.z,S.y)?'tower':'forest';
   S.depth=mode==='forest'?waterDepth(S.pos.x,S.pos.z):0;{const wa=waterAt(S.pos.x,S.pos.z);WL=wa>-1e8?wa:WY;}
   ts*=lerp(1,0.5,sat(S.depth/0.36));
-  if(ts>0&&!S.air&&!act&&!lift.riding&&turboUse(dt,false))ts=TURBO.foot;      // turbo a pie
+  // turbo a pie; con las sabates màgiques corre muchísimo más, casi sin tocar el suelo (v.1.2)
+  S.dash=false;if(ts>0&&!S.air&&!act&&!lift.riding&&turboUse(dt,false)){S.dash=shoesOn;ts=shoesOn?TURBO.footShoes:TURBO.foot;}
   if(S.glide&&ts>0)ts=Math.max(ts,4.6);                                        // planeando avanza más
   if(act||lift.riding)ts=0;
   if(ts>0){const sy=Math.sin(cam.yaw),cy=Math.cos(cam.yaw);S.tyaw=Math.atan2(-sy*iy+cy*ix,-cy*iy-sy*ix);}

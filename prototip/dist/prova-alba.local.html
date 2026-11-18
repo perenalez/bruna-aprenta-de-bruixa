@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f0e1c2">
+<title>Bruna · Prova: moviment estil Alba</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#f0e1c2;touch-action:none;-webkit-user-select:none;user-select:none;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#load{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#f0e1c2;color:#5a3a2a;z-index:9;transition:opacity .6s}
+#load b{font-size:22px}#load small{opacity:.7}
+#track{width:220px;height:8px;border-radius:9px;background:rgba(90,58,42,.15);overflow:hidden}#bar{height:100%;width:0;background:#c97a4a;border-radius:9px;transition:width .2s}
+#hud{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity .8s;z-index:3}
+#hud.on{opacity:1}
+#title{position:absolute;left:calc(env(safe-area-inset-left) + 16px);top:calc(env(safe-area-inset-top) + 12px);color:#fff;text-shadow:0 1px 4px rgba(60,35,20,.85);font-weight:700;font-size:18px}
+#title small{display:block;font-weight:500;font-size:13px;opacity:.9;margin-top:3px}
+#tools{position:absolute;right:calc(env(safe-area-inset-right) + 12px);top:calc(env(safe-area-inset-top) + 10px);display:flex;gap:6px;align-items:center;pointer-events:auto}
+#tools button{border:0;border-radius:999px;background:rgba(70,45,30,.55);color:#fff;font:600 12px system-ui;padding:7px 12px;cursor:pointer}
+#stats{flex-basis:100%;text-align:right;color:#fff;font-size:11px}#stats:not(:empty):before{content:'';}#stats span{background:rgba(70,45,30,.5);border-radius:999px;padding:3px 10px}#stats:empty{display:none}
+#tools{flex-wrap:wrap;justify-content:flex-end;max-width:calc(100vw - 150px)}
+#motor{background:rgba(255,215,94,.85)!important;color:#5a2e10!important;text-shadow:none!important}
+#fps:empty{display:none}#fps{color:#fff;font-size:12px;background:rgba(70,45,30,.55);border-radius:999px;padding:4px 9px;text-shadow:0 1px 2px rgba(0,0,0,.4);margin-right:4px}
+/* controles: mismos tamaños y estilos que src/index.html del juego */
+.ui{position:fixed;z-index:5}
+#hint{left:50%;top:calc(env(safe-area-inset-top) + 150px);transform:translateX(-50%);background:rgba(255,255,255,.82);color:#3b2c2a;padding:7px 14px;border-radius:999px;font-size:12px;pointer-events:none;transition:opacity .8s;white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
+#joy{left:calc(env(safe-area-inset-left) + 22px);bottom:calc(env(safe-area-inset-bottom) + 28px);width:132px;height:132px;border-radius:50%;background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.55);touch-action:none}
+#knob{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;background:rgba(255,255,255,.9);box-shadow:0 2px 8px rgba(0,0,0,.3);pointer-events:none}
+#acts{right:calc(env(safe-area-inset-right) + 22px);bottom:calc(env(safe-area-inset-bottom) + 28px);display:flex;align-items:flex-end;gap:12px}
+.rb{border:0;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 2px 8px rgba(0,0,0,.3);font:700 13px system-ui;color:#3b2c2a;cursor:pointer;touch-action:manipulation}
+.rb:active{transform:scale(.94);background:#fff}
+#bjump{width:88px;height:88px}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="load"><b>Prova: moviment estil Alba</b><div id="track"><div id="bar"></div></div><small>Esculpint el personatge i plantant l'herba…</small></div>
+<div id="hud">
+  <div id="title">Prova · nou motor<small>moviment estil Alba</small></div>
+  <div id="tools"><span id="fps"></span><button id="motor">Motor: nou</button><button id="pers">Personatge</button><button id="post">Desenfocament: sí</button><button id="sortir">Sortir</button><div id="stats"></div></div>
+</div>
+<div id="hint" class="ui"><span class="touch">Joystick: caminar (a fons, córrer) · arrossega per girar la càmera</span><span class="desk">WASD: caminar · Majúscules: córrer · Espai: saltar · arrossega per girar la càmera</span></div>
+<div id="joy" class="ui"><div id="knob"></div></div>
+<div id="acts" class="ui"><button id="bjump" class="rb">Saltar</button></div>
+<script src="../vendor/three.min.js"></script>
+<script>
+(()=>{
+/* ===== 00_util.js ===== */
+/* =====================================================================
+   PRUEBA «ESTIL ALBA» — utilidades comunes
+   Three.js r128 (global THREE). Todo el paquete comparte un solo IIFE.
+   ===================================================================== */
+const TAU = Math.PI * 2;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const sstep = t => t * t * (3 - 2 * t);
+// amortiguación independiente de los fps: acerca a → b con velocidad k (1/s)
+const damp = (a, b, k, dt) => lerp(a, b, 1 - Math.exp(-k * dt));
+const C = h => new THREE.Color(h);
+
+function hash2(i, j) { let h = (Math.imul(i, 374761393) + Math.imul(j, 668265263)) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
+function hash3(i, j, k) { let h = (Math.imul(i, 374761393) + Math.imul(j, 668265263) + Math.imul(k, 1440662683)) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
+function vnoise(x, y) { const i = Math.floor(x), j = Math.floor(y), u = sstep(x - i), v = sstep(y - j); const a = hash2(i, j), b = hash2(i + 1, j), c = hash2(i, j + 1), d = hash2(i + 1, j + 1); return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v; }
+function vnoise3(x, y, z) {
+  const i = Math.floor(x), j = Math.floor(y), k = Math.floor(z), u = sstep(x - i), v = sstep(y - j), w = sstep(z - k);
+  return lerp(lerp(lerp(hash3(i, j, k), hash3(i + 1, j, k), u), lerp(hash3(i, j + 1, k), hash3(i + 1, j + 1, k), u), v),
+    lerp(lerp(hash3(i, j, k + 1), hash3(i + 1, j, k + 1), u), lerp(hash3(i, j + 1, k + 1), hash3(i + 1, j + 1, k + 1), u), v), w);
+}
+function fbm2(x, y, o = 4) { let s = 0, a = .5, f = 1, n = 0; for (let i = 0; i < o; i++) { s += vnoise(x * f, y * f) * a; n += a; a *= .5; f *= 2.03; } return s / n; }
+function rngf(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+// Fusiona geometrías (no indexadas) que tengan position, normal y color.
+// r128 no trae BufferGeometryUtils en el núcleo, por eso va aquí.
+function fusionar(list) {
+  const gs = list.map(g => g.index ? g.toNonIndexed() : g);
+  let n = 0; gs.forEach(g => n += g.attributes.position.count);
+  const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), col = new Float32Array(n * 3);
+  let o = 0;
+  for (const g of gs) {
+    if (!g.attributes.normal) g.computeVertexNormals();
+    const c = g.attributes.position.count;
+    pos.set(g.attributes.position.array.subarray(0, c * 3), o * 3);
+    nor.set(g.attributes.normal.array.subarray(0, c * 3), o * 3);
+    if (g.attributes.color) col.set(g.attributes.color.array.subarray(0, c * 3), o * 3); else col.fill(1, o * 3, (o + c) * 3);
+    o += c;
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  return g;
+}
+// pinta toda una geometría de un color (atributo color por vértice)
+function pintar(g, hex) { const c = C(hex), n = g.attributes.position.count, a = new Float32Array(n * 3); for (let i = 0; i < n; i++) { a[i * 3] = c.r; a[i * 3 + 1] = c.g; a[i * 3 + 2] = c.b; } g.setAttribute('color', new THREE.BufferAttribute(a, 3)); return g; }
+
+/* ===== 10_escultor.js ===== */
+/* =====================================================================
+   ESCULTOR SDF — modelar con «arcilla» desde código
+   ---------------------------------------------------------------------
+   Se describe la pieza como una función de distancia (SDF): primitivas
+   (esfera, elipsoide, cápsula) unidas con mezcla suave. Luego se extrae
+   la superficie con «surface nets» → una única malla orgánica, sin las
+   costuras de esferas y cilindros. Normales del gradiente (suaves) y
+   color por vértice según qué primitiva manda en cada punto.
+
+   Uso:
+     const geo = esculpir((x,y,z)=>{ R0(); U(sEll(...), id); U(sCap(...), id2, .03); return D; },
+                          pintura|null, [xmin,ymin,zmin], [xmax,ymax,zmax], paso, paleta);
+   - U(d, id, k): unión (suave si k>0). SUB(d, k): resta.
+   - pintura(x,y,z,id) → id: permite pintar zonas (mejillas, rayas…).
+   - paso: tamaño de celda en metros (0.006–0.009 para un personaje).
+   Pensado también para «Crea el teu personatge»: cada peinado o prenda
+   puede ser una función SDF que se esculpe al elegirla.
+   ===================================================================== */
+let D = 1e9, ID = 0;
+function R0() { D = 1e9; ID = 0; }
+function U(d, id, k = 0) {
+  if (k > 0) { const h = Math.max(k - Math.abs(D - d), 0) / k; const nd = Math.min(D, d) - h * h * k * .25; if (d < D) ID = id; D = nd; }
+  else if (d < D) { D = d; ID = id; }
+}
+function SUB(d, k = 0) {
+  if (k > 0) { const h = Math.max(k - Math.abs(D + d), 0) / k; D = Math.max(D, -d) + h * h * k * .25; } else D = Math.max(D, -d);
+}
+const len3 = (x, y, z) => Math.sqrt(x * x + y * y + z * z);
+function sSph(x, y, z, cx, cy, cz, r) { return len3(x - cx, y - cy, z - cz) - r; }
+function sEll(x, y, z, cx, cy, cz, rx, ry, rz) {
+  const px = (x - cx) / rx, py = (y - cy) / ry, pz = (z - cz) / rz;
+  const k0 = len3(px, py, pz), k1 = len3(px / rx, py / ry, pz / rz);
+  return k0 * (k0 - 1) / (k1 || 1e-6);
+}
+// cápsula entre a y b con radio r1→r2
+function sCap(x, y, z, ax, ay, az, bx, by, bz, r1, r2 = r1) {
+  const px = x - ax, py = y - ay, pz = z - az, bxa = bx - ax, bya = by - ay, bza = bz - az;
+  const h = clamp((px * bxa + py * bya + pz * bza) / (bxa * bxa + bya * bya + bza * bza), 0, 1);
+  return len3(px - bxa * h, py - bya * h, pz - bza * h) - lerp(r1, r2, h);
+}
+
+function esculpir(fn, paint, b0, b1, h, pal) {
+  const nx = Math.ceil((b1[0] - b0[0]) / h) + 1, ny = Math.ceil((b1[1] - b0[1]) / h) + 1, nz = Math.ceil((b1[2] - b0[2]) / h) + 1;
+  const F = new Float32Array(nx * ny * nz);
+  let p = 0;
+  for (let k = 0; k < nz; k++) { const z = b0[2] + k * h; for (let j = 0; j < ny; j++) { const y = b0[1] + j * h; for (let i = 0; i < nx; i++) F[p++] = fn(b0[0] + i * h, y, z); } }
+  const cx = nx - 1, cy = ny - 1, cz = nz - 1;
+  const VI = new Int32Array(cx * cy * cz).fill(-1);
+  const pos = [];
+  const CO = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0], [0, 0, 1], [1, 0, 1], [0, 1, 1], [1, 1, 1]];
+  const ED = [[0, 1], [2, 3], [4, 5], [6, 7], [0, 2], [1, 3], [4, 6], [5, 7], [0, 4], [1, 5], [2, 6], [3, 7]];
+  const v = new Float32Array(8);
+  for (let k = 0; k < cz; k++) for (let j = 0; j < cy; j++) for (let i = 0; i < cx; i++) {
+    let mask = 0;
+    for (let c = 0; c < 8; c++) { const o = CO[c]; v[c] = F[(i + o[0]) + nx * ((j + o[1]) + ny * (k + o[2]))]; if (v[c] < 0) mask |= 1 << c; }
+    if (mask === 0 || mask === 255) continue;
+    let sx = 0, sy = 0, sz = 0, n = 0;
+    for (const [a, b] of ED) {
+      if (((mask >> a) & 1) !== ((mask >> b) & 1)) {
+        const t = v[a] / (v[a] - v[b]), A = CO[a], B = CO[b];
+        sx += A[0] + (B[0] - A[0]) * t; sy += A[1] + (B[1] - A[1]) * t; sz += A[2] + (B[2] - A[2]) * t; n++;
+      }
+    }
+    VI[i + cx * (j + cy * k)] = pos.length / 3;
+    pos.push(b0[0] + (i + sx / n) * h, b0[1] + (j + sy / n) * h, b0[2] + (k + sz / n) * h);
+  }
+  const Cc = (i, j, k) => VI[i + cx * (j + cy * k)];
+  const idx = [];
+  const quad = (a, b, c, d) => { if (a < 0 || b < 0 || c < 0 || d < 0) return; idx.push(a, b, c, a, c, d); };
+  for (let k = 0; k < nz; k++) for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+    const f0 = F[i + nx * (j + ny * k)] < 0;
+    if (i < cx && j > 0 && k > 0 && j < cy && k < cz && f0 !== (F[i + 1 + nx * (j + ny * k)] < 0)) quad(Cc(i, j - 1, k - 1), Cc(i, j, k - 1), Cc(i, j, k), Cc(i, j - 1, k));
+    if (j < cy && i > 0 && k > 0 && i < cx && k < cz && f0 !== (F[i + nx * (j + 1 + ny * k)] < 0)) quad(Cc(i - 1, j, k - 1), Cc(i, j, k - 1), Cc(i, j, k), Cc(i - 1, j, k));
+    if (k < cz && i > 0 && j > 0 && i < cx && j < cy && f0 !== (F[i + nx * (j + ny * (k + 1))] < 0)) quad(Cc(i - 1, j - 1, k), Cc(i, j - 1, k), Cc(i, j, k), Cc(i - 1, j, k));
+  }
+  const nv = pos.length / 3, nor = new Float32Array(nv * 3), col = new Float32Array(nv * 3);
+  const e = h * .5;
+  for (let q = 0; q < nv; q++) {
+    const x = pos[q * 3], y = pos[q * 3 + 1], z = pos[q * 3 + 2];
+    const gx = fn(x + e, y, z) - fn(x - e, y, z), gy = fn(x, y + e, z) - fn(x, y - e, z), gz = fn(x, y, z + e) - fn(x, y, z - e);
+    const l = Math.hypot(gx, gy, gz) || 1; nor[q * 3] = gx / l; nor[q * 3 + 1] = gy / l; nor[q * 3 + 2] = gz / l;
+    fn(x, y, z); const id = paint ? paint(x, y, z, ID) : ID;
+    const cc = pal[id] || pal[0]; col[q * 3] = cc.r; col[q * 3 + 1] = cc.g; col[q * 3 + 2] = cc.b;
+  }
+  // orienta cada triángulo según la normal del campo
+  for (let t = 0; t < idx.length; t += 3) {
+    const a = idx[t] * 3, b = idx[t + 1] * 3, c = idx[t + 2] * 3;
+    const ux = pos[b] - pos[a], uy = pos[b + 1] - pos[a + 1], uz = pos[b + 2] - pos[a + 2];
+    const wx = pos[c] - pos[a], wy = pos[c + 1] - pos[a + 1], wz = pos[c + 2] - pos[a + 2];
+    const fx = uy * wz - uz * wy, fy = uz * wx - ux * wz, fz = ux * wy - uy * wx;
+    if ((nor[a] + nor[b] + nor[c]) * fx + (nor[a + 1] + nor[b + 1] + nor[c + 1]) * fy + (nor[a + 2] + nor[b + 2] + nor[c + 2]) * fz < 0) { const tmp = idx[t + 1]; idx[t + 1] = idx[t + 2]; idx[t + 2] = tmp; }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  g.setIndex(idx);
+  return g;
+}
+
+/* ===== 20_mon.js ===== */
+/* =====================================================================
+   MUNDO DE LA PRUEBA — una isla dorada estilo Alba
+   Terreno con caminos, pinos y olivos con copas de borde de hojas,
+   rocas facetadas, agaves, valla, torreón en la colina, mar y cielo.
+   Es solo el escenario de la prueba: en el juego real el terreno es
+   landH()/gY() y los árboles los de 04/05. Lo reutilizable de aquí son
+   taperTube/canopyBlob (copas con hojas en el borde) y el mar.
+   ===================================================================== */
+const MON = (() => {
+  const PATHS = [
+    [[0, 12], [2.5, 5], [1, -2], [-4, -8], [-10, -14], [-16, -19.5]],
+    [[2.5, 5], [9, 8], [17, 11], [25, 13], [33, 13]],
+    [[1, -2], [8, -6], [15, -12], [20, -20]],
+  ];
+  const SEGS = [];
+  PATHS.forEach(p => { for (let i = 0; i < p.length - 1; i++) SEGS.push([p[i][0], p[i][1], p[i + 1][0], p[i + 1][1]]); });
+  function pathDist(x, z) {
+    let m = 1e9;
+    for (const [ax, az, bx, bz] of SEGS) {
+      const dx = bx - ax, dz = bz - az; const t = clamp(((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz), 0, 1);
+      const w = Math.hypot(x - ax - dx * t, z - az - dz * t); if (w < m) m = w;
+    }
+    return m + (vnoise(x * .6, z * .6) - .5) * .5;
+  }
+  const TOWER = [-20, -24];
+  const SEA = -.45;
+  function islandR(x, z) { const a = Math.atan2(z, x); return 44 + (vnoise(Math.cos(a) * 1.7 + 7, Math.sin(a) * 1.7 + 3) - .5) * 20; }
+  function heightAt(x, z) {
+    const r = Math.hypot(x, z), Ri = islandR(x, z);
+    let h = .35 + fbm2(x * .03 + 11, z * .03 + 5) * 3.6 + (vnoise(x * .15, z * .15) - .5) * .35;
+    h += 5.2 * Math.exp(-((x - TOWER[0]) ** 2 + (z - TOWER[1]) ** 2) / 140);
+    h -= 1.6 * Math.exp(-(x * x + (z - 6) ** 2) / 200);
+    const pd = pathDist(x, z); h -= (1 - smooth(0, 2.2, pd)) * .12;
+    return lerp(h, -2.8, smooth(Ri - 12, Ri + 3, r));
+  }
+
+  function terreno(seg) {
+    const S = 130, N = seg;
+    const g = new THREE.PlaneGeometry(S, S, N, N); g.rotateX(-Math.PI / 2);
+    const p = g.attributes.position, col = new Float32Array(p.count * 3);
+    const cGr = C('#d9b456'), cGr2 = C('#ead07a'), cGr3 = C('#c39d48'), cGreen = C('#9aa046'), cDirt = C('#e1bd85'), cDirt2 = C('#d4ad78'), cSand = C('#efdcaa'), cWet = C('#b9dccd'), cDeep = C('#5aaebe');
+    const tmp = new THREE.Color(), dirt = new THREE.Color();
+    for (let i = 0; i < p.count; i++) {
+      const x = p.getX(i), z = p.getZ(i); const h = heightAt(x, z); p.setY(i, h);
+      const n = fbm2(x * .08, z * .08, 3), n2 = vnoise(x * .4, z * .4);
+      tmp.copy(cGr).lerp(cGr2, smooth(.45, .7, n)).lerp(cGr3, smooth(.6, .9, n2) * .5).lerp(cGreen, smooth(.55, .8, fbm2(x * .05 + 40, z * .05)) * .55);
+      dirt.copy(cDirt).lerp(cDirt2, n2 * .6);
+      tmp.lerp(dirt, 1 - smooth(.9, 1.6, pathDist(x, z)));
+      tmp.lerp(cSand, 1 - smooth(.05, .7, h - SEA));
+      if (h < SEA) tmp.copy(cWet).lerp(cDeep, smooth(0, 1.6, SEA - h));
+      col[i * 3] = tmp.r; col[i * 3 + 1] = tmp.g; col[i * 3 + 2] = tmp.b;
+    }
+    g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    g.computeVertexNormals();
+    const m = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true }));
+    m.receiveShadow = true;
+    return m;
+  }
+
+  /* --- tronco retorcido: tubo con radio que se estrecha y bulto aleatorio --- */
+  function taperTube(pts, r0, r1, radial, colA, colB, seed) {
+    const curve = new THREE.CatmullRomCurve3(pts);
+    const segs = Math.max(6, pts.length * 5);
+    const fr = curve.computeFrenetFrames(segs, false);
+    const pos = [], col = [], idx = [];
+    const tmp = new THREE.Color();
+    for (let s = 0; s <= segs; s++) {
+      const t = s / segs, P = curve.getPointAt(t), N = fr.normals[s], B = fr.binormals[s];
+      const rad = lerp(r0, r1, Math.pow(t, .8)) * (1 + (s === 0 ? .35 : 0));
+      for (let k = 0; k <= radial; k++) {
+        const a = k / radial * TAU, wob = 1 + (vnoise(a * 1.3 + seed, t * 6) - .5) * .35;
+        const cx = Math.cos(a) * rad * wob, cy = Math.sin(a) * rad * wob;
+        pos.push(P.x + N.x * cx + B.x * cy, P.y + N.y * cx + B.y * cy, P.z + N.z * cx + B.z * cy);
+        tmp.copy(colA).lerp(colB, vnoise(k * .9, s * .7 + seed) * .8); col.push(tmp.r, tmp.g, tmp.b);
+      }
+    }
+    for (let s = 0; s < segs; s++) for (let k = 0; k < radial; k++) { const a = s * (radial + 1) + k, b = a + radial + 1; idx.push(a, b, a + 1, b, b + 1, a + 1); }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.setIndex(idx); g.computeVertexNormals();
+    return g;
+  }
+  /* --- copa: masa con ruido + «tarjetas» de hojas en el borde que rompen la silueta --- */
+  function canopyBlob(cx, cy, cz, sx, sy, sz, seed, cols) {
+    const g = new THREE.IcosahedronGeometry(1, 3);
+    const p = g.attributes.position, col = new Float32Array(p.count * 3), dirs = [];
+    const tmp = new THREE.Color();
+    for (let i = 0; i < p.count; i++) {
+      const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+      const n = vnoise3(x * 1.8 + seed, y * 1.8, z * 1.8 - seed);
+      const d = .82 + n * .35 + (vnoise3(x * 4 + seed, y * 4, z * 4) - .5) * .12;
+      const yy = y < 0 ? y * .55 : y;
+      p.setXYZ(i, cx + x * sx * d, cy + yy * sy * d, cz + z * sz * d);
+      dirs.push(x, y, z);
+      tmp.copy(cols[1]).lerp(cols[0], smooth(-.1, .9, y) * .8).lerp(cols[2], smooth(.1, -.9, y)); tmp.offsetHSL(0, 0, (n - .5) * .06);
+      col[i * 3] = tmp.r; col[i * 3 + 1] = tmp.g; col[i * 3 + 2] = tmp.b;
+    }
+    g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    g.computeVertexNormals();
+    // normales suavizadas hacia la esfera: luz más blanda, como follaje
+    const nn = g.attributes.normal, v = new THREE.Vector3(), w = new THREE.Vector3();
+    for (let i = 0; i < nn.count; i++) { v.set(nn.getX(i), nn.getY(i), nn.getZ(i)).lerp(w.set(dirs[i * 3], dirs[i * 3 + 1], dirs[i * 3 + 2]), .65).normalize(); nn.setXYZ(i, v.x, v.y, v.z); }
+    const cpos = [], ccol = [], cnor = [], cidx = [];
+    const r = rngf(seed * 13 + 1);
+    const ncards = Math.round(26 * (sx + sz));
+    for (let i = 0; i < ncards; i++) {
+      const a = r() * TAU, e = (r() - .35) * 1.2;
+      const dx = Math.cos(a) * Math.cos(e), dy = Math.sin(e), dz = Math.sin(a) * Math.cos(e);
+      const px = cx + dx * sx * 1.02, py = cy + (dy < 0 ? dy * .55 : dy) * sy * 1.02, pz = cz + dz * sz * 1.02;
+      const s = .22 + r() * .2, tx = -Math.sin(a), tz = Math.cos(a), base = cpos.length / 3;
+      const ang = (r() - .5) * 1.4, ca = Math.cos(ang), sa = Math.sin(ang);
+      for (const [u, ww] of [[0, 0], [s * .5, s * .35], [0, s * 1.1], [-s * .5, s * .35]]) {
+        const uu = u * ca - ww * sa, w2 = u * sa + ww * ca;
+        cpos.push(px + tx * uu + dx * w2 * .5, py + w2 * .7 + dy * w2 * .3, pz + tz * uu + dz * w2 * .5);
+        tmp.copy(cols[1]).lerp(cols[0], smooth(-.1, .9, dy) * .8).lerp(cols[2], smooth(.1, -.9, dy)); tmp.offsetHSL(0, 0, (r() - .5) * .06);
+        ccol.push(tmp.r, tmp.g, tmp.b); cnor.push(dx, dy, dz);
+      }
+      cidx.push(base, base + 1, base + 2, base, base + 2, base + 3);
+    }
+    const cg = new THREE.BufferGeometry(); cg.setAttribute('position', new THREE.Float32BufferAttribute(cpos, 3)); cg.setAttribute('color', new THREE.Float32BufferAttribute(ccol, 3)); cg.setAttribute('normal', new THREE.Float32BufferAttribute(cnor, 3)); cg.setIndex(cidx);
+    return [g, cg];
+  }
+  function arbres(spots) {
+    const trunks = [], leaves = [];
+    const bark = C('#7a5b4c'), bark2 = C('#5d4238');
+    const PALS = [[C('#8ea24a'), C('#5f7a34'), C('#3c5328')], [C('#a3aa52'), C('#6f8238'), C('#46582a')], [C('#7f9a54'), C('#4f6b3a'), C('#33472a')]];
+    spots.forEach(([x, z, sc, seed]) => {
+      const y0 = heightAt(x, z) - .1, r = rngf(seed);
+      const pine = r() < .55, pal = PALS[Math.floor(r() * PALS.length)];
+      const lean = (r() - .5) * .5, la = r() * TAU;
+      if (pine) {
+        const H = (4.2 + r() * 2.2) * sc, pts = [];
+        for (let k = 0; k <= 5; k++) { const t = k / 5; pts.push(new THREE.Vector3(x + Math.cos(la) * lean * H * t * t + Math.sin(t * 5 + seed) * .15, y0 + t * H, z + Math.sin(la) * lean * H * t * t + Math.cos(t * 4 + seed) * .15)); }
+        trunks.push(taperTube(pts, .22 * sc, .07 * sc, 8, bark, bark2, seed));
+        const top = pts[5], nb = 3 + Math.floor(r() * 2);
+        for (let b = 0; b < nb; b++) {
+          const ba = la + b / nb * TAU + r() * .5, bl = (1.1 + r() * .8) * sc;
+          const start = pts[3 + (b % 2)].clone();
+          const end = new THREE.Vector3(top.x + Math.cos(ba) * bl, top.y + (.1 + r() * .5) * sc, top.z + Math.sin(ba) * bl);
+          trunks.push(taperTube([start, start.clone().lerp(end, .5).add(new THREE.Vector3(0, .35 * sc, 0)), end], .09 * sc, .035 * sc, 6, bark, bark2, seed + b));
+          leaves.push(...canopyBlob(end.x, end.y + .25 * sc, end.z, (1.2 + r() * .5) * sc, (.5 + r() * .2) * sc, (1.1 + r() * .5) * sc, seed + b * 7, pal));
+        }
+        leaves.push(...canopyBlob(top.x, top.y + .35 * sc, top.z, 1.6 * sc, .6 * sc, 1.5 * sc, seed + 99, pal));
+      } else {
+        const H = (2.2 + r() * 1.2) * sc, pts = [];
+        for (let k = 0; k <= 4; k++) { const t = k / 4; pts.push(new THREE.Vector3(x + Math.sin(t * 4 + seed) * .25 * sc, y0 + t * H, z + Math.cos(t * 3 + seed) * .25 * sc)); }
+        trunks.push(taperTube(pts, .26 * sc, .12 * sc, 8, bark, bark2, seed));
+        const top = pts[4], nb = 3 + Math.floor(r() * 3);
+        for (let b = 0; b < nb; b++) {
+          const ba = b / nb * TAU + r(), bl = (1 + r() * .9) * sc;
+          const end = new THREE.Vector3(top.x + Math.cos(ba) * bl, top.y + (.4 + r() * .9) * sc, top.z + Math.sin(ba) * bl);
+          trunks.push(taperTube([pts[3].clone(), top.clone().lerp(end, .5), end], .11 * sc, .04 * sc, 6, bark, bark2, seed + b));
+          leaves.push(...canopyBlob(end.x, end.y + .2 * sc, end.z, (.9 + r() * .4) * sc, (.65 + r() * .25) * sc, (.9 + r() * .4) * sc, seed + b * 5, pal));
+        }
+      }
+    });
+    const tm = new THREE.Mesh(fusionar(trunks), new THREE.MeshLambertMaterial({ vertexColors: true }));
+    const lm = new THREE.Mesh(fusionar(leaves), new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide }));
+    tm.castShadow = tm.receiveShadow = true; lm.castShadow = lm.receiveShadow = true;
+    const grp = new THREE.Group(); grp.add(tm, lm); return grp;
+  }
+  function roques(spots) {
+    const geos = [];
+    spots.forEach(([x, z, s, seed]) => {
+      let g = new THREE.IcosahedronGeometry(1, 1);
+      const p = g.attributes.position, r = rngf(seed);
+      const sx = s * (1 + r() * .6), sy = s * (.55 + r() * .35), sz = s * (.9 + r() * .5);
+      for (let i = 0; i < p.count; i++) {
+        const vx = p.getX(i), vy = p.getY(i), vz = p.getZ(i);
+        const d = .8 + vnoise3(vx * 1.4 + seed, vy * 1.4, vz * 1.4) * .45;
+        p.setXYZ(i, x + vx * sx * d, heightAt(x, z) - .15 * s + (vy < -.2 ? -.2 : vy) * sy * d, z + vz * sz * d);
+      }
+      if (g.index) g = g.toNonIndexed();
+      g.computeVertexNormals();   // facetada a propósito: las rocas de Alba lo son
+      const n = g.attributes.position.count, col = new Float32Array(n * 3), nn = g.attributes.normal;
+      const base = C(r() < .5 ? '#e0cfb3' : '#cdb9a0'), top = C('#f1e6d2'), tmp = new THREE.Color();
+      for (let i = 0; i < n; i++) { tmp.copy(base).lerp(top, clamp(nn.getY(i), 0, 1) * .5); tmp.offsetHSL(0, 0, (hash2(i, seed) - .5) * .05); col[i * 3] = tmp.r; col[i * 3 + 1] = tmp.g; col[i * 3 + 2] = tmp.b; }
+      g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+      geos.push(g);
+    });
+    const m = new THREE.Mesh(fusionar(geos), new THREE.MeshLambertMaterial({ vertexColors: true }));
+    m.castShadow = m.receiveShadow = true; return m;
+  }
+  function atzavares(spots) {
+    const geos = [];
+    spots.forEach(([x, z, s, seed]) => {
+      const r = rngf(seed), y0 = heightAt(x, z) - .05;
+      const pos = [], col = [], idx = [];
+      const c0 = C('#6e9a86'), c1 = C('#a9c7a8');
+      const nl = 11 + Math.floor(r() * 5);
+      for (let l = 0; l < nl; l++) {
+        const a = l / nl * TAU + r() * .3, up = .35 + r() * .9, Ln = (.6 + r() * .5) * s, Wd = .09 * s;
+        const dx = Math.cos(a), dz = Math.sin(a), tx = -dz, tz = dx, b = pos.length / 3;
+        for (let k = 0; k <= 4; k++) {
+          const t = k / 4, hh = Math.sin(up) * Ln * t - t * t * Ln * .25, out = Math.cos(up) * Ln * t + t * t * .1 * Ln;
+          const w = Wd * (1 - t) * (k === 4 ? 0 : 1);
+          pos.push(x + dx * out - tx * w, y0 + hh, z + dz * out - tz * w, x + dx * out + tx * w, y0 + hh + w * .4, z + dz * out + tz * w);
+          const cc = c0.clone().lerp(c1, t); col.push(cc.r, cc.g, cc.b, cc.r, cc.g, cc.b);
+        }
+        for (let k = 0; k < 4; k++) { const q = b + k * 2; idx.push(q, q + 1, q + 3, q, q + 3, q + 2); }
+      }
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.setIndex(idx); g.computeVertexNormals();
+      geos.push(g);
+    });
+    const m = new THREE.Mesh(fusionar(geos), new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide }));
+    m.castShadow = m.receiveShadow = true; return m;
+  }
+  function torreo() {
+    const grp = new THREE.Group();
+    const [tx, tz] = TOWER, y0 = heightAt(tx, tz) - .4;
+    const prof = []; for (let i = 0; i <= 12; i++) { const t = i / 12; prof.push(new THREE.Vector2(2.35 - t * .25 + Math.sin(t * 9) * .03, t * 7.2)); }
+    let g = new THREE.LatheGeometry(prof, 36);
+    const p = g.attributes.position, col = new Float32Array(p.count * 3), tmp = new THREE.Color();
+    for (let i = 0; i < p.count; i++) {
+      const x = p.getX(i), y = p.getY(i), z = p.getZ(i), a = Math.atan2(z, x);
+      const row = Math.floor(y * 2.4), brick = Math.floor((a + Math.PI) * 4 + row * .5);
+      const d = 1 + (vnoise3(x * 1.2, y * 1.2, z * 1.2) - .5) * .05;
+      p.setXYZ(i, x * d, y, z * d);
+      tmp.set('#d9cfc8').lerp(C('#b6a7a6'), hash2(row, brick) * .8).lerp(C('#96a76a'), smooth(.8, 0, y) * vnoise(a * 3, 1) * .8);
+      col[i * 3] = tmp.r; col[i * 3 + 1] = tmp.g; col[i * 3 + 2] = tmp.b;
+    }
+    g.setAttribute('color', new THREE.BufferAttribute(col, 3)); g.computeVertexNormals();
+    const body = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true })); body.castShadow = body.receiveShadow = true;
+    const rp = []; for (let i = 0; i <= 14; i++) { const t = i / 14; rp.push(new THREE.Vector2(Math.max(.02, (1 - t) * 3.1 * (1 - .12 * Math.sin(t * Math.PI))), t * 3.8)); }
+    g = new THREE.LatheGeometry(rp, 36);
+    const rpos = g.attributes.position, rcol = new Float32Array(rpos.count * 3);
+    for (let i = 0; i < rpos.count; i++) {
+      const y = rpos.getY(i), t = y / 3.8, x = rpos.getX(i), z = rpos.getZ(i);
+      rpos.setXYZ(i, x - t * t * t * .9, y, z + t * t * t * .3);
+      tmp.set('#d48a4a').lerp(C('#a85e34'), (Math.floor(y * 3) % 2) * .35 + hash2(Math.floor(y * 3), Math.floor(Math.atan2(z, x) * 6)) * .2);
+      rcol[i * 3] = tmp.r; rcol[i * 3 + 1] = tmp.g; rcol[i * 3 + 2] = tmp.b;
+    }
+    g.setAttribute('color', new THREE.BufferAttribute(rcol, 3)); g.computeVertexNormals();
+    const roof = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true })); roof.position.y = 7.0; roof.castShadow = true;
+    const win = new THREE.MeshBasicMaterial({ color: '#ffd27a' }), dark = new THREE.MeshLambertMaterial({ color: '#4a3530' });
+    const arc = (w, h) => { const s = new THREE.Shape(); s.moveTo(-w / 2, 0); s.lineTo(w / 2, 0); s.lineTo(w / 2, h - w / 2); s.absarc(0, h - w / 2, w / 2, 0, Math.PI, false); s.lineTo(-w / 2, 0); return new THREE.ShapeGeometry(s, 8); };
+    [[.4, 4.8, win, .7, 1.1], [2.5, 3.2, win, .6, 1], [1.4, 0, dark, 1.2, 2.1]].forEach(([a, y, m, w, h]) => {
+      const mm = new THREE.Mesh(arc(w, h), m), rr = 2.33 - y / 7.2 * .25;
+      mm.position.set(Math.cos(a) * rr * 1.01, y + .4, Math.sin(a) * rr * 1.01); mm.lookAt(Math.cos(a) * 9, y + .4, Math.sin(a) * 9); grp.add(mm);
+    });
+    grp.add(body, roof); grp.position.set(tx, y0, tz); grp.rotation.y = .9;
+    return grp;
+  }
+  function tanca() {
+    const geos = [], r = rngf(12);
+    const pts = [[3.6, 6], [8, 9.6], [14, 12.6], [19, 14.6]];
+    for (let s = 0; s < pts.length - 1; s++) {
+      const [ax, az] = pts[s], [bx, bz] = pts[s + 1], Ln = Math.hypot(bx - ax, bz - az), n = Math.ceil(Ln / 1.6);
+      for (let i = 0; i <= n; i++) {
+        const t = i / n, x = lerp(ax, bx, t), z = lerp(az, bz, t), y = heightAt(x, z);
+        const post = new THREE.BoxGeometry(.11, .8, .11); post.rotateZ((r() - .5) * .15); post.rotateX((r() - .5) * .15); post.translate(x, y + .35, z); geos.push(post);
+      }
+      const ang = Math.atan2(bz - az, bx - ax);
+      [.55, .25].forEach(hh => { const rail = new THREE.BoxGeometry(Ln, .06, .05); rail.rotateY(-ang); rail.translate((ax + bx) / 2, (heightAt(ax, az) + heightAt(bx, bz)) / 2 + hh, (az + bz) / 2); geos.push(rail); });
+    }
+    const m = new THREE.Mesh(fusionar(geos.map(g => pintar(g.toNonIndexed(), '#b79b7c'))), new THREE.MeshLambertMaterial({ vertexColors: true }));
+    m.castShadow = m.receiveShadow = true; return m;
+  }
+  function mar(uTime) {
+    const g = new THREE.PlaneGeometry(700, 700, 1, 1); g.rotateX(-Math.PI / 2);
+    const m = new THREE.MeshStandardMaterial({ color: '#3aa3c0', roughness: .25, metalness: 0, transparent: true, opacity: .8 });
+    m.onBeforeCompile = sh => {
+      sh.uniforms.uTime = uTime;
+      sh.vertexShader = sh.vertexShader.replace('void main() {', 'varying vec3 vWP;\nvoid main() {').replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvWP = (modelMatrix * vec4(transformed, 1.)).xyz;');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uTime;\nvarying vec3 vWP;')
+        .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+          { float a = sin(vWP.x*1.3 + uTime*1.2)*.5 + sin(vWP.z*1.7 - uTime*.9)*.5 + sin((vWP.x+vWP.z)*3.1 + uTime*2.)*.25;
+            float b = cos(vWP.z*1.1 + uTime)*.5 + cos((vWP.x-vWP.z)*2.3 - uTime*1.4)*.3;
+            normal = normalize(normal + vec3(a, 0., b) * .08); }`);
+    };
+    const sea = new THREE.Mesh(g, m); sea.position.y = SEA; sea.receiveShadow = true;
+    return sea;
+  }
+  function cel() {
+    const m = new THREE.ShaderMaterial({
+      side: THREE.BackSide, depthWrite: false, fog: false,
+      uniforms: { top: { value: C('#6fb2df') }, mid: { value: C('#b9dcec') }, hor: { value: C('#fbe7c6') }, sunDir: { value: new THREE.Vector3(-.5, .45, .3).normalize() } },
+      vertexShader: 'varying vec3 vD; void main(){ vD = normalize(position); gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }',
+      fragmentShader: `uniform vec3 top, mid, hor, sunDir; varying vec3 vD;
+        void main(){ float h = vD.y; vec3 c = mix(hor, mid, smoothstep(-.02, .18, h)); c = mix(c, top, smoothstep(.18, .7, h));
+        c += vec3(1.,.85,.6) * pow(max(dot(vD, sunDir), 0.), 24.) * .35; gl_FragColor = vec4(c, 1.); }`,
+    });
+    return new THREE.Mesh(new THREE.SphereGeometry(450, 32, 16), m);
+  }
+
+  // Construye todo y devuelve los obstáculos (círculos [x,z,r]) para colisiones y para no plantar hierba encima.
+  function construir(scene, Q, uTime) {
+    const obstacles = [];
+    scene.add(cel()); scene.add(mar(uTime)); scene.add(terreno(Q.terrainSeg));
+    const r = rngf(2024), treeSpots = [];
+    const fixed = [[-6, 2, 1.1], [7, -1, 1.2], [-3, -14, 1.0], [12, 3, .9], [-12, -6, 1.2], [5, 16, 1.0], [-9, 12, 1.1], [16, -4, 1.0], [-24, -12, 1.3], [-14, -30, 1.1], [22, 6, 1.1], [26, -8, 1.0], [-28, 2, 1.2], [-20, 14, 1.0], [10, -18, 1.2], [0, -25, 1.1], [30, 18, .9], [-32, -18, 1.0]];
+    fixed.forEach(([x, z, s], i) => { if (pathDist(x, z) > 2.2 && heightAt(x, z) > 0) { treeSpots.push([x, z, s, 100 + i * 17]); obstacles.push([x, z, .5 * s]); } });
+    for (let i = 0; i < Q.extraTrees; i++) { const x = (r() - .5) * 70, z = (r() - .5) * 70; if (Math.hypot(x, z) < islandR(x, z) - 10 && pathDist(x, z) > 3 && Math.hypot(x - TOWER[0], z - TOWER[1]) > 6 && Math.hypot(x, z - 12) > 4) { const s = .8 + r() * .5; treeSpots.push([x, z, s, 900 + i * 31]); obstacles.push([x, z, .5 * s]); } }
+    scene.add(arbres(treeSpots));
+    const rocks = [[4.5, 9, .9, 1], [-3.5, 6, .6, 2], [9, 1, 1.3, 3], [-8, -2, .8, 4], [2, -9, 1.1, 5], [-14, -16, 1.6, 6], [18, 9, 1.0, 7], [-18, 6, 1.4, 8], [14, -14, .9, 9], [27, 12, 1.8, 10], [-5, 19, 1.2, 11], [-22, -20, 1.2, 12]];
+    rocks.forEach(([x, z, s]) => obstacles.push([x, z, s * 1.05]));
+    scene.add(roques(rocks));
+    const ag = [[6, 11, 1, 1], [-2, 9, .8, 2], [11, 5, 1.1, 3], [-7, -4, .9, 4], [3.5, -6, 1, 5], [-11, -11, 1.2, 6], [16, 10, .9, 7], [21, -2, 1, 8], [-16, 2, 1.1, 9]];
+    ag.forEach(([x, z, s]) => obstacles.push([x, z, s * .45]));
+    scene.add(atzavares(ag));
+    scene.add(torreo()); obstacles.push([TOWER[0], TOWER[1], 2.6]);
+    scene.add(tanca());
+    return obstacles;
+  }
+  // Densidad de hierba en (x,z): 0 = nada; se usa en 30_herba.js
+  function grassDensity(x, z) {
+    const h = heightAt(x, z); if (h < SEA + .35) return 0;
+    const pd = pathDist(x, z); if (pd < 1.15) return 0;
+    if (Math.hypot(x - TOWER[0], z - TOWER[1]) < 3.6) return 0;
+    if (Math.hypot(x, z) > islandR(x, z) - 2) return 0;
+    return clamp(.25 + smooth(.4, .62, fbm2(x * .06 + 3, z * .06 + 9, 3)) * .9 - (1 - smooth(1.15, 2.2, pd)) * .5, 0, 1);
+  }
+  function tallAt(x, z) { return smooth(.5, .68, fbm2(x * .05 + 21, z * .05 + 2, 3)); }
+  function flowerSpot(x, z) { return Math.hypot(x, z) < islandR(x, z) - 4 && vnoise(x * .18 + 8, z * .18 + 1) > .62 && grassDensity(x, z) > 0; }
+
+  return { heightAt, pathDist, islandR, SEA, TOWER, construir, grassDensity, tallAt, flowerSpot, taperTube, canopyBlob };
+})();
+
+/* ===== 30_herba.js ===== */
+/* =====================================================================
+   HIERBA INSTANCIADA CON VIENTO Y QUE SE APARTA AL PASAR
+   ---------------------------------------------------------------------
+   - Una «mata» (9 briznas curvas) repetida miles de veces con
+     InstancedMesh: una sola llamada de dibujo.
+   - Vertex shader inyectado en MeshLambertMaterial (onBeforeCompile):
+       · viento: dos senos desfasados según la posición de la mata;
+       · empuje: las matas a menos de ~1,1 m del personaje se doblan
+         hacia fuera y se aplastan (uniform VENT.uPlayer).
+     La flexión crece con aH² (0 en la base, 1 en la punta).
+   - Color: degradado base→punta por vértice × tinte por instancia (aTint).
+   - Normales todas hacia arriba: luz suave y uniforme, como en Alba.
+   - Compatible con r128 (no usa transpose(), ni instanceColor).
+   API genérica: se le pasan funciones de suelo y densidad, así que
+   sirve igual para la isla de la prueba que para landH() del juego.
+   ===================================================================== */
+const VENT = { uTime: { value: 0 }, uPlayer: { value: new THREE.Vector3(0, -99, 0) } };
+
+function materialVent(push) {
+  const m = new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide });
+  m.onBeforeCompile = sh => {
+    sh.uniforms.uTime = VENT.uTime; sh.uniforms.uPlayer = VENT.uPlayer;
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', `#include <common>
+        uniform float uTime; uniform vec3 uPlayer; attribute float aH; attribute vec3 aTint;`)
+      .replace('#include <color_vertex>', `#include <color_vertex>
+        #ifdef USE_COLOR
+          vColor.xyz *= aTint;
+        #endif`)
+      .replace('#include <begin_vertex>', `#include <begin_vertex>
+        {
+          vec4 iw = modelMatrix * instanceMatrix * vec4(0., 0., 0., 1.);
+          float k = aH * aH;
+          float w = sin(uTime * 1.5 + iw.x * .22 + iw.z * .15) * .6 + sin(uTime * 2.9 + iw.x * .7 - iw.z * .4) * .25;
+          vec3 off = vec3(w * .16, 0., w * .09) * k;
+          ${push ? `vec2 d = iw.xz - uPlayer.xz; float dist = length(d);
+          float pu = (1. - smoothstep(.2, 1.15, dist)) * step(abs(iw.y - uPlayer.y), 1.2);
+          off.xz += normalize(d + 1e-4) * pu * .5 * k; off.y -= pu * .3 * k;` : ''}
+          // de mundo a local de la instancia (solo giro en Y + escala uniforme)
+          mat3 im = mat3(instanceMatrix); float s2 = dot(im[0], im[0]);
+          transformed += vec3(dot(im[0], off), dot(im[1], off), dot(im[2], off)) / s2;
+        }`);
+  };
+  m.customProgramCacheKey = () => 'vent' + push;
+  return m;
+}
+
+function geometriaMata(blades, hgt, wid, cols) {
+  const pos = [], col = [], ah = [], nor = [], idx = [];
+  const base = C(cols[0]), mid = C(cols[1]), tip = C(cols[2]);
+  const r = rngf(5), tmp = new THREE.Color();
+  for (let b = 0; b < blades; b++) {
+    const a = r() * TAU, rr0 = Math.sqrt(r()) * .13, ox = Math.cos(a) * rr0, oz = Math.sin(a) * rr0;
+    const lean = .15 + r() * .35, la = r() * TAU, h = hgt * (.7 + r() * .5), w = wid * (.8 + r() * .4);
+    const fx = Math.cos(la + Math.PI / 2), fz = Math.sin(la + Math.PI / 2);
+    const s0 = pos.length / 3, segs = 3;
+    for (let s = 0; s <= segs; s++) {
+      const t = s / segs, ww = w * (1 - t * .85) * (s === segs ? 0 : 1);
+      const bx = ox + Math.cos(la) * lean * t * t * h, bz = oz + Math.sin(la) * lean * t * t * h, by = t * h;
+      pos.push(bx - fx * ww, by, bz - fz * ww, bx + fx * ww, by, bz + fz * ww);
+      tmp.copy(base).lerp(mid, smooth(0, .5, t)).lerp(tip, smooth(.5, 1, t));
+      for (let q = 0; q < 2; q++) { col.push(tmp.r, tmp.g, tmp.b); ah.push(t); nor.push(0, 1, 0); }
+    }
+    for (let s = 0; s < segs; s++) { const a0 = s0 + s * 2; idx.push(a0, a0 + 1, a0 + 3, a0, a0 + 3, a0 + 2); }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); g.setAttribute('aH', new THREE.Float32BufferAttribute(ah, 1)); g.setIndex(idx);
+  return g;
+}
+
+/* opts: { count, area:[x0,z0,x1,z1], ground(x,z), density(x,z)→0..1, tall(x,z)→0..1,
+           obstacles:[[x,z,r]], seed, cols:[base,medio,punta], push:true } */
+function herbaInstanciada(o) {
+  const geo = geometriaMata(9, .42, .017, o.cols || ['#a88a3e', '#e0c26c', '#f8ebb4']);
+  const tint = new Float32Array(o.count * 3);
+  geo.setAttribute('aTint', new THREE.InstancedBufferAttribute(tint, 3));
+  const mesh = new THREE.InstancedMesh(geo, materialVent(o.push !== false), o.count);
+  mesh.receiveShadow = true; mesh.frustumCulled = false;
+  const r = rngf(o.seed || 31), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), ps = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0), c = new THREE.Color(), olive = C('#a7a64a');
+  const [x0, z0, x1, z1] = o.area;
+  let n = 0, tries = 0;
+  while (n < o.count && tries < o.count * 8) {
+    tries++;
+    const x = lerp(x0, x1, r()), z = lerp(z0, z1, r());
+    const d = o.density(x, z); if (r() > d) continue;
+    if (o.obstacles && o.obstacles.some(b => Math.hypot(x - b[0], z - b[1]) < b[2] * .8)) continue;
+    const tall = o.tall ? o.tall(x, z) : 0;
+    const s = (.55 + r() * .5) * (1 + tall * .9) * (.6 + d * .5);
+    ps.set(x, o.ground(x, z) - .02, z); q.setFromAxisAngle(up, r() * TAU); sc.set(s, s * (.85 + r() * .35), s);
+    m4.compose(ps, q, sc); mesh.setMatrixAt(n, m4);
+    c.setHSL(.12 + r() * .025 - tall * .01, .42 + r() * .12, .62 + r() * .12); if (vnoise(x * .1 + 50, z * .1) > .7) c.lerp(olive, .4);
+    // el tinte multiplica el degradado: se normaliza para no oscurecer de más
+    tint[n * 3] = c.r * 1.25; tint[n * 3 + 1] = c.g * 1.25; tint[n * 3 + 2] = c.b * 1.25;
+    n++;
+  }
+  mesh.count = n; mesh.instanceMatrix.needsUpdate = true; geo.attributes.aTint.needsUpdate = true;
+  return mesh;
+}
+
+/* flores rojas/blancas/lila con tallo, mismo viento y empuje */
+function florsInstanciades(o) {
+  const pos = [], col = [], ah = [], nor = [], idx = [];
+  const add = (x, y, z, cc, h) => { pos.push(x, y, z); col.push(cc.r, cc.g, cc.b); ah.push(h); nor.push(0, 1, 0); return pos.length / 3 - 1; };
+  const H = .32, stem = C('#6b7d34'), white = C('#ffffff');
+  const a0 = add(-.008, 0, 0, stem, 0), a1 = add(.008, 0, 0, stem, 0), a2 = add(.006, H, 0, stem, 1), a3 = add(-.006, H, 0, stem, 1);
+  idx.push(a0, a1, a2, a0, a2, a3);
+  const cen = add(0, H + .012, 0, C('#2a1a1a'), 1), ring = [];
+  for (let i = 0; i < 10; i++) { const a = i / 10 * TAU, rr = i % 2 ? .035 : .055; ring.push(add(Math.cos(a) * rr, H + (i % 2 ? .008 : .018), Math.sin(a) * rr, white, 1)); }
+  for (let i = 0; i < 10; i++) idx.push(cen, ring[i], ring[(i + 1) % 10]);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); g.setAttribute('aH', new THREE.Float32BufferAttribute(ah, 1)); g.setIndex(idx);
+  const tint = new Float32Array(o.count * 3); g.setAttribute('aTint', new THREE.InstancedBufferAttribute(tint, 3));
+  const mesh = new THREE.InstancedMesh(g, materialVent(true), o.count);
+  const r = rngf(77), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), ps = new THREE.Vector3(), eu = new THREE.Euler();
+  const cols = ['#e8483a', '#e8483a', '#f06a3a', '#f6f0e0', '#c88ae0'].map(C);
+  const [x0, z0, x1, z1] = o.area;
+  let n = 0, tries = 0;
+  while (n < o.count && tries < o.count * 30) {
+    tries++;
+    const x = lerp(x0, x1, r()), z = lerp(z0, z1, r());
+    if (!o.spot(x, z)) continue;
+    const s = .7 + r() * .6;
+    ps.set(x, o.ground(x, z) - .02, z); q.setFromEuler(eu.set((r() - .5) * .3, r() * TAU, (r() - .5) * .3)); sc.set(s, s * (.8 + (o.tall ? o.tall(x, z) : 0) * 1.2), s);
+    m4.compose(ps, q, sc); mesh.setMatrixAt(n, m4);
+    const cc = cols[Math.floor(r() * cols.length)]; tint[n * 3] = cc.r; tint[n * 3 + 1] = cc.g; tint[n * 3 + 2] = cc.b; n++;
+  }
+  mesh.count = n; mesh.frustumCulled = false; mesh.receiveShadow = true; g.attributes.aTint.needsUpdate = true;
+  return mesh;
+}
+
+/* ===== 40_personatge.js ===== */
+/* =====================================================================
+   PERSONAJE — contrato de «rig» + Bruna esculpida por defecto
+   ---------------------------------------------------------------------
+   La lógica (50_locomocio.js) NO conoce el muñeco: solo mueve grupos.
+   Cualquier personaje que cumpla este contrato se anima igual
+   (el de «Crea el teu personatge», la Bruna del juego, el que sea):
+
+     rig = {
+       root,   // Group a los pies, mirando a +z. La lógica pone posición y giro.
+       inner,  // Group hijo de root: aplastar/estirar e inclinación.
+       hips,   // pelvis. hips.position.y = hipY en reposo.
+       hipY,   // altura de la cadera en reposo (m). Escala toda la animación.
+       legs: [derecha(-x), izquierda(+x)],  // pivote en la cadera, cuelgan hacia -y
+       arms: [derecho(-x), izquierdo(+x)],  // pivote en el hombro, cuelgan hacia -y
+       neck,   // pivote de la cabeza
+       // opcionales (si faltan, simplemente no se animan):
+       hat,    // pivote del sombrero (muelle)
+       cape,   // pivote de la capa en la espalda (se levanta con la velocidad)
+       eyes,   // array de grupos: parpadeo con scale.y
+       mouth, mouthY,  // boca: se abre al correr/saltar (scale.y relativo a mouthY)
+       esc,    // escala de velocidades y balanceo (por defecto hipY/0.30)
+       camY,   // altura a la que mira la cámara (por defecto 0.75)
+       knees, feet, legRest, kneeRest,  // piernas con rodilla: [dcha, izda], pose de reposo
+       elbows, // codos [dcho, izdo]
+       extra(dt, pl, t, wn, rn),        // muelles propios del personaje
+       nom,    // nombre que se ve en el botón «Personatge»
+     }
+   ===================================================================== */
+const PAL_BRUNA = [
+  C('#e2a77e'), // 0 piel
+  C('#452a22'), // 1 pelo
+  C('#6c4a90'), // 2 vestido
+  C('#5a3a7a'), // 3 sombrero
+  C('#d06aa8'), // 4 cinta rosa
+  C('#7e3a72'), // 5 capa
+  C('#c9a6dc'), // 6 media clara
+  C('#6a4386'), // 7 raya de la media
+  C('#5a3a40'), // 8 bota
+  C('#e98a8a'), // 9 mejilla
+  C('#b788d0'), // 10 borde de la falda
+  C('#432a5e'), // 11 cinturón
+  C('#b97a58'), // 12 piel en sombra (oreja)
+  C('#f2a6cf'), // 13 puño rosa
+];
+
+// Bruna bruja esculpida con SDF (la de la prueba). progreso(0..1) para la barra de carga.
+function brunaEsculpida(progreso = () => { }) {
+  const mat = new THREE.MeshLambertMaterial({ vertexColors: true });
+  const root = new THREE.Group(), inner = new THREE.Group(); root.add(inner);
+  const hipY = .30;
+  const hips = new THREE.Group(); hips.position.y = hipY; inner.add(hips);
+  const mk = (geo, parent) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; m.receiveShadow = true; parent.add(m); return m; };
+
+  // cuerpo: torso + falda acampanada con pliegues
+  mk(esculpir((x, y, z) => {
+    R0();
+    U(sCap(x, y, z, 0, .2, 0, 0, .33, 0, .082, .095), 2);
+    U(sEll(x, y, z, 0, .335, -.005, .118, .055, .082), 2, .05);
+    const r = Math.hypot(x, z * 1.08), a = Math.atan2(z, x), t = clamp((.22 - y) / .30, 0, 1);
+    const Rr = lerp(.092, .215, Math.pow(t, .8)) * (1 + .055 * Math.sin(a * 9) * t);
+    U(Math.max((r - Rr) * .9, y - .23, -.075 - y + .012 * Math.sin(a * 9)), 2, .03);
+    U(sSph(x, y, z, 0, .33, .088, .018), 4, .006);
+    return D;
+  }, (x, y, z, id) => (id === 2 && y < -.045) ? 10 : (id === 2 && y > .195 && y < .228) ? 11 : id,
+  [-.27, -.11, -.27], [.27, .43, .27], .0085, PAL_BRUNA), hips);
+  progreso(.2);
+
+  // capa
+  const cape = new THREE.Group(); cape.position.set(0, .345, -.04); hips.add(cape);
+  mk(esculpir((x, y, z) => {
+    R0();
+    const r = Math.hypot(x, (z + .02) * 1.15), a = Math.atan2(z, x), t = clamp(-y / .4, 0, 1);
+    const Rr = lerp(.10, .25, Math.pow(t, .75)) * (1 + .05 * Math.sin(a * 7) * t);
+    U(Math.max(Math.abs(r - Rr) - .011, z + .02 - .03 * t, y - .015, -.42 - y), 5);
+    return D;
+  }, null, [-.3, -.46, -.32], [.3, .05, .08], .0085, PAL_BRUNA), cape);
+  progreso(.3);
+
+  // piernas: media de rayas (pintura por altura) + bota
+  const legGeo = esculpir((x, y, z) => {
+    R0();
+    U(sCap(x, y, z, 0, .02, 0, 0, -.2, 0, .042, .035), 6);
+    U(sCap(x, y, z, 0, -.17, 0, 0, -.255, .005, .047, .05), 8, .015);
+    U(sEll(x, y, z, 0, -.268, .03, .056, .042, .083), 8, .03);
+    D = Math.max(D, -.30 - y);
+    return D;
+  }, (x, y, z, id) => (id === 6 && Math.sin(y * 95) > .25) ? 7 : id, [-.08, -.33, -.1], [.08, .06, .14], .0065, PAL_BRUNA);
+  const legs = [-1, 1].map(s => { const g = new THREE.Group(); g.position.set(s * .056, 0, 0); hips.add(g); mk(legGeo, g); return g; });
+  progreso(.4);
+
+  // brazos: manga abullonada + manopla con pulgar separado
+  const arms = [-1, 1].map(s => {
+    const g = new THREE.Group(); g.position.set(s * .128, .315, 0); hips.add(g);
+    mk(esculpir((x, y, z) => {
+      R0();
+      U(sEll(x, y, z, 0, -.035, 0, .056, .066, .056), 2);
+      U(sCap(x, y, z, 0, -.06, 0, 0, -.175, .012, .036, .031), 2, .03);
+      U(sCap(x, y, z, 0, -.17, .012, 0, -.18, .014, .036, .036), 13, .004);
+      U(sEll(x, y, z, 0, -.222, .016, .036, .046, .03), 0, .02);
+      U(sCap(x, y, z, -s * .022, -.2, .03, -s * .03, -.222, .042, .014, .012), 0, .012);
+      return D;
+    }, null, [-.09, -.29, -.08], [.09, .05, .1], .0055, PAL_BRUNA), g);
+    return g;
+  });
+  progreso(.5);
+
+  // cabeza + pelo rizado (una sola pieza: los rizos se funden con el cráneo)
+  const neck = new THREE.Group(); neck.position.set(0, .37, 0); hips.add(neck);
+  const hr = rngf(17), curls = [];
+  for (let i = 0; i < 70; i++) {
+    const a = hr() * TAU, el = -0.45 + hr() * 1.5;
+    const x = Math.cos(a) * Math.cos(el) * .175, y = .18 + Math.sin(el) * .17, z = Math.sin(a) * Math.cos(el) * .17;
+    if (z > .03 && y < .235) continue;      // la cara queda libre
+    curls.push([x, y, z, .034 + hr() * .022]);
+  }
+  for (let i = 0; i < 26; i++) { const a = Math.PI * (.05 + hr() * .9) + Math.PI, y = -.04 + hr() * .16; curls.push([Math.cos(a) * (.16 + hr() * .03), y, Math.sin(a) * (.13 + hr() * .04) - .02, .04 + hr() * .02]); }
+  for (let i = 0; i < 9; i++) { const x = -.13 + i * .0325; curls.push([x, .235 + Math.sin(i * 2.1) * .01, .128 - Math.abs(x) * .3, .03 + hr() * .008]); }
+  [1, -1].forEach(s => { curls.push([s * .158, .1, .03, .034], [s * .162, .05, .02, .032], [s * .155, .0, .0, .03]); });
+  mk(esculpir((x, y, z) => {
+    R0();
+    U(sEll(x, y, z, 0, .175, 0, .158, .152, .148), 0);
+    U(sEll(x, y, z, 0, .115, .035, .128, .1, .118), 0, .06);
+    U(sEll(x, y, z, 0, .07, .07, .06, .045, .055), 0, .06);    // barbilla marcada
+    U(sSph(x, y, z, 0, .13, .152, .016), 0, .02);              // nariz
+    U(sEll(x, y, z, .156, .14, -.005, .022, .036, .028), 12, .015);
+    U(sEll(x, y, z, -.156, .14, -.005, .022, .036, .028), 12, .015);
+    U(sCap(x, y, z, 0, -.05, -.005, 0, .06, 0, .043), 0, .03);
+    const sk = D, skid = ID;
+    let hd = sEll(x, y, z, 0, .195, -.012, .172, .165, .163);
+    hd = Math.max(hd, -Math.max(.035 - z, y - (.218 + .012 * Math.cos(x * 34))));
+    D = 1e9; ID = 1; U(hd, 1);
+    for (const c of curls) U(sSph(x, y, z, c[0], c[1], c[2], c[3]), 1, .028);
+    const hairD = D; D = sk; ID = skid; U(hairD, 1, .012);
+    return D;
+  }, (x, y, z, id) => (id === 0 && (Math.hypot(x - .085, y - .098, z - .118) < .03 || Math.hypot(x + .085, y - .098, z - .118) < .03)) ? 9 : id,
+  [-.25, -.12, -.25], [.25, .43, .25], .0065, PAL_BRUNA), neck).receiveShadow = false;  // sin sombra del ala en la cara
+  progreso(.75);
+
+  // ojos grandes (manga ligero), cejas y boca
+  const eyeMat = new THREE.MeshLambertMaterial({ color: '#2a1717' }), white = new THREE.MeshBasicMaterial({ color: '#ffffff' });
+  const sph = (m, sx, sy, sz, x, y, z, p) => { const o = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), m); o.scale.set(sx, sy, sz); o.position.set(x, y, z); p.add(o); return o; };
+  const eyes = [-1, 1].map(s => {
+    const g = new THREE.Group(); g.position.set(s * .056, .148, .147); g.rotation.set(-.08, s * .38, 0); neck.add(g);
+    sph(eyeMat, .027, .037, .012, 0, 0, 0, g); sph(white, .0085, .0085, .0085, -s * .007, .012, .011, g); sph(white, .004, .004, .004, s * .008, -.013, .011, g);
+    return g;
+  });
+  const brow = new THREE.MeshLambertMaterial({ color: '#2e1b18' });
+  [-1, 1].forEach(s => { const b = sph(brow, .022, .006, .006, s * .058, .203, .142, neck); b.rotation.set(0, s * .35, s * .15); });
+  const mouth = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 8, 0, TAU, Math.PI / 2, Math.PI / 2), new THREE.MeshLambertMaterial({ color: '#7a2a36' }));
+  mouth.scale.set(.022, .016, .008); mouth.position.set(0, .086, .152); mouth.rotation.x = -.15; neck.add(mouth);
+
+  // sombrero de bruja con la punta doblada (pieza propia, con muelle)
+  const hat = new THREE.Group(); hat.position.set(0, .3, -.015); hat.rotation.x = -.12; neck.add(hat);
+  mk(esculpir((x, y, z) => {
+    R0();
+    const rr = x * x + z * z;
+    U(sEll(x, y + .045 * rr / .09 - .004 * Math.sin(Math.atan2(z, x) * 5), z, 0, 0, 0, .3, .02, .29), 3);
+    U(sCap(x, y, z, 0, .0, 0, 0, .2, -.02, .145, .085), 3, .03);
+    U(sCap(x, y, z, 0, .2, -.02, 0, .3, -.06, .085, .05), 3, .04);
+    U(sCap(x, y, z, 0, .3, -.06, .01, .35, -.15, .05, .03), 3, .03);
+    U(sCap(x, y, z, .01, .35, -.15, .02, .34, -.24, .03, .014), 3, .02);
+    return D;
+  }, (x, y, z, id) => (id === 3 && y > .02 && y < .065 && Math.hypot(x, z) < .17) ? 4 : id, [-.33, -.06, -.33], [.33, .42, .33], .007, PAL_BRUNA), hat);
+  progreso(.9);
+
+  return { nom: 'Bruixa', root, inner, hips, hipY, legs, arms, neck, hat, cape, eyes, mouth, mouthY: .016 };
+}
+
+/* ===== Bruna del joc (copiada de src/js/01_utilidades.js i 40_bruna_modelo.js) ===== */
+const BRUNA_JOC = (() => {
+  const PI = Math.PI, TAU = Math.PI * 2;
+  const LM = (c, o) => new THREE.MeshLambertMaterial(Object.assign({ color: c }, o || {}));
+const mk=(geo,mat,x,y,z,parent)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.castShadow=true;if(parent)parent.add(m);return m;};
+function canvasTex(w,h,draw,rx,ry){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,ry);t.anisotropy=4;return t;}
+const dotsTex=canvasTex(128,128,(g,w,h)=>{g.fillStyle='#e8506a';g.fillRect(0,0,w,h);g.fillStyle='#3a2a3f';[[0,96],[128,96],[64,96],[32,32],[96,32]].forEach(([x,y])=>{g.beginPath();g.arc(x,y,11,0,7);g.fill();});},6,2.5);
+const stripe=(ry)=>canvasTex(8,64,(g,w,h)=>{g.fillStyle='#f3efe6';g.fillRect(0,0,w,h/2);g.fillStyle='#464a78';g.fillRect(0,h/2,w,h/2);},1,ry);
+const SPH=(r,w,h)=>new THREE.SphereGeometry(r,w||20,h||14);
+const prismG=(a,b,l)=>new THREE.CylinderGeometry(a,b,l,6,1);
+const ico=(r,d)=>new THREE.IcosahedronGeometry(r,d||0);
+function RBox(w,h,d,r,seg){
+  seg=seg||5;const g=new THREE.BoxGeometry(w,h,d,seg,seg,seg),p=g.attributes.position,n=g.attributes.normal;
+  const hx=w/2-r,hy=h/2-r,hz=d/2-r,v=new THREE.Vector3(),c=new THREE.Vector3();
+  for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i);c.set(clamp(v.x,-hx,hx),clamp(v.y,-hy,hy),clamp(v.z,-hz,hz));v.sub(c).normalize();
+    p.setXYZ(i,c.x+v.x*r,c.y+v.y*r,c.z+v.z*r);n.setXYZ(i,v.x,v.y,v.z);}
+  return g;
+}
+// cabeza con mandíbula: esfera deformada, mentón marcado
+function jawGeo(rx,ry,rz,jawK,chinK){
+  const g=new THREE.SphereGeometry(1,40,30),p=g.attributes.position;
+  for(let i=0;i<p.count;i++){
+    let x=p.getX(i),y=p.getY(i),z=p.getZ(i);
+    const t=Math.max(0,-y),jaw=Math.pow(t,1.25);
+    x*=1-jawK*jaw;z*=1-jawK*0.5*jaw;
+    if(y<0)y*=1+chinK*Math.pow(t,1.4);
+    if(z>0)z*=1+chinK*0.6*smooth(0.45,0.95,t);
+    x*=1+0.07*Math.exp(-Math.pow((y+0.15)/0.28,2));
+    p.setXYZ(i,x*rx,y*ry,z*rz);
+  }
+  g.computeVertexNormals();return g;
+}
+function surfFn(geo){const sk=new THREE.Mesh(geo);sk.updateMatrixWorld(true);const rc=new THREE.Raycaster();
+  return(x,y)=>{rc.set(new THREE.Vector3(x,y,2),new THREE.Vector3(0,0,-1));const h=rc.intersectObject(sk)[0];return h?h.point.z:0.2;};}
+
+
+const L1=0.22,L2=0.22,AH=0.065,HIPW=0.082,STAND=0.488,UA=0.14,FA=0.13;
+const cyl=(a,b,h,n)=>new THREE.CylinderGeometry(a,b,h,n||14,1);
+function buildBruna(){
+  const mSkin=LM('#b9764e'),mSkinD=LM('#a5633f'),mHair=LM('#3a2628',{side:THREE.DoubleSide}),mWhite=LM('#fffdf6',{emissive:'#fffdf6',emissiveIntensity:0.25}),mBlack=LM('#1a1213'),
+    mMouth=LM('#7a342b'),mCheek=new THREE.MeshBasicMaterial({color:'#d5765c',transparent:true,opacity:0.55,depthWrite:false}),
+    mDress=LM('#ffffff',{map:dotsTex,side:THREE.DoubleSide}),mDressT=LM('#ffffff',{map:canvasTex(128,128,(g,w,h)=>{g.fillStyle='#e8506a';g.fillRect(0,0,w,h);g.fillStyle='#3a2a3f';[[0,96],[128,96],[64,96],[32,32],[96,32]].forEach(([x,y])=>{g.beginPath();g.arc(x,y,13,0,7);g.fill();});},4,1.2)}),
+    mShirt=LM('#ffffff',{map:stripe(5)}),mSleeve=LM('#ffffff',{map:stripe(2.5)}),mBow=LM('#6b2234'),mLeg=LM('#333a55'),mShoe=LM('#34303f'),mSole=LM('#b79aa6'),
+    mPack=LM('#6f6e3c'),mPackL=LM('#807e48'),mPackD=LM('#5c5a30'),
+    mBrace=LM('#ffffff',{map:canvasTex(64,4,(g,w,h)=>{['#e8443a','#f59a23','#f6d93a','#4fbf5a','#3f8fe0','#a45fd0'].forEach((c,i)=>{g.fillStyle=c;g.fillRect(i*w/6,0,w/6+1,h);});},2,1)});
+  const root=new THREE.Group();
+  // --- piernas (IK) ---
+  const leg=s=>{
+    const hip=new THREE.Group();hip.rotation.order='ZXY';root.add(hip);
+    mk(SPH(0.068,14,10),mLeg,0,0,0,hip);mk(cyl(0.066,0.056,L1),mLeg,0,-L1/2,0,hip);
+    const knee=new THREE.Group();knee.position.y=-L1;hip.add(knee);
+    mk(SPH(0.056,14,10),mLeg,0,0,0,knee);mk(cyl(0.056,0.05,0.085),mLeg,0,-0.042,0,knee);mk(cyl(0.047,0.04,L2-0.08),mSkin,0,-0.08-(L2-0.08)/2,0,knee);
+    const foot=new THREE.Group();foot.position.y=-L2;knee.add(foot);
+    mk(SPH(0.042,12,8),mSkin,0,0,0,foot);
+    mk(RBox(0.108,0.074,0.2,0.034),mShoe,0,-0.022,0.042,foot);mk(RBox(0.114,0.026,0.208,0.012),mSole,0,-0.052,0.042,foot);
+    return {hip,knee,foot,s,contact:true,fx:0,fz:0,pp:0};
+  };
+  const legL=leg(1),legR=leg(-1);
+  // --- pelvis, falda, pecho ---
+  const pelvis=new THREE.Group();root.add(pelvis);
+  mk(SPH(0.105,16,12),mLeg,0,0.0,0,pelvis).scale.set(1.05,0.8,0.95);
+  const skirt=new THREE.Group();skirt.position.y=0.1;pelvis.add(skirt);
+  const sk=mk(new THREE.LatheGeometry([[0.112,0.02],[0.128,-0.04],[0.158,-0.14],[0.19,-0.24],[0.212,-0.305]].map(p=>new THREE.Vector2(p[0],p[1])),28),mDress,0,0,0,skirt);
+  const chest=new THREE.Group();chest.position.y=0.1;pelvis.add(chest);
+  mk(cyl(0.106,0.116,0.14,20),mDressT,0,0.065,0,chest).scale.z=0.86;
+  mk(cyl(0.092,0.106,0.085,20),mShirt,0,0.175,0,chest).scale.z=0.84;
+  mk(SPH(0.1,18,12),mShirt,0,0.205,0,chest).scale.set(1.28,0.42,0.84);
+  const mPink=LM('#e8506a');mk(RBox(0.12,0.1,0.03,0.014),mPink,0,0.15,0.083,chest);
+  [1,-1].forEach(s=>{const st=mk(RBox(0.026,0.11,0.02,0.008),mPink,s*0.052,0.215,0.066,chest);st.rotation.x=-0.5;});
+  [1,-1].forEach(s=>{const b=mk(new THREE.ConeGeometry(0.03,0.055,6),mBow,s*0.028,0.185,0.102,chest);b.rotation.z=s*PI/2;b.scale.z=0.55;});mk(SPH(0.016,8,6),mBow,0,0.185,0.104,chest);
+  mk(cyl(0.044,0.05,0.07,12),mSkin,0,0.255,0,chest);
+  // mochila (con muelle)
+  const pack=new THREE.Group();pack.position.set(0,0.1,-0.15);chest.add(pack);
+  mk(RBox(0.22,0.2,0.11,0.045),mPack,0,0,0,pack);mk(RBox(0.14,0.09,0.05,0.02),mPackL,0,-0.035,-0.062,pack);mk(RBox(0.15,0.035,0.055,0.014),mPackD,0,0.012,-0.064,pack);mk(RBox(0.2,0.05,0.1,0.02),mPackD,0,0.085,-0.004,pack);
+  [1,-1].forEach(s=>{const a=mk(RBox(0.03,0.12,0.014,0.006),mPack,s*0.09,0.175,0.085,chest);a.rotation.x=-0.25;const t=mk(RBox(0.034,0.016,0.2,0.006),mPack,s*0.086,0.235,-0.01,chest);t.rotation.x=0.12;});
+  // --- brazos ---
+  const arm=s=>{
+    const sh=new THREE.Group();sh.position.set(s*0.135,0.2,0);chest.add(sh);
+    mk(SPH(0.052,12,8),mSleeve,0,0,0,sh);mk(cyl(0.052,0.05,0.075),mSleeve,0,-0.04,0,sh);mk(cyl(0.041,0.038,UA-0.05),mSkin,0,-0.05-(UA-0.05)/2,0,sh);
+    const el=new THREE.Group();el.position.y=-UA;sh.add(el);
+    mk(SPH(0.039,10,8),mSkin,0,0,0,el);mk(cyl(0.038,0.032,FA),mSkin,0,-FA/2,0,el);
+    const hd=new THREE.Group();hd.position.y=-FA+0.006;hd.scale.setScalar(1.18);el.add(hd);
+    mk(SPH(1,12,10),mSkin,0,-0.03,0.002,hd).scale.set(0.021,0.034,0.035);
+    const fg=new THREE.Group();fg.position.set(0,-0.046,0);hd.add(fg);mk(SPH(1,12,10),mSkin,0,-0.024,-0.003,fg).scale.set(0.0175,0.034,0.031);fg.rotation.z=-s*0.3;
+    const th=mk(SPH(1,10,8),mSkin,-s*0.012,-0.036,0.036,hd);th.scale.set(0.0125,0.029,0.0145);th.rotation.set(-0.85,0,s*0.5);
+    if(s<0){const b=mk(new THREE.TorusGeometry(0.036,0.011,6,16),mBrace,0,-FA+0.015,0,el);b.rotation.x=PI/2;}
+    return {sh,el,s,hd,fg};
+  };
+  const armL=arm(1),armR=arm(-1);
+  // --- cabeza ---
+  const head=new THREE.Group();head.position.y=0.45;chest.add(head);
+  const hg=jawGeo(0.215,0.2,0.195,0.2,0.05),surf=surfFn(hg);
+  mk(hg,mSkin,0,0,0,head);
+  [1,-1].forEach(s=>{mk(SPH(0.036,10,8),mSkinD,s*0.212,-0.02,0,head).scale.set(0.45,1,0.8);});
+  const eyes=[];
+  [1,-1].forEach(s=>{
+    const g=new THREE.Group();g.position.set(s*0.088,-0.004,surf(s*0.088,-0.004)-0.012);g.rotation.y=s*0.22;head.add(g);
+    const w=mk(SPH(0.05,18,12),mWhite,0,0,0,g);w.scale.z=0.36;w.castShadow=false;
+    const pu=mk(SPH(0.03,14,10),mBlack,-s*0.004,-0.002,0.014,g);pu.scale.z=0.4;pu.castShadow=false;
+    mk(SPH(0.008,6,5),mWhite,0.01,0.012,0.026,g).castShadow=false;
+    eyes.push(g);
+    const br=mk(SPH(1,10,8),mHair,s*0.092,0.082,surf(s*0.092,0.082)+0.002,head);br.scale.set(0.042,0.011,0.012);br.rotation.set(0,s*0.25,-s*0.1);br.castShadow=false;
+    const ck=new THREE.Mesh(new THREE.CircleGeometry(0.036,14),mCheek);ck.position.set(s*0.132,-0.07,surf(s*0.132,-0.07)+0.004);ck.rotation.y=s*0.6;ck.scale.y=0.72;head.add(ck);
+  });
+  const ns=mk(SPH(1,10,8),mSkinD,0,-0.048,surf(0,-0.048)+0.004,head);ns.scale.set(0.02,0.03,0.022);ns.castShadow=false;
+  const mo=mk(new THREE.TorusGeometry(0.046,0.0075,6,14,PI*0.62),mMouth,0,-0.082,surf(0,-0.115)+0.003,head);mo.rotation.z=-PI/2-PI*0.31;mo.castShadow=false;
+  // pelo
+  mk(new THREE.SphereGeometry(1,28,14,0,TAU,0,1.22),mHair,0,0.022,-0.014,head).scale.set(0.236,0.218,0.226);
+  [1,-1].forEach(s=>{const f=mk(SPH(1,14,10),mHair,s*0.124,0.128,0.094,head);f.scale.set(0.122,0.046,0.06);f.rotation.set(0.25,s*0.55,-s*0.62);
+    const f2=mk(SPH(1,12,10),mHair,s*0.203,0.02,-0.005,head);f2.scale.set(0.045,0.14,0.1);f2.rotation.z=-s*0.1;});
+  [[0.02,0.235,0.0,0.2],[-0.05,0.228,0.03,-0.5],[0.07,0.222,-0.03,0.7]].forEach(([x,y,z,a])=>{const c=mk(new THREE.ConeGeometry(0.014,0.06,5),mHair,x,y,z,head);c.rotation.z=-a;});
+  const hairB=new THREE.Group();hairB.position.set(0,0.1,-0.1);head.add(hairB);
+  mk(SPH(1,20,14),mHair,0,-0.2,-0.045,hairB).scale.set(0.25,0.27,0.125);
+  for(let i=0;i<5;i++){const x=(i-2)*0.085,c=mk(new THREE.ConeGeometry(0.06,0.17,6),mHair,x,-0.47+Math.abs(i-2)*0.035,-0.05,hairB);c.rotation.x=PI;c.rotation.z=-(i-2)*0.12;c.scale.z=0.75;}
+  const hairS=[1,-1].map(s=>{const g=new THREE.Group();g.position.set(s*0.19,0.03,-0.03);head.add(g);
+    const a=mk(SPH(1,12,12),mHair,s*0.012,-0.2,0,g);a.scale.set(0.062,0.23,0.085);
+    const c=mk(new THREE.ConeGeometry(0.05,0.13,6),mHair,s*0.02,-0.44,0.005,g);c.rotation.x=PI;c.scale.z=0.9;return g;});
+  root.traverse(o=>{if(o.isMesh&&o.material!==mCheek&&o.castShadow!==false)o.castShadow=true;});
+  return {root,legL,legR,pelvis,skirt,chest,pack,armL,armR,head,eyes,hairB,hairS};
+}
+
+  return { build: buildBruna, STAND, HIPW };
+})();
+/* ===== 45_bruna_joc.js ===== */
+/* =====================================================================
+   LA BRUNA DEL JUEGO, ADAPTADA AL CONTRATO DE RIG
+   ---------------------------------------------------------------------
+   construir.mjs copia en BRUNA_JOC, en el momento de montar, buildBruna()
+   de src/js/40_bruna_modelo.js y las utilidades de 01_utilidades.js que
+   necesita: la prueba usa SIEMPRE el modelo actual del juego, sin copias
+   a mano. Si no los encuentra, BRUNA_JOC = null y la prueba solo tiene
+   la Bruixa esculpida.
+   Aquí solo se traduce su jerarquía (legL/legR con rodilla, pelvis,
+   chest, armL/armR con codo, head, pelo, falda, mochila) al contrato.
+   ===================================================================== */
+function brunaJoc() {
+  if (!BRUNA_JOC) return null;
+  const B = BRUNA_JOC.build();
+  const { STAND, HIPW } = BRUNA_JOC;
+  const root = new THREE.Group(), inner = new THREE.Group(); root.add(inner); inner.add(B.root);
+  B.root.traverse(o => { if (o.isMesh && o.castShadow) o.receiveShadow = true; });
+  B.pelvis.position.y = STAND;
+  B.legR.hip.position.set(-HIPW, STAND, 0); B.legL.hip.position.set(HIPW, STAND, 0);
+  // muelles sencillos para lo que en el juego mueve 41_bruna_animacion.js
+  const S = { hb: 0, hbv: 0, hs: 0, hsv: 0, sk: 0, skv: 0 };
+  const spr = (k, x, v, target, dt, K = 60, Cc = 9) => { S[v] += (-(S[x] - target) * K - S[v] * Cc) * dt; S[x] += S[v] * dt; return S[x]; };
+  return {
+    nom: 'Bruna', root, inner, hips: B.pelvis, hipY: STAND,
+    esc: 1.15, camY: .9,
+    legs: [B.legR.hip, B.legL.hip], knees: [B.legR.knee, B.legL.knee], feet: [B.legR.foot, B.legL.foot],
+    legRest: -.28, kneeRest: .56,
+    arms: [B.armR.sh, B.armL.sh], elbows: [B.armR.el, B.armL.el],
+    neck: B.head, eyes: B.eyes,
+    extra(dt, pl, t, wn, rn) {
+      const air = !pl.grounded, fall = air && pl.vy < 0;
+      if (B.hairB) B.hairB.rotation.x = spr(0, 'hb', 'hbv', .1 * wn + .4 * rn + (air ? (fall ? -.25 : .3) : 0), dt);
+      const sway = spr(0, 'hs', 'hsv', clamp(-pl.yawVel * .06, -.3, .3) + Math.sin(pl.phase) * .06 * wn, dt);
+      if (B.hairS) B.hairS.forEach((h, i) => { h.rotation.z = sway + (i ? -1 : 1) * .12 * rn; h.rotation.x = .25 * rn; });
+      const fl = spr(0, 'sk', 'skv', .06 * rn + (fall ? .16 : 0), dt, 55, 11);
+      if (B.skirt) { B.skirt.scale.set(1 + fl, 1, 1 + fl); B.skirt.rotation.x = .15 * rn; }
+      if (B.pack) B.pack.rotation.x = clamp(-pl.squash * .6, -.3, .3);
+    },
+  };
+}
+
+/* ===== 50_locomocio.js ===== */
+/* =====================================================================
+   LOCOMOCIÓN «ESTIL ALBA» — la lógica que le gusta a Pere
+   ---------------------------------------------------------------------
+   Dos partes independientes del muñeco:
+     1) pasJugador(): física de movimiento (aceleración suave, giro
+        amortiguado, salto flotante con pausa arriba, muelle de
+        aplastar/estirar, colisiones con círculos).
+     2) animarRig(): pose procedural sobre el contrato de rig
+        (40_personatge.js). Todo amortiguado: nada de golpes secos.
+   Todos los números ajustables están en ALBA_P.
+   Las velocidades se escalan con el tamaño del personaje (hipY/0.30).
+   ===================================================================== */
+const ALBA_P = {
+  walk: 2.4, run: 5.0,          // m/s para un personaje con cadera a 0,30 m
+  accSuelo: 9, accAire: 3.5,    // rapidez con la que la velocidad alcanza la deseada (1/s)
+  giro: 10,                     // rapidez del giro hacia la dirección de marcha (1/s)
+  saltoV: 5.6,                  // velocidad inicial del salto
+  gravedad: 15,
+  gravedadMantenido: 9.5,       // subiendo con el botón apretado: salta más y más suave
+  pausaArriba: .55,             // multiplica la gravedad cuando |vy| < 1.4 → «flota» arriba
+  squashK: 140, squashC: 11,    // muelle de aplastar/estirar
+  sombreroK: 90, sombreroC: 7,  // muelle del sombrero
+  radio: .25,                   // radio del personaje para colisiones
+};
+
+function crearJugador(x, z, yaw, ground) {
+  return { x, z, y: ground(x, z), vx: 0, vz: 0, vy: 0, yaw, yawVel: 0, grounded: true, phase: 0, squash: 0, squashV: 0,
+    hatX: -.12, hatZ: 0, hatVX: 0, hatVZ: 0, capeA: 0, blink: 2, airT: 0, ev: { step: false, land: false, jump: false } };
+}
+
+/* in = { dx, dz: dirección en el mundo (unitaria o 0), mag: 0..1 (≤0,5 camina, >0,5 corre),
+          jump: se ha pulsado este fotograma, held: se mantiene }
+   mundo = { ground(x,z), canStand(x,z), obstacles: [[x,z,r]...] } */
+function pasJugador(pl, inp, mundo, dt, esc = 1) {
+  const P = ALBA_P;
+  pl.ev.step = pl.ev.land = pl.ev.jump = false;
+  const W = P.walk * esc, Rn = P.run * esc;
+  const target = inp.mag <= .5 ? inp.mag / .5 * W : lerp(W, Rn, (inp.mag - .5) / .5);
+  const acc = pl.grounded ? P.accSuelo : P.accAire;
+  pl.vx = damp(pl.vx, inp.dx * target, acc, dt); pl.vz = damp(pl.vz, inp.dz * target, acc, dt);
+  const sp = Math.hypot(pl.vx, pl.vz);
+  if (sp > .15 * esc) {
+    const want = Math.atan2(pl.vx, pl.vz); let d = want - pl.yaw; d = Math.atan2(Math.sin(d), Math.cos(d));
+    const ny = pl.yaw + d * (1 - Math.exp(-P.giro * dt)); pl.yawVel = damp(pl.yawVel, (ny - pl.yaw) / dt, 8, dt); pl.yaw = ny;
+  } else pl.yawVel = damp(pl.yawVel, 0, 8, dt);
+  let nx = pl.x + pl.vx * dt, nz = pl.z + pl.vz * dt;
+  for (const [ox, oz, r] of mundo.obstacles) { const dx = nx - ox, dz = nz - oz, d = Math.hypot(dx, dz), rr = r + P.radio * esc; if (d < rr && d > 1e-6) { nx = ox + dx / d * rr; nz = oz + dz / d * rr; } }
+  if (mundo.canStand(nx, nz)) { pl.x = nx; pl.z = nz; } else { pl.vx *= .5; pl.vz *= .5; }
+  const gh = mundo.ground(pl.x, pl.z);
+  if (inp.jump && pl.grounded) { pl.vy = P.saltoV * Math.sqrt(esc); pl.grounded = false; pl.squashV = 5; pl.ev.jump = true; }
+  if (!pl.grounded) {
+    let g = P.gravedad; if (pl.vy > 0 && inp.held) g = P.gravedadMantenido; if (Math.abs(pl.vy) < 1.4) g *= P.pausaArriba;
+    pl.vy -= g * dt; pl.y += pl.vy * dt; pl.airT += dt;
+    if (pl.y <= gh) { pl.y = gh; pl.grounded = true; pl.squashV = -4.5 - Math.min(3, -pl.vy * .3); pl.vy = 0; pl.airT = 0; pl.ev.land = true; }
+  } else {
+    pl.y = damp(pl.y, gh, 25, dt);
+    if (sp < .1 && gh < pl.y - .3) pl.grounded = false;      // se cae por un desnivel
+  }
+  pl.squashV += (-pl.squash * P.squashK - pl.squashV * P.squashC) * dt; pl.squash += pl.squashV * dt;
+  // fase del paso: frecuencia que crece con la velocidad (zancadas más largas al correr)
+  const prev = Math.sin(pl.phase);
+  if (sp > .05) pl.phase += dt * (2.0 + sp / esc * .62) * Math.PI;
+  if (pl.grounded && sp > .7 * esc && Math.sign(prev) !== Math.sign(Math.sin(pl.phase))) pl.ev.step = true;
+  pl.sp = sp; pl.gh = gh;
+}
+
+function animarRig(b, pl, dt, t, esc = 1) {
+  const P = ALBA_P, sp = pl.sp / esc;
+  const wn = clamp(sp / P.walk, 0, 1), rn = clamp((sp - P.walk) / (P.run - P.walk), 0, 1);
+  const m = pl.grounded ? sstep(wn) : 0;
+  const s = Math.sin(pl.phase), c = Math.cos(pl.phase);
+  b.root.position.set(pl.x, pl.y, pl.z); b.root.rotation.y = pl.yaw;
+  // inclinación hacia delante al correr y hacia dentro en las curvas
+  const lean = .06 * wn + .16 * rn;
+  const roll = clamp(-pl.yawVel * .05 * (.3 + rn), -.3, .3);
+  b.inner.rotation.set(lean, 0, roll);
+  const sq = clamp(pl.squash, -.5, .5); b.inner.scale.set(1 - sq * .35, 1 + sq * .6, 1 - sq * .35);
+  // pelvis: balanceo flotante (amplitud pequeña: Pere pidió que no maree)
+  const k = b.esc ?? b.hipY / .30;
+  b.hips.position.y = b.hipY + ((Math.abs(c) - .6) * .028 * m * (1 + rn * .5) + (pl.grounded ? 0 : .02)) * k;
+  b.hips.rotation.y = s * .14 * m * (1 - rn * .4);
+  b.hips.rotation.z = c * .035 * m;
+  // piernas
+  const amp = .55 + rn * .35;
+  const rest = b.legRest || 0;   // giro de cadera en reposo (rigs con rodilla, p. ej. la Bruna del juego)
+  b.legs.forEach((g, i) => {
+    const sg = i ? 1 : -1, u = g.userData;
+    if (u.y0 === undefined) { u.y0 = g.position.y; u.sw = 0; u.lift = 0; }
+    if (pl.grounded) { u.sw = sg * s * amp * m; u.lift = Math.max(0, -sg * c) * .055 * m * (1 + rn) * k; }
+    else { u.sw = damp(u.sw, i ? -.55 : .35, 10, dt); u.lift = damp(u.lift, (i ? .06 : .02) * k, 10, dt); }
+    g.rotation.x = u.sw + rest;
+    g.position.y = u.y0 + u.lift;
+    // opcionales: rodilla que se dobla al levantar el pie y pie que vuelve a quedar plano
+    if (b.knees) {
+      const lifted = pl.grounded ? u.lift / (.11 * k) : (i ? 1 : .4);
+      const kn = b.knees[i]; kn.rotation.x = damp(kn.rotation.x, (b.kneeRest || 0) + clamp(lifted, 0, 1) * (.9 + rn * .4), 16, dt);
+      if (b.feet) b.feet[i].rotation.x = -(g.rotation.x + kn.rotation.x) * .85;
+    }
+  });
+  // brazos: se balancean al caminar y se abren «de avión» al correr; en el aire, en cruz
+  const breathe = Math.sin(t * 1.8) * .03;
+  b.arms.forEach((g, i) => {
+    const sg = i ? 1 : -1;
+    let rx, rz;
+    if (pl.grounded) { rx = -sg * s * (.55 - rn * .3) * m + breathe * .5 - rn * .25; rz = sg * (.14 + rn * .95 + Math.sin(pl.phase * 2) * .08 * rn + breathe * .3); }
+    else { rx = -.7; rz = sg * 1.15; }
+    g.rotation.x = damp(g.rotation.x, rx, 14, dt); g.rotation.z = damp(g.rotation.z, rz, 10, dt);
+  });
+  // opcional: codos ligeramente doblados (más al correr y en el aire)
+  if (b.elbows) b.elbows.forEach(e => { e.rotation.x = damp(e.rotation.x, -(.2 + rn * .55 + (pl.grounded ? 0 : .3)), 10, dt); });
+  // cabeza
+  b.neck.rotation.x = damp(b.neck.rotation.x, -lean * .7 + Math.sin(t * 1.8) * .015 + (pl.grounded ? 0 : -.12), 8, dt);
+  b.neck.rotation.y = damp(b.neck.rotation.y, clamp(pl.yawVel * .08, -.4, .4), 6, dt);
+  b.neck.rotation.z = -roll * .5;
+  // sombrero con muelle (frenazos, giros, saltos)
+  if (b.hat) {
+    const ax = -(pl.vz * Math.cos(pl.yaw) + pl.vx * Math.sin(pl.yaw)) / esc;
+    pl.hatVX += (-(pl.hatX - (-.12 + ax * .025 - pl.vy * .012)) * P.sombreroK - pl.hatVX * P.sombreroC) * dt; pl.hatX += pl.hatVX * dt;
+    pl.hatVZ += (-(pl.hatZ - roll * .6) * P.sombreroK - pl.hatVZ * P.sombreroC) * dt; pl.hatZ += pl.hatVZ * dt;
+    b.hat.rotation.x = pl.hatX + Math.abs(c) * .03 * m; b.hat.rotation.z = pl.hatZ;
+  }
+  // capa: se levanta con la velocidad y al caer
+  if (b.cape) {
+    pl.capeA = damp(pl.capeA, .12 + wn * .25 + rn * .75 + (pl.grounded ? 0 : (pl.vy < 0 ? .8 : .3)), 5, dt);
+    b.cape.rotation.x = pl.capeA + Math.sin(t * 7 + pl.phase) * .05 * (wn + rn);
+  }
+  // parpadeo y boca
+  pl.blink -= dt; const bl = pl.blink < .1 ? .12 : 1; if (pl.blink < 0) pl.blink = 2 + Math.random() * 3;
+  if (b.eyes) b.eyes.forEach(e => e.scale.y = bl);
+  if (b.mouth) b.mouth.scale.y = damp(b.mouth.scale.y, (rn > .3 || !pl.grounded ? 1.7 : 1) * b.mouthY, 8, dt);
+  // opcional: muelles propios del personaje (pelo, falda, mochila…)
+  if (b.extra) b.extra(dt, pl, t, wn, rn);
+}
+
+/* ===== 60_postproces.js ===== */
+/* =====================================================================
+   POSTPROCESO — desenfoque tipo «tilt-shift», gradación cálida, viñeta
+   ---------------------------------------------------------------------
+   La escena se pinta en una textura (con antialiasing multisample si
+   hay WebGL2) y un quad a pantalla completa aplica:
+     · desenfoque arriba (fondo) y un poco abajo (primer plano) según la
+       altura en pantalla: es lo que da el aire «maqueta» de Alba;
+     · saturación +10 % y tono cálido; · viñeta suave.
+   Sin EffectComposer: r128 no lo trae en el núcleo y así no hay
+   dependencias. post.render(scene, camera) sustituye a renderer.render.
+   ===================================================================== */
+function crearPostproces(renderer, o = {}) {
+  const size = new THREE.Vector2();
+  const ms = renderer.capabilities.isWebGL2 && THREE.WebGLMultisampleRenderTarget;
+  const rt = ms ? new THREE.WebGLMultisampleRenderTarget(1, 1, { format: THREE.RGBAFormat }) : new THREE.WebGLRenderTarget(1, 1, { format: THREE.RGBAFormat });
+  if (ms) rt.samples = o.samples ?? 4;
+  const U = {
+    tDiffuse: { value: rt.texture }, res: { value: new THREE.Vector2(1, 1) },
+    focusY: { value: o.focusY ?? .45 }, blur: { value: o.blur ?? 1 }, sat: { value: o.sat ?? 1.1 },
+    warm: { value: new THREE.Vector3(1.03, 1.0, .96) }, vig: { value: o.vig ?? .5 },
+  };
+  const mat = new THREE.ShaderMaterial({
+    uniforms: U, depthTest: false, depthWrite: false,
+    vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }',
+    fragmentShader: `uniform sampler2D tDiffuse; uniform vec2 res; uniform float focusY, blur, sat, vig; uniform vec3 warm; varying vec2 vUv;
+      void main(){
+        vec2 uv = vUv; vec4 col = texture2D(tDiffuse, uv);
+        float d = uv.y > focusY ? (uv.y - focusY) * 1.15 : (focusY - uv.y) * .8;
+        float b = smoothstep(.22, .62, d) * blur;
+        if (b > .01) {
+          vec4 acc = col; float w = 1.;
+          for (int i = 0; i < 14; i++) { float fi = float(i); float a = fi * 2.39996; float r = sqrt(fi + .5) / 3.8;
+            acc += texture2D(tDiffuse, uv + vec2(cos(a), sin(a)) * r * b * vec2(res.y / res.x, 1.) * .011); w += 1.; }
+          col = acc / w;
+        }
+        vec3 c = col.rgb; float l = dot(c, vec3(.299, .587, .114));
+        c = mix(vec3(l), c, sat) * warm;
+        vec2 q = uv - .5; c *= 1. - dot(q, q) * vig;
+        gl_FragColor = vec4(c, 1.);
+      }`,
+  });
+  const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat); quad.frustumCulled = false;
+  const qs = new THREE.Scene(); qs.add(quad);
+  const qc = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  function setSize() { renderer.getDrawingBufferSize(size); rt.setSize(size.x, size.y); U.res.value.copy(size); }
+  setSize();
+  return {
+    uniforms: U, setSize, enabled: true,
+    render(scene, camera) {
+      if (!this.enabled) { renderer.setRenderTarget(null); renderer.render(scene, camera); return; }
+      renderer.setRenderTarget(rt); renderer.render(scene, camera);
+      renderer.setRenderTarget(null); renderer.render(qs, qc);
+    },
+  };
+}
+
+/* ===== 70_particules.js ===== */
+/* =====================================================================
+   PARTÍCULAS — polvo al pisar/aterrizar, briznas que saltan al correr
+   por la hierba alta, y mariposas que revolotean.
+   (El juego ya tiene emit()/burst() en 22_particulas.js: aquí solo
+   importa CUÁNDO se emite, que lo marcan los eventos de pasJugador.)
+   ===================================================================== */
+function crearParticules(scene, ground) {
+  const parts = [];
+  const cv = document.createElement('canvas'); cv.width = cv.height = 64;
+  const g = cv.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.5, 'rgba(255,255,255,.5)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+  const tex = new THREE.CanvasTexture(cv);
+  for (let i = 0; i < 50; i++) {
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: '#f3e3c2', transparent: true, depthWrite: false, opacity: 0 }));
+    s.visible = false; scene.add(s); parts.push({ s, life: 0, max: 1, vx: 0, vy: 0, vz: 0, kind: 'pols' });
+  }
+  const bladeG = new THREE.PlaneGeometry(.05, .14);
+  for (let i = 0; i < 40; i++) {
+    const m = new THREE.Mesh(bladeG, new THREE.MeshLambertMaterial({ color: i % 2 ? '#e6c25a' : '#c9a33e', side: THREE.DoubleSide, transparent: true }));
+    m.visible = false; scene.add(m); parts.push({ s: m, life: 0, max: 1, vx: 0, vy: 0, vz: 0, kind: 'herba', rx: 0, rz: 0 });
+  }
+  function emit(kind, x, y, z, n, spread = 1) {
+    for (let k = 0; k < n; k++) {
+      const p = parts.find(p => p.life <= 0 && p.kind === kind); if (!p) return;
+      p.life = p.max = kind === 'pols' ? .7 + Math.random() * .5 : 1 + Math.random() * .6;
+      p.s.position.set(x + (Math.random() - .5) * .2 * spread, y + .05, z + (Math.random() - .5) * .2 * spread);
+      if (kind === 'pols') { p.vx = (Math.random() - .5) * .8 * spread; p.vy = .35 + Math.random() * .4; p.vz = (Math.random() - .5) * .8 * spread; p.size = .18 + Math.random() * .16; }
+      else { const a = Math.random() * TAU; p.vx = Math.cos(a) * 1.4; p.vy = 2 + Math.random() * 1.8; p.vz = Math.sin(a) * 1.4; p.rx = (Math.random() - .5) * 14; p.rz = (Math.random() - .5) * 14; }
+      p.s.visible = true;
+    }
+  }
+  function step(dt) {
+    for (const p of parts) {
+      if (p.life <= 0) continue;
+      p.life -= dt; const k = clamp(p.life / p.max, 0, 1);
+      p.s.position.x += p.vx * dt; p.s.position.y += p.vy * dt; p.s.position.z += p.vz * dt;
+      if (p.kind === 'pols') { p.vx *= .96; p.vz *= .96; p.vy *= .97; const s = p.size * (1.6 - k * .8); p.s.scale.set(s, s, s); p.s.material.opacity = k * .38; }
+      else { p.vy -= 7 * dt; p.s.rotation.x += p.rx * dt; p.s.rotation.z += p.rz * dt; p.s.material.opacity = Math.min(1, k * 3); const gy = ground(p.s.position.x, p.s.position.z); if (p.s.position.y < gy) { p.s.position.y = gy; p.vx = p.vz = p.vy = 0; } }
+      if (p.life <= 0) p.s.visible = false;
+    }
+  }
+  return { emit, step };
+}
+
+function crearPapallones(scene, ground, n) {
+  const wg = new THREE.CircleGeometry(.07, 10, 0, Math.PI); wg.rotateX(-Math.PI / 2);
+  const cols = ['#ffffff', '#f6d36a', '#f08a3c', '#ffffff', '#cfe8ff'];
+  const flies = [];
+  for (let i = 0; i < n; i++) {
+    const g = new THREE.Group(), m = new THREE.MeshLambertMaterial({ color: cols[i % cols.length], side: THREE.DoubleSide });
+    const l = new THREE.Mesh(wg, m), r = new THREE.Mesh(wg, m); r.rotation.y = Math.PI; g.add(l, r);
+    const a = Math.random() * TAU, d = 3 + Math.random() * 18;
+    flies.push({ g, l, r, cx: Math.cos(a) * d, cz: Math.sin(a) * d, ph: Math.random() * 100, sp: .6 + Math.random() * .6 });
+    scene.add(g);
+  }
+  return function step(t) {
+    for (const f of flies) {
+      const x = f.cx + Math.sin(t * .3 * f.sp + f.ph) * 3 + Math.sin(t * .9 + f.ph) * .6, z = f.cz + Math.cos(t * .25 * f.sp + f.ph * 1.3) * 3;
+      const y = ground(x, z) + .7 + Math.sin(t * 2.1 + f.ph) * .3, px = f.g.position.x, pz = f.g.position.z;
+      f.g.position.set(x, y, z); f.g.rotation.y = Math.atan2(x - px, z - pz);
+      const fl = Math.sin(t * 22 * f.sp + f.ph) * .9; f.l.rotation.z = fl; f.r.rotation.z = -fl;
+    }
+  };
+}
+
+/* ===== 80_control.js ===== */
+/* =====================================================================
+   CONTROL Y CÁMARA — los mismos controles que el juego (decisión de Pere)
+   ---------------------------------------------------------------------
+   Móvil: joystick fijo abajo a la izquierda (#joy, mismos tamaños y
+   estilos que src/index.html), botón «Saltar» abajo a la derecha.
+   Joystick a medias = caminar; casi a fondo (≥0,7) = correr, igual que
+   stepMove() del juego. Un dedo en la pantalla gira la cámara, dos dedos
+   hacen zoom.
+   Ordenador: WASD/flechas, Mayúsculas corre, Espacio salta, arrastrar
+   gira la cámara, rueda = zoom.
+   La cámara sigue con retraso suave y nunca baja del terreno.
+   ===================================================================== */
+const esTactil = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
+
+function crearControl(canvas, ui) {
+  const keys = {};
+  const st = { jump: false, held: false, btnHeld: false, yaw: Math.PI, pitch: .42, dist: 6.2, forcar: null };
+  const input = { x: 0, y: 0 };
+  addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Space') { e.preventDefault(); if (!e.repeat) st.jump = true; } if (e.code.startsWith('Arrow')) e.preventDefault(); });
+  addEventListener('keyup', e => { keys[e.code] = false; });
+  // botón Saltar (mantenerlo apretado = salto más alto y suave)
+  ui.jump.addEventListener('pointerdown', e => { st.jump = true; st.btnHeld = true; ui.jump.setPointerCapture && ui.jump.setPointerCapture(e.pointerId); e.preventDefault(); });
+  const upJ = () => { st.btnHeld = false; }; ui.jump.addEventListener('pointerup', upJ); ui.jump.addEventListener('pointercancel', upJ);
+  // joystick fijo
+  { let jid = null; const JR = 50;
+    const mv = e => { const r = ui.joy.getBoundingClientRect(); let dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2); const l = Math.hypot(dx, dy); if (l > JR) { dx *= JR / l; dy *= JR / l; } ui.knob.style.transform = `translate(${dx}px,${dy}px)`; input.x = dx / JR; input.y = dy / JR; };
+    ui.joy.addEventListener('pointerdown', e => { jid = e.pointerId; ui.joy.setPointerCapture(jid); mv(e); if (ui.hint) ui.hint.style.opacity = 0; e.preventDefault(); });
+    ui.joy.addEventListener('pointermove', e => { if (e.pointerId === jid) mv(e); });
+    const end = e => { if (e.pointerId === jid) { jid = null; ui.knob.style.transform = ''; input.x = input.y = 0; } };
+    ui.joy.addEventListener('pointerup', end); ui.joy.addEventListener('pointercancel', end); }
+  // cámara: un dedo gira, dos dedos zoom; rueda del ratón = zoom
+  { const ptrs = new Map(); let pd = 0;
+    const dist2 = () => { const a = [...ptrs.values()]; return Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y); };
+    canvas.addEventListener('pointerdown', e => { canvas.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (ptrs.size === 2) pd = dist2(); });
+    canvas.addEventListener('pointermove', e => { const p = ptrs.get(e.pointerId); if (!p) return; const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
+      if (ptrs.size === 1) { st.yaw -= dx * .0065; st.pitch = clamp(st.pitch + dy * .005, .1, 1.1); }
+      else if (ptrs.size === 2) { const d = dist2(); if (pd > 0) st.dist = clamp(st.dist * pd / d, 2.5, 14); pd = d; } });
+    const up = e => { ptrs.delete(e.pointerId); pd = 0; }; canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
+    canvas.addEventListener('wheel', e => { st.dist = clamp(st.dist * (1 + e.deltaY * .001), 2.5, 14); e.preventDefault(); }, { passive: false }); }
+
+  // entrada del fotograma en coordenadas de mundo (relativa a la cámara)
+  // mag: 0 = quieta · ≤0,5 = caminar · 1 = correr (ver pasJugador)
+  function leer() {
+    let ix = 0, iz = 0, mag = 0;
+    const kx = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0);
+    const kz = (keys.KeyS || keys.ArrowDown ? 1 : 0) - (keys.KeyW || keys.ArrowUp ? 1 : 0);
+    const m = Math.hypot(input.x, input.y);
+    if (st.forcar) { ix = st.forcar.x; iz = st.forcar.y; mag = st.forcar.mag; }
+    else if (kx || kz) { ix = kx; iz = kz; mag = (keys.ShiftLeft || keys.ShiftRight) ? 1 : .5; }
+    else if (m > .12) { ix = input.x; iz = input.y; mag = m < .7 ? .5 * clamp(m / .55, .4, 1) : 1; }
+    const l = Math.hypot(ix, iz); if (l > 0) { ix /= l; iz /= l; }
+    const fx = -Math.sin(st.yaw), fz = -Math.cos(st.yaw), rx = Math.cos(st.yaw), rz = -Math.sin(st.yaw);
+    const out = { dx: rx * ix - fx * iz, dz: rz * ix - fz * iz, mag, jump: st.jump, held: !!(keys.Space || st.btnHeld) };
+    st.jump = false;
+    return out;
+  }
+  return { st, leer, keys };
+}
+
+function seguirCamera(camera, st, target, pl, ground, dt, altura = .75) {
+  target.x = damp(target.x, pl.x, 6, dt); target.y = damp(target.y, pl.y + altura, 6, dt); target.z = damp(target.z, pl.z, 6, dt);
+  const cx = target.x + Math.sin(st.yaw) * Math.cos(st.pitch) * st.dist, cz = target.z + Math.cos(st.yaw) * Math.cos(st.pitch) * st.dist;
+  const cy = Math.max(target.y + Math.sin(st.pitch) * st.dist, ground(cx, cz) + .6);
+  camera.position.set(cx, cy, cz); camera.lookAt(target);
+}
+
+/* ===== 90_prova.js ===== */
+/* =====================================================================
+   PRUEBA «MOVIMENT ESTIL ALBA» — montaje
+   Renderer, luces, mundo, hierba, personaje, bucle y API de depuración.
+   Personajes (decisión de Pere, 18-11-2026): por defecto la Bruna del
+   juego (45_bruna_joc.js); el botón «Personatge» cambia a la Bruixa
+   esculpida con capa (40_personatge.js). Si la página define
+   window.ALBA_PERSONATGE (función que devuelve un rig), se añade a la
+   lista: así «Crea el teu personatge» enchufa el suyo sin tocar la lógica.
+   ===================================================================== */
+const LOW = esTactil || Math.min(screen.width, screen.height) < 700;
+const Q = { grass: LOW ? 16000 : 34000, flowers: LOW ? 500 : 1100, shadow: LOW ? 1024 : 2048, dpr: Math.min(devicePixelRatio || 1, LOW ? 1.6 : 2), terrainSeg: LOW ? 140 : 200, samples: LOW ? 2 : 4, extraTrees: LOW ? 6 : 14, flies: LOW ? 8 : 14 };
+const $ = id => document.getElementById(id);
+const barra = v => { $('bar').style.width = (v * 100).toFixed(0) + '%'; };
+const respir = () => new Promise(r => setTimeout(r, 0));
+document.querySelectorAll(esTactil ? '.desk' : '.touch').forEach(e => e.style.display = 'none');
+
+const canvas = $('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Q.dpr); renderer.setSize(innerWidth, innerHeight, false);
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog('#f0e1c2', 28, 140);
+const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, .1, 900);
+const hemi = new THREE.HemisphereLight('#dcedff', '#bba57a', .62); scene.add(hemi);
+const sun = new THREE.DirectionalLight('#fff3e0', .95);
+sun.castShadow = true; sun.shadow.mapSize.set(Q.shadow, Q.shadow);
+Object.assign(sun.shadow.camera, { left: -16, right: 16, top: 16, bottom: -16, near: 1, far: 80 });
+sun.shadow.bias = -.0006; sun.shadow.normalBias = .035;
+scene.add(sun, sun.target);
+const SUN_OFF = new THREE.Vector3(-16, 26, 11);
+
+const ctl = crearControl(canvas, { joy: $('joy'), knob: $('knob'), jump: $('bjump'), hint: $('hint') });
+const camT = new THREE.Vector3();
+let rig, pl, post, parts, papallones, esc = 1;
+// lista de personajes: el primero es el que sale al empezar
+let FABRIQUES = [brunaJoc, brunaEsculpida], rigs = [], actual = 0;
+function posarPersonatge(i, progreso) {
+  if (rig) scene.remove(rig.root);
+  actual = i;
+  if (!rigs[i]) rigs[i] = FABRIQUES[i](progreso);
+  rig = rigs[i]; esc = rig.esc ?? rig.hipY / .30;
+  scene.add(rig.root);
+  if (pl) { rig.root.position.set(pl.x, pl.y, pl.z); rig.root.rotation.y = pl.yaw; }
+  $('pers').textContent = 'Personatge: ' + (rig.nom || (i + 1));
+}
+const mundo = { ground: MON.heightAt, canStand: (x, z) => MON.heightAt(x, z) > MON.SEA - .15, obstacles: [] };
+
+async function iniciar() {
+  await respir();
+  if (typeof window.ALBA_PERSONATGE === 'function') FABRIQUES.unshift(window.ALBA_PERSONATGE);
+  FABRIQUES = FABRIQUES.filter(f => f !== brunaJoc || !!BRUNA_JOC);
+  rigs = FABRIQUES.map(() => null);
+  posarPersonatge(0, v => barra(v * .8));
+  $('pers').style.display = FABRIQUES.length > 1 ? '' : 'none';
+  await respir(); barra(.85);
+  mundo.obstacles = MON.construir(scene, Q, VENT.uTime);
+  barra(.92); await respir();
+  scene.add(herbaInstanciada({ count: Q.grass, area: [-50, -50, 50, 50], ground: MON.heightAt, density: MON.grassDensity, tall: MON.tallAt, obstacles: mundo.obstacles }));
+  scene.add(florsInstanciades({ count: Q.flowers, area: [-45, -45, 45, 45], ground: MON.heightAt, spot: MON.flowerSpot, tall: MON.tallAt }));
+  parts = crearParticules(scene, MON.heightAt);
+  papallones = crearPapallones(scene, MON.heightAt, Q.flies);
+  post = crearPostproces(renderer, { samples: Q.samples });
+  pl = crearJugador(0, 11, Math.PI, MON.heightAt);
+  camT.set(pl.x, pl.y + .75, pl.z);
+  barra(1); window.__alba.tCarrega = Math.round(performance.now());
+  $('load').style.opacity = 0; setTimeout(() => $('load').remove(), 700);
+  $('hud').classList.add('on'); setTimeout(() => $('hint').style.opacity = 0, 9000);
+  last = performance.now(); requestAnimationFrame(bucle);
+}
+
+let last = 0, tAcc = 0, fpsT = 0, fpsN = 0;
+// «Motor: nou / actual» (decisió d'en Pere, 18-11-2026): la mateixa escena amb el motor nou (postprocés,
+// herba amb vent i empenta) o dibuixada com el joc d'ara (sense postprocés i amb l'herba quieta), per comparar fps.
+// Es guarda la mitjana d'fps de cada motor.
+const MOTOR = { nou: true, tVent: 0, stats: { nou: [0, 0], actual: [0, 0] } };
+function pas(dt) {
+  tAcc += dt; const t = tAcc;
+  if (MOTOR.nou) VENT.uTime.value = t;            // amb el motor actual l'herba no es mou
+  const inp = ctl.leer();
+  pasJugador(pl, inp, mundo, dt, esc);
+  animarRig(rig, pl, dt, t, esc);
+  // partículas según los eventos de la locomoción
+  const fx = pl.x + Math.sin(pl.yaw) * .05, fz = pl.z + Math.cos(pl.yaw) * .05;
+  if (pl.ev.jump) parts.emit('pols', pl.x, pl.gh, pl.z, 5, 1.4);
+  if (pl.ev.land) parts.emit('pols', pl.x, pl.gh, pl.z, 7, 1.8);
+  if (pl.ev.step) {
+    const rn = clamp((pl.sp / esc - ALBA_P.walk) / (ALBA_P.run - ALBA_P.walk), 0, 1);
+    parts.emit('pols', fx, pl.gh, fz, rn > .3 ? 2 : 1, .7);
+    if (rn > .4 && MON.tallAt(pl.x, pl.z) > .3 && MON.grassDensity(pl.x, pl.z) > .3) parts.emit('herba', fx, pl.gh + .2, fz, 3);
+  }
+  parts.step(dt); papallones(t);
+  seguirCamera(camera, ctl.st, camT, pl, MON.heightAt, dt, rig.camY ?? .75);
+  sun.position.copy(camT).add(SUN_OFF); sun.target.position.copy(camT);
+  if (MOTOR.nou) VENT.uPlayer.value.set(pl.x, pl.y, pl.z); else VENT.uPlayer.value.set(0, -99, 0);
+}
+function bucle(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  pas(dt); dibuixar();
+  fpsT += dt; fpsN++;
+  if (fpsT > .5) { const f = fpsN / fpsT, k = MOTOR.nou ? 'nou' : 'actual', st = MOTOR.stats[k]; st[0] += fpsN; st[1] += fpsT;
+    $('fps').textContent = Math.round(f) + ' fps'; fpsT = 0; fpsN = 0; mostrarStats(); }
+  requestAnimationFrame(bucle);
+}
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight, false); post && post.setSize();
+});
+camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+function dibuixar() { if (MOTOR.nou) post.render(scene, camera); else renderer.render(scene, camera); }
+function mostrarStats() { const m = k => { const s = MOTOR.stats[k]; return s[1] > 1 ? Math.round(s[0] / s[1]) + ' fps' : '—'; };
+  $('stats').innerHTML = '<span>Mitjana · nou: ' + m('nou') + ' · actual: ' + m('actual') + '</span>'; }
+$('motor').addEventListener('click', e => { MOTOR.nou = !MOTOR.nou; fpsT = 0; fpsN = 0;
+  e.currentTarget.textContent = 'Motor: ' + (MOTOR.nou ? 'nou' : 'actual'); $('post').style.display = MOTOR.nou ? '' : 'none'; });
+// «Sortir» torna a la llista de proves del joc
+$('sortir').addEventListener('click', () => { location.href = './index' + (/\.local\.html/.test(location.pathname) ? '.local' : '') + '.html?prova=zona'; });
+$('pers').addEventListener('click', () => posarPersonatge((actual + 1) % FABRIQUES.length));
+$('post').addEventListener('click', e => { post.enabled = !post.enabled; e.currentTarget.textContent = 'Desenfocament: ' + (post.enabled ? 'sí' : 'no'); });
+
+// API de depuración (mismo estilo que window.__j del juego): los tests congelan el bucle
+// (requestAnimationFrame = () => 0) y avanzan el tiempo con step(n, dt).
+window.__alba = {
+  get pl() { return pl; }, get rig() { return rig; }, ctl, P: ALBA_P, MON, VENT, scene, camera, tCarrega: 0,
+  step(n = 1, dt = 1 / 60) { for (let i = 0; i < n; i++) pas(dt); },
+  render() { dibuixar(); },
+  get motor() { return MOTOR.nou ? 'nou' : 'actual'; }, MOTOR,
+  personatge(i) { posarPersonatge(i); return rig.nom; },
+  input(x, y, mag) { ctl.st.forcar = (x || y) ? { x, y, mag } : null; },
+  saltar() { ctl.st.jump = true; },
+  teleport(x, z) { pl.x = x; pl.z = z; pl.y = MON.heightAt(x, z); camT.set(x, pl.y + .75, z); },
+  camara(yaw, pitch, dist) { ctl.st.yaw = yaw; ctl.st.pitch = pitch; ctl.st.dist = dist; },
+  get llest() { return !!pl; },
+};
+iniciar();
+
+})();
+</script>
+</body>
+</html>

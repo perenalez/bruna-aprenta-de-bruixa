@@ -24,7 +24,7 @@ else
 fi
 cd "$TMP/site"
 rm -rf proves && mkdir -p proves
-cp "$ROOT/prototip/dist/index.html" "$ROOT/prototip/dist/vuelo.html" "$ROOT/prototip/dist/turbo.html" proves/
+cp "$ROOT/prototip/dist/index.html" "$ROOT/prototip/dist/vuelo.html" "$ROOT/prototip/dist/turbo.html" "$ROOT/prototip/dist/prova-alba.html" proves/
 [ -d "$ROOT/prototip/dist/img" ] && cp -R "$ROOT/prototip/dist/img" proves/ || true
 touch .nojekyll
 # portada de l'adreça arrel: porta a la versió de proves

@@ -27,3 +27,5 @@ for (const [name, demo] of Object.entries(DEMOS)) {
 // imágenes (portada…): src/img → dist/img
 {const src=path.join(root,'src','img'),dst=path.join(root,'dist','img');if(fs.existsSync(src)){fs.mkdirSync(dst,{recursive:true});for(const f of fs.readdirSync(src))fs.copyFileSync(path.join(src,f),path.join(dst,f));}}
 console.log(`OK · ${files.length} módulos · ${(bundle.length / 1024).toFixed(0)} KB → dist/{index,vuelo,turbo}.html (+ .local.html)`);
+// prova «Moviment estil Alba / nou motor de render» (zona de proves): dist/prova-alba(.local).html
+await import('../proves/alba/construir.mjs');
