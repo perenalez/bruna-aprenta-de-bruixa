@@ -60,7 +60,16 @@ function animate(dt){
   B.pelvis.position.set(sway,pelvisY,-lean*0.05);
   B.pelvis.rotation.set(lean*0.55+P.air*(S.vy>0?-0.1:0.12),twist,roll*0.6+bank*0.6);
   if(FL.k>0.01){B.pelvis.rotation.x=lerp(B.pelvis.rotation.x,0.12,FL.k);B.pelvis.rotation.y*=1-FL.k;B.pelvis.rotation.z*=1-FL.k;}
-  const st=1+clamp(SP.squat.v*-0.02,-0.06,0.07)+P.air*clamp(S.vy*0.012,-0.02,0.05);B.pelvis.scale.set(1/Math.sqrt(st),st,1/Math.sqrt(st));
+  // aixafar i estirar estil Alba: molla que s'estira en saltar i s'aixafa en aterrar
+  if(S.sqKick){P.sqV=(P.sqV||0)+S.sqKick;S.sqKick=0;}
+  P.sqV=(P.sqV||0)+(-(P.sq||0)*140-(P.sqV||0)*11)*dt;P.sq=clamp((P.sq||0)+P.sqV*dt,-0.35,0.35);
+  const st=1+clamp(SP.squat.v*-0.02,-0.06,0.07)+P.air*clamp(S.vy*0.012,-0.02,0.05),sqa=P.sq*(1-FL.k);
+  B.pelvis.scale.set(1/Math.sqrt(st)*(1-sqa*0.3),st*(1+sqa*0.5),1/Math.sqrt(st)*(1-sqa*0.3));
+  // barret amb molla estil Alba: es tomba endavant en frenar, enrere en accelerar i de costat als girs
+  if(hatB.visible){const tx=-0.08-clamp(S.acc,-8,8)*0.02-(S.air?S.vy*0.015:0),tz=0.1+bank*0.6;
+    P.hvx=(P.hvx||0)+(-((P.hx??-0.08)-tx)*90-(P.hvx||0)*7)*dt;P.hx=(P.hx??-0.08)+P.hvx*dt;
+    P.hvz=(P.hvz||0)+(-((P.hz??0.1)-tz)*90-(P.hvz||0)*7)*dt;P.hz=(P.hz??0.1)+P.hvz*dt;
+    hatB.rotation.x=clamp(P.hx,-0.5,0.35);hatB.rotation.z=clamp(P.hz,-0.4,0.6);}
   B.chest.rotation.set(lerp(lean*0.45+Math.sin(t*1.9)*0.012*(1-w),0.18+Math.min(FL.vh,9)*0.012,FL.k),-twist*1.4*(1-FL.k),(-roll*0.9+bank*0.5)*(1-FL.k));
   const hipsX=sway,ct=Math.cos(twist),sn=Math.sin(twist);
   for(let i=0;i<2;i++){const s=legs[i].s;solveLeg(legs[i],hipsX+s*HIPW*ct,pelvisY,-lean*0.05-s*HIPW*sn,F[i].x,F[i].y,F[i].z,F[i].p);}

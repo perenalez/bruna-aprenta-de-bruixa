@@ -132,17 +132,18 @@ function stepMove(dt){
     else{
       S.y+=(g-S.y)*(1-Math.exp(-dt*13));
       if(S.jumpReq&&S.prep<0&&!act)S.prep=0;
-      if(S.prep>=0){S.prep+=dt;if(S.prep>0.11){S.prep=-1;S.air=true;S.dbl=false;sfx('jump');S.vy=JUMPV*(S.depth>0.15?0.8:1);S.airT=0;SP.squat.v=-1.4;burst(S.surf,S.pos.x,S.y,S.pos.z,0.7);}}
+      if(S.prep>=0){S.prep+=dt;if(S.prep>0.11){S.prep=-1;S.air=true;S.dbl=false;S.sqKick=5;sfx('jump');S.vy=JUMPV*(S.depth>0.15?0.8:1);S.airT=0;SP.squat.v=-1.4;burst(S.surf,S.pos.x,S.y,S.pos.z,0.7);}}
     }
   }else{
-    S.airT+=dt;let gr=S.vy>0?(S.jumpHeld?10.5:24):14.5;if(S.bounced)gr=S.vy>0?11:14.5;if(Math.abs(S.vy)<1.1)gr*=0.55;
+    // salt flotant estil Alba: puja suau (més si es manté premut) i queda un moment suspès a dalt (|vy|<1.4)
+    S.airT+=dt;let gr=S.vy>0?(S.jumpHeld?9.5:15):15;if(S.bounced)gr=S.vy>0?11:14.5;if(Math.abs(S.vy)<1.4)gr*=0.55;
     // sabates màgiques (encàrrec v.1, 2.8): un segundo salto en el aire, con chispas en los zapatos; después se puede planear
-    if(S.jumpReq&&shoesOn&&!S.dbl&&!act){S.dbl=true;S.vy=Math.max(S.vy,JUMPV*0.95);S.airT=0;S.bounced=false;sfx('jump');SP.squat.v=-1.2;doubleJumpFx();}
+    if(S.jumpReq&&shoesOn&&!S.dbl&&!act){S.dbl=true;S.sqKick=4;S.vy=Math.max(S.vy,JUMPV*0.95);S.airT=0;S.bounced=false;sfx('jump');SP.squat.v=-1.2;doubleJumpFx();}
     S.glide=(mode==='forest'||S.dbl)&&glideNow(g);
     if(S.glide)S.vy+=(-1.25-S.vy)*(1-Math.exp(-dt*5));else S.vy-=gr*dt;      // planeo: el vestido frena la caída
     const py=S.y;S.y+=S.vy*dt;
     if(mode==='forest')mushHit(py);
-    if(S.y<=g&&S.vy<0){S.bounced=false;S.glide=false;S.dbl=false;const imp=sat(-S.vy/6);S.y=g;S.air=false;sfx('land',imp);SP.squat.v+=1.0+2.0*imp;burst(S.surf,S.pos.x,S.y,S.pos.z,0.7+0.8*imp);if(S.surf!=='water')emit('dust',S.pos.x,S.y+0.03,S.pos.z,5,{sp:1.4,size:0.1,color:DUSTC});S.vy=0;}
+    if(S.y<=g&&S.vy<0){S.sqKick=-(4.5+Math.min(3,-S.vy*0.3));S.bounced=false;S.glide=false;S.dbl=false;const imp=sat(-S.vy/6);S.y=g;S.air=false;sfx('land',imp);SP.squat.v+=1.0+2.0*imp;burst(S.surf,S.pos.x,S.y,S.pos.z,0.7+0.8*imp);if(S.surf!=='water')emit('dust',S.pos.x,S.y+0.03,S.pos.z,5,{sp:1.4,size:0.1,color:DUSTC});S.vy=0;}
   }
   S.jumpReq=false;
   if(!S.air&&S.depth>0.03&&S.speed>0.4){S.wake-=dt*S.speed;if(S.wake<0){S.wake=0.55;emit('ring',S.pos.x,0,S.pos.z,1,{size:0.45+S.depth,life:0.8});}}
@@ -268,7 +269,7 @@ camT.y+=(S.y+0.72-camT.y)*(1-Math.exp(-dt*(lift.riding?8:3.2)));
 }
 
 /* ---------- bucle ---------- */
-function frame(dt){stepMove(dt);stepAct(dt);animate(dt);animWorld(dt);worldAnim(dt);dayStep(dt);towerAnim(dt);bunnyStep(dt);turboStep(dt);gameStep(dt);}
+function frame(dt){stepMove(dt);stepAct(dt);animate(dt);animWorld(dt);worldAnim(dt);herbaStep();dayStep(dt);towerAnim(dt);bunnyStep(dt);turboStep(dt);gameStep(dt);}
 let last=performance.now();
 function loop(now){
   const dt=clamp((now-last)/1000,0,0.04);last=Math.max(last,now);   // el primer rAF puede llegar con una marca de tiempo anterior: dt negativo

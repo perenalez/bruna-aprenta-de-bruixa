@@ -84,7 +84,7 @@ function glowFlower(x,z,h,col,star){
 {
   const GC=['#5c7a4a','#6f8f4e','#4a6a58','#b5b85a','#8fa04e'];
   let n=0;
-  for(let i=0;i<2600&&n<520;i++){
+  for(let i=0;i<(HERBA_ALBA?0:2600)&&n<520;i++){
     const x=rr(-19,19),z=rr(-44,19);const[bx,bz]=bound(x,z);if(Math.hypot(bx-x,bz-z)>2.5)continue;
     if(Math.abs(x-pathX(z))<1.6||pondD(x,z)<1.08)continue;if(Math.hypot(x-OX,z-OZ)<9||Math.hypot(x-OX+10.6,z-OZ)<4.3)continue;
     const y=landH(x,z),h=rr(0.22,0.5),c=pick(GC);folB.sw=[y,1.6];folB.base=null;

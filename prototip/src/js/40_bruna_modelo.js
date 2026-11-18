@@ -90,7 +90,7 @@ const B=buildBruna();scene.add(B.root);
 /* =====================================================================
    CONTROL Y ANIMACIÓN PROCEDURAL
    ===================================================================== */
-const WALK=1.15,RUN=3.7,JUMPV=4.3;
+const WALK=1.15,RUN=3.7,JUMPV=4.6;   // salt flotant estil Alba (abans 4.3)
 const S={pos:new THREE.Vector3(-0.6,0,10.5),y:0,yaw:PI,tyaw:PI,turn:0,speed:0,acc:0,vy:0,air:false,prep:-1,ph:0,t:0,skid:0,blinkT:2,jumpHeld:false,jumpReq:false,surf:'grass',depth:0,wake:0,idleT:0};
 S.y=landH(S.pos.x,S.pos.z);
 const input={x:0,y:0},K={};

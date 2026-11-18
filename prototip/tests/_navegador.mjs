@@ -13,8 +13,8 @@ export async function abrirJuego({ width = 430, height = 860, congelar = true, d
   const errores = [];
   page.on('pageerror', e => errores.push(e.message));
   page.on('console', m => { if (m.type() === 'error') errores.push(m.text()); });
-  await page.goto(pathToFileURL(path.join(root, 'dist', demo + '.local.html')).href);
-  await page.waitForFunction(() => window.__j && window.__j.S, null, { timeout: 30000 });
+  await page.goto(pathToFileURL(path.join(root, 'dist', demo + '.local.html')).href, { timeout: 120000 });   // ordinadors carregats: més marge
+  await page.waitForFunction(() => window.__j && window.__j.S, null, { timeout: 120000 });
   await page.waitForTimeout(800);
   if (congelar) await page.evaluate(() => { window.requestAnimationFrame = () => 0; });
   return { browser, page, errores };

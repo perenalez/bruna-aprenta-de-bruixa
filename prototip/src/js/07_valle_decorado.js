@@ -21,7 +21,7 @@
     if(i%4===0){litB.base=null;litB.sw=[yy,1.4/h];litB.add(C5,'#4a6a50',x+0.1,yy+h*0.58,z,0,0,0,0.016,h*1.15,0.016);litB.add(C6,'#7c4636',x+0.1,yy+h*1.15,z,0,0,0,0.05,0.32,0.05);}}
   // hierba del valle
   const GC=['#5c7a4a','#6f8f4e','#4a6a58','#b5b85a','#8fa04e','#7a9a55'];
-  n=0;for(let i=0;i<9000&&n<1500;i++){const a=rr(0,Math.PI*2),e=Math.sqrt(R())*0.99,x=VC.x+Math.sin(a)*e*VRX,z=VC.z+Math.cos(a)*e*VRZ;
+  n=0;for(let i=0;i<(HERBA_ALBA?0:9000)&&n<1500;i++){const a=rr(0,Math.PI*2),e=Math.sqrt(R())*0.99,x=VC.x+Math.sin(a)*e*VRX,z=VC.z+Math.cos(a)*e*VRZ;
     if(distPaths(x,z)<1.4||Math.hypot(x-OX,z-OZ)<9.5||Math.hypot(x-OX+10.6,z-OZ)<4.4||Math.hypot(x-GT.x,z-GT.z)<7.6)continue;
     if(z<-34&&Math.abs(x-RX(z))<RW+0.6)continue;let inH=false;for(const H of HOUSES){const l=hL(H,x,z);if(Math.abs(l[0])<H.w/2+0.4&&Math.abs(l[1])<H.d/2+0.4)inH=true;}if(inH)continue;
     const y=landH(x,z),h=rr(0.2,0.48)*(R()<0.12?1.9:1),c=pick(GC);folB.base=null;folB.sw=[y,1.6];

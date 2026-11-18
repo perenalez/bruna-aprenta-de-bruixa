@@ -2,6 +2,7 @@
    EL BOSQUE DEL LAGO — entorno
    ===================================================================== */
 const world=new THREE.Group();scene.add(world);
+const HERBA_ALBA=true;   // herba instanciada estil Alba (31_herba_alba.js) en lloc de les mates d'abans
 camera.far=500;
 scene.background=new THREE.Color('#40398f');
 const FOGC=new THREE.Color('#7667c2');
