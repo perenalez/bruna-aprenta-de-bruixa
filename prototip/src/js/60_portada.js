@@ -167,7 +167,7 @@ if(TITLE.on){
       <button id="tgo" aria-label="Accedir a la zona de proves">${SPARK4}<span>Accedir a la zona de proves</span></button></div>
       <div class="cred">Un joc creat per Ayla Sainz i Pere Nadal</div></div>`;
   document.body.appendChild(d);
-  const v=document.createElement('div');v.id='tver';v.textContent='v.1';document.body.appendChild(v);
+  const v=document.createElement('div');v.id='tver';v.textContent='v.1.2';document.body.appendChild(v);
   const p=document.createElement('div');p.id='tproves';p.innerHTML='<div class="card"></div>';document.body.appendChild(p);
   p.addEventListener('click',e=>{const t=e.target.closest('[data-go]');if(t){sfx('click');provesView(t.dataset.go);}else if(e.target===p)provesView('');});
   [d,p].forEach(e=>e.addEventListener('pointerdown',ev=>ev.stopPropagation()));
@@ -177,7 +177,20 @@ if(TITLE.on){
 }
 function startGame(){if(!TITLE.on)return;TITLE.on=false;audioInit();sfx('magic');$('tscreen').classList.add('out');
   setTimeout(()=>{['tscreen','tver','tproves'].forEach(id=>{const e=$(id);if(e)e.remove();});},900);
-  showTitleUI(false);camera.fov=38;camera.updateProjectionMatrix();}
+  camera.fov=38;camera.updateProjectionMatrix();startIntro();}
+
+/* ---------- inicio de partida: la cámara da una vuelta de 360° alrededor de Bruna (encàrrec v.1, 2.7) ----------
+   Empieza alta y lejos, gira despacio y acaba a su espalda, a la distancia por defecto (cam.dist).
+   Los controles se ocultan durante la vuelta; tocar la pantalla o pulsar una tecla la salta. */
+const INTRO={on:false,t:0,T:7,end:{yaw:0,pitch:0,dist:0}};
+function startIntro(){INTRO.on=true;INTRO.t=0;INTRO.t0=performance.now();INTRO.end={yaw:S.yaw+PI,pitch:cam.pitch,dist:cam.dist};introCam(0);}
+function endIntro(){if(!INTRO.on)return;INTRO.on=false;Object.assign(cam,INTRO.end);showTitleUI(false);}
+function introCam(u){const e=u*u*(3-2*u),E=INTRO.end;
+  // comença molt amunt (vista d'ocell, ~65°) i lluny, i baixa mentre gira fins a l'esquena de la Bruna
+  cam.yaw=E.yaw-(1-e)*TAU;cam.dist=E.dist*(2.3-1.3*e);cam.pitch=E.pitch+(1-e)*0.78;}
+function introStep(dt){if(!INTRO.on)return;INTRO.t+=dt;const u=Math.min(1,INTRO.t/INTRO.T);introCam(u);if(u>=1)endIntro();}
+const introSkip=()=>{if(INTRO.on&&performance.now()-INTRO.t0>300)endIntro();};   // (no salta con el mismo toque de «Juga»)
+addEventListener('pointerdown',introSkip,true);addEventListener('keydown',introSkip,true);
 
 /* ---------- cada fotograma: encuadre según la pantalla y la escena viva (todo muy sutil) ---------- */
 function titleCam(){
@@ -192,7 +205,7 @@ function titleCam(){
 }
 const _tv=new THREE.Vector3();
 function titleStep(dt){
-  if(!TITLE.on)return;TITLE.t+=dt;const t=TITLE.t;
+  introStep(dt);if(!TITLE.on)return;TITLE.t+=dt;const t=TITLE.t;
   titleCam();
   // Bruna: respira, balanceo suave, parpadeo y la varita que se mueve un poco
   const b=TS.bruna;
@@ -216,4 +229,4 @@ function titleStep(dt){
   // destellos de ambiente
   for(const s of TS.twinkles){const v=Math.max(0,Math.sin(t*s.sp+s.ph));s.s.material.opacity=v*v*0.9;s.s.scale.setScalar(s.sz*(0.5+v*0.5));}
 }
-Object.assign(window.__j,{TITLE,TS,TSC,startGame,provesView,camera});
+Object.assign(window.__j,{TITLE,TS,TSC,INTRO,endIntro,startGame,provesView,camera});

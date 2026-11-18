@@ -56,7 +56,11 @@ function mushHit(py){                                     // llamada en el aire,
 }
 function mushSolid(p){for(const M of MUSH){const dx=p.x-M.x,dz=p.z-M.z,d=Math.hypot(dx,dz),R0=M.r+0.35;if(d<R0&&p.y<M.top+0.2&&d>1e-4){p.x=M.x+dx/d*R0;p.z=M.z+dz/d*R0;}}}
 // planeo: cayendo, con Espacio apretado, después de una seta o desde cierta altura
-function glideNow(g){return S.air&&S.vy<0&&S.jumpHeld&&(S.bounced||S.y-g>1.6);}
+function glideNow(g){return S.air&&S.vy<0&&S.jumpHeld&&(S.bounced||S.dbl||S.y-g>1.6);}
+// chispas en los zapatos al hacer el doble salto
+function doubleJumpFx(){const _f=new THREE.Vector3();[B.legL,B.legR].forEach(L0=>{L0.foot.getWorldPosition(_f);
+  for(let i=0;i<9;i++)emit('dust',_f.x,_f.y,_f.z,1,{sp:1.6,size:0.07,color:pick(['#ffe36a','#fff3b0','#c98aff','#ff9ad8'])});});
+}
 
 /* ---------- fruta ---------- */
 const FRUIT=[];

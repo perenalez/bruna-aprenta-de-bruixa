@@ -579,7 +579,7 @@ const flies=(()=>{const N=220,base=new Float32Array(N*4),pos=new Float32Array(N*
     base[i*4]=x;base[i*4+1]=landH(x,z)+rr(0.3,3.2);base[i*4+2]=z;base[i*4+3]=rr(0,6.28);}
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));
   const p=new THREE.Points(g,new THREE.PointsMaterial({map:glowTex,color:'#fff0a8',size:0.34,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));p.frustumCulled=false;world.add(p);
-  return {N,base,pos,g};})();
+  return {N,base,pos,g,p};})();
 
 /* ===== 10_torreon_estructura.js ===== */
 /* =====================================================================
@@ -1655,7 +1655,8 @@ const WALK=1.15,RUN=3.7,JUMPV=4.3;
 const S={pos:new THREE.Vector3(-0.6,0,10.5),y:0,yaw:PI,tyaw:PI,turn:0,speed:0,acc:0,vy:0,air:false,prep:-1,ph:0,t:0,skid:0,blinkT:2,jumpHeld:false,jumpReq:false,surf:'grass',depth:0,wake:0,idleT:0};
 S.y=landH(S.pos.x,S.pos.z);
 const input={x:0,y:0},K={};
-const cam={yaw:0.12,pitch:0.32,dist:5.8},camT=new THREE.Vector3(S.pos.x,S.y+0.8,S.pos.z);
+// cámara: distancia por defecto más abierta (encàrrec v.1, 2.7)
+const cam={yaw:0.12,pitch:0.36,dist:7.6},camT=new THREE.Vector3(S.pos.x,S.y+0.8,S.pos.z);
 const tv=new THREE.Vector3();
 const spring=(k,c)=>({x:0,v:0,k,c});
 const stepS=(s,target,dt)=>{s.v+=(-(s.x-target)*s.k-s.v*s.c)*dt;s.x+=s.v*dt;return s.x;};
@@ -1813,7 +1814,15 @@ function buildBunny(){
   const fore=[1,-1].map(s=>{const g=new THREE.Group();g.position.set(s*0.055,-0.05,0.1);body.add(g);mk(SPH(1,10,8),mB,0,-0.05,0,g).scale.set(0.03,0.06,0.03);mk(SPH(1,10,8),mBL,0,-0.1,0.01,g).scale.set(0.032,0.022,0.04);return g;});
   const hind=[1,-1].map(s=>{const g=new THREE.Group();g.position.set(s*0.085,-0.04,-0.06);body.add(g);mk(SPH(1,12,10),mB,0,0,0,g).scale.set(0.06,0.075,0.08);
     const f=new THREE.Group();f.position.set(0,-0.07,0.02);g.add(f);mk(SPH(1,10,8),mBD,0,-0.03,0.04,f).scale.set(0.04,0.025,0.085);return {g,f};});
-  root.traverse(o=>{if(o.isMesh&&o.material!==mCheek)o.castShadow=true;});
+  // manchitas blancas por todo el cuerpo (para distinguirlo de los conejos del bosque)
+  {const mS=LM('#fbf6ec'),spot=(par,cx,cy,cz,sx,sy,sz,az,el,r)=>{const d=new THREE.Vector3(Math.cos(el)*Math.sin(az),Math.sin(el),Math.cos(el)*Math.cos(az));
+     const n=new THREE.Vector3(d.x/sx,d.y/sy,d.z/sz).normalize(),m=mk(SPH(1,10,6),mS,cx+d.x*sx,cy+d.y*sy,cz+d.z*sz,par);m.scale.set(r*0.72,r*0.62,r*0.25);
+     m.lookAt(m.position.clone().add(n));m.castShadow=false;};
+   [[1.9,0.5,0.03],[-2.0,0.6,0.026],[2.6,0.1,0.024],[-2.7,0.2,0.03],[3.14,0.55,0.028],[1.5,-0.1,0.022],[-1.4,0.05,0.024],[2.3,0.9,0.02],[-2.4,0.95,0.022],[0.0,1.25,0.02],[3.0,-0.2,0.02]]
+     .forEach(([az,el,r])=>spot(body,0,0,-0.01,0.15,0.14,0.18,az,el,r));
+   [[0.9,0.7,0.018],[-1.1,0.55,0.016],[2.6,0.5,0.02],[-2.5,0.3,0.017]].forEach(([az,el,r])=>spot(head,0,0,0,0.125,0.115,0.115,az,el,r));
+   hind.forEach(h=>spot(h.g,0,0,0,0.06,0.075,0.08,h.g.position.x>0?1.4:-1.4,0.3,0.017));}
+  root.traverse(o=>{if(o.isMesh&&o.material!==mCheek&&o.castShadow!==false)o.castShadow=true;});
   return {root,rig,body,head,ears,fore,hind,tail,nose};
 }
 const BN=Object.assign(buildBunny(),{x:0,y:0,z:0,yaw:0,v:0,ph:0,gy:0,lastG:0,onLift:false,landed:true,pit:spring(70,11),sq:spring(160,13),eL:spring(60,6),eR:spring(55,6.5),look:0,twT:2,tw:0});
@@ -2138,7 +2147,11 @@ function mushHit(py){                                     // llamada en el aire,
 }
 function mushSolid(p){for(const M of MUSH){const dx=p.x-M.x,dz=p.z-M.z,d=Math.hypot(dx,dz),R0=M.r+0.35;if(d<R0&&p.y<M.top+0.2&&d>1e-4){p.x=M.x+dx/d*R0;p.z=M.z+dz/d*R0;}}}
 // planeo: cayendo, con Espacio apretado, después de una seta o desde cierta altura
-function glideNow(g){return S.air&&S.vy<0&&S.jumpHeld&&(S.bounced||S.y-g>1.6);}
+function glideNow(g){return S.air&&S.vy<0&&S.jumpHeld&&(S.bounced||S.dbl||S.y-g>1.6);}
+// chispas en los zapatos al hacer el doble salto
+function doubleJumpFx(){const _f=new THREE.Vector3();[B.legL,B.legR].forEach(L0=>{L0.foot.getWorldPosition(_f);
+  for(let i=0;i<9;i++)emit('dust',_f.x,_f.y,_f.z,1,{sp:1.6,size:0.07,color:pick(['#ffe36a','#fff3b0','#c98aff','#ff9ad8'])});});
+}
 
 /* ---------- fruta ---------- */
 const FRUIT=[];
@@ -2386,15 +2399,17 @@ function stepMove(dt){
     else{
       S.y+=(g-S.y)*(1-Math.exp(-dt*13));
       if(S.jumpReq&&S.prep<0&&!act)S.prep=0;
-      if(S.prep>=0){S.prep+=dt;if(S.prep>0.11){S.prep=-1;S.air=true;sfx('jump');S.vy=JUMPV*(S.depth>0.15?0.8:1);S.airT=0;SP.squat.v=-1.4;burst(S.surf,S.pos.x,S.y,S.pos.z,0.7);}}
+      if(S.prep>=0){S.prep+=dt;if(S.prep>0.11){S.prep=-1;S.air=true;S.dbl=false;sfx('jump');S.vy=JUMPV*(S.depth>0.15?0.8:1);S.airT=0;SP.squat.v=-1.4;burst(S.surf,S.pos.x,S.y,S.pos.z,0.7);}}
     }
   }else{
     S.airT+=dt;let gr=S.vy>0?(S.jumpHeld?10.5:24):14.5;if(S.bounced)gr=S.vy>0?11:14.5;if(Math.abs(S.vy)<1.1)gr*=0.55;
-    S.glide=mode==='forest'&&glideNow(g);
+    // sabates màgiques (encàrrec v.1, 2.8): un segundo salto en el aire, con chispas en los zapatos; después se puede planear
+    if(S.jumpReq&&shoesOn&&!S.dbl&&!act){S.dbl=true;S.vy=Math.max(S.vy,JUMPV*0.95);S.airT=0;S.bounced=false;sfx('jump');SP.squat.v=-1.2;doubleJumpFx();}
+    S.glide=(mode==='forest'||S.dbl)&&glideNow(g);
     if(S.glide)S.vy+=(-1.25-S.vy)*(1-Math.exp(-dt*5));else S.vy-=gr*dt;      // planeo: el vestido frena la caída
     const py=S.y;S.y+=S.vy*dt;
     if(mode==='forest')mushHit(py);
-    if(S.y<=g&&S.vy<0){S.bounced=false;S.glide=false;const imp=sat(-S.vy/6);S.y=g;S.air=false;sfx('land',imp);SP.squat.v+=1.0+2.0*imp;burst(S.surf,S.pos.x,S.y,S.pos.z,0.7+0.8*imp);if(S.surf!=='water')emit('dust',S.pos.x,S.y+0.03,S.pos.z,5,{sp:1.4,size:0.1,color:DUSTC});S.vy=0;}
+    if(S.y<=g&&S.vy<0){S.bounced=false;S.glide=false;S.dbl=false;const imp=sat(-S.vy/6);S.y=g;S.air=false;sfx('land',imp);SP.squat.v+=1.0+2.0*imp;burst(S.surf,S.pos.x,S.y,S.pos.z,0.7+0.8*imp);if(S.surf!=='water')emit('dust',S.pos.x,S.y+0.03,S.pos.z,5,{sp:1.4,size:0.1,color:DUSTC});S.vy=0;}
   }
   S.jumpReq=false;
   if(!S.air&&S.depth>0.03&&S.speed>0.4){S.wake-=dt*S.speed;if(S.wake<0){S.wake=0.55;emit('ring',S.pos.x,0,S.pos.z,1,{size:0.45+S.depth,life:0.8});}}
@@ -2492,7 +2507,7 @@ function towerAnim(dt){
   const lvl=base?-1:clamp(Math.floor((l.y+0.8)/H),0,3),outside=curKey==='out'||(lvl===3&&!inT);
   G[-1].visible=mode==='tower'&&(l.y<-0.3||lift.y<-0.3);
   for(let n=0;n<=3;n++){G[n].visible=!base&&(outside?(n===0||n===3):n<=lvl);TG[n].visible=!base&&!outside&&n<=lvl;}
-  for(const s of steps)s.m.visible=!base&&!outside&&s.y<l.y+2.3;
+  for(const s of steps)s.m.visible=!base&&!outside&&s.y<l.y+2.3&&!(s.off&&s.off());
   EXT.visible=outside;turretTop.visible=!inT;world.visible=!base;sky.visible=!base;
   // luz de la zona
   const cfg=LIGHTS[mode==='forest'?zoneKey():(curKey==='t'?lvl:curKey)]||LIGHTS[0],e=1-Math.exp(-dt*4);
@@ -2520,7 +2535,7 @@ camT.y+=(S.y+0.72-camT.y)*(1-Math.exp(-dt*(lift.riding?8:3.2)));
 }
 
 /* ---------- bucle ---------- */
-function frame(dt){stepMove(dt);stepAct(dt);animate(dt);animWorld(dt);worldAnim(dt);towerAnim(dt);bunnyStep(dt);turboStep(dt);gameStep(dt);}
+function frame(dt){stepMove(dt);stepAct(dt);animate(dt);animWorld(dt);worldAnim(dt);dayStep(dt);towerAnim(dt);bunnyStep(dt);turboStep(dt);gameStep(dt);}
 let last=performance.now();
 function loop(now){
   const dt=clamp((now-last)/1000,0,0.04);last=Math.max(last,now);   // el primer rAF puede llegar con una marca de tiempo anterior: dt negativo
@@ -2531,6 +2546,57 @@ function loop(now){
 }
 requestAnimationFrame(loop);
 window.__j={render:()=>renderer.render(titleScene()||scene,camera),step:(n,dt)=>{for(let i=0;i<n;i++)frame(dt||1/60);updateCam(1);},S,cam,K,input,ACT,actions,teleport,lift,doors,landH,groundY,parts,get mode(){return mode;},get key(){return curKey;},get act(){return act;},OX,OY,OZ,BN,GT,H1,H2,RXB,BZ,BL,trail,gY,waterAt,FL,FLY,broom,canLaunch,TURBO,MUSH,FRUIT,tryFly,canMountHere,get inCave(){return inCave;}};
+
+/* ===== 51_hora_del_dia.js ===== */
+/* =====================================================================
+   LUZ SEGÚN LA HORA REAL (encàrrec v.1, 2.4)
+   La luz de fuera depende de la hora del dispositivo, con transiciones suaves entre franjas:
+     22:00–6:00 noche (la de siempre: azul-lila, luna, estrellas, luciérnagas, ventana del torreón encendida)
+     6:00–7:30 amanecer (rosado) · 7:30–19:30 día · 19:30–21:00 atardecer (naranja) · 21:00–22:00 anochecer
+   Cada paleta tiene un punto de referencia; entre dos puntos se mezcla poco a poco.
+   Para probar: ?hora=21.5 en la URL (o window.__j.setHour(21.5); null vuelve a la hora real).
+   ===================================================================== */
+const PALS={
+  night:{bg:'#40398f',fog:'#7667c2',sky:['#d6b0f6','#8f80e2','#3d368c'],hemi:['#c4b6ff','#8a9a66',1.0],sun:['#ffe2f2',0.5],stars:0.85,moon:1,flies:1,win:0.5,pts:1},
+  dawn:{bg:'#b48ac8',fog:'#e6a8c0',sky:['#ffd2b0','#f0a2c4','#8070c4'],hemi:['#ffd8e6','#94a070',1.1],sun:['#ffbe96',0.75],stars:0.2,moon:0.35,flies:0.35,win:0.3,pts:0.6},
+  day:{bg:'#8ec4ee',fog:'#bcdcf2',sky:['#f2f8ff','#b4d8f6','#6ca4e6'],hemi:['#f2f6ff','#8cae5c',1.18],sun:['#fff2d8',0.9],stars:0,moon:0,flies:0.06,win:0,pts:0.15},
+  sunset:{bg:'#9a68b0',fog:'#e89a9c',sky:['#ffc488','#f2869c','#6e56ac'],hemi:['#ffd4c0','#8f9a62',1.05],sun:['#ffb070',0.75],stars:0.15,moon:0.3,flies:0.5,win:0.35,pts:0.8},
+  dusk:{bg:'#4c4396',fog:'#8674c4',sky:['#dcb0ec','#9282dc','#423a92'],hemi:['#c8b8f6','#8a9a66',1.0],sun:['#ffd8e8',0.55],stars:0.6,moon:0.85,flies:0.85,win:0.45,pts:1}
+};
+// [hora, paleta]: la luz es exactamente esa paleta en esa hora y se mezcla con la siguiente
+const DAYK=[[0,'night'],[6,'night'],[6.75,'dawn'],[7.5,'day'],[19.5,'day'],[20.25,'sunset'],[21.25,'dusk'],[22,'night'],[24,'night']];
+const DAY={force:null,hour:0,pal:null};
+{const m=/[?&]hora=([\d.]+)/.exec(location.search);if(m)DAY.force=+m[1]%24;}
+function realHour(){const d=new Date();return d.getHours()+d.getMinutes()/60+d.getSeconds()/3600;}
+const _ca=new THREE.Color(),_cb=new THREE.Color();
+function mixPal(h){
+  let i=0;while(i<DAYK.length-2&&h>=DAYK[i+1][0])i++;
+  const [h0,a]=DAYK[i],[h1,b]=DAYK[i+1],u=smooth(0,1,h1>h0?(h-h0)/(h1-h0):0),A=PALS[a],B=PALS[b];
+  const c=(x,y)=>'#'+_ca.set(x).lerp(_cb.set(y),u).getHexString(),n=(x,y)=>x+(y-x)*u;
+  return {bg:c(A.bg,B.bg),fog:c(A.fog,B.fog),sky:A.sky.map((x,k)=>c(x,B.sky[k])),hemi:[c(A.hemi[0],B.hemi[0]),c(A.hemi[1],B.hemi[1]),n(A.hemi[2],B.hemi[2])],
+    sun:[c(A.sun[0],B.sun[0]),n(A.sun[1],B.sun[1])],stars:n(A.stars,B.stars),moon:n(A.moon,B.moon),flies:n(A.flies,B.flies),win:n(A.win,B.win),pts:n(A.pts,B.pts)};
+}
+// partes del cielo (06_bosque_cielo_setas_rocas.js): esfera con degradado, estrellas, luna y su halo
+const SKY={dome:sky.children[0],stars:sky.children[1],moon:sky.children[2],moonHalo:sky.children[3],key:''};
+SKY.moon.material.transparent=true;
+function paintSky(cols){const key=cols.join();if(key===SKY.key)return;SKY.key=key;
+  const g=SKY.dome.geometry,p=g.attributes.position,col=g.attributes.color,c=new THREE.Color(),c1=new THREE.Color(cols[0]),c2=new THREE.Color(cols[1]),c3=new THREE.Color(cols[2]);
+  for(let i=0;i<p.count;i++){const t=clamp(p.getY(i)/190,-0.2,1);if(t<0.22)c.copy(c1).lerp(c2,smooth(0,0.22,t));else c.copy(c2).lerp(c3,smooth(0.22,0.8,t));col.setXYZ(i,c.r,c.g,c.b);}
+  col.needsUpdate=true;}
+let dayT=99;
+function dayStep(dt){
+  dayT+=dt;if(dayT<0.25)return;dayT=0;              // cuatro veces por segundo es más que suficiente
+  const h=DAY.force!==null?DAY.force:realHour();DAY.hour=h;const P=DAY.pal=mixPal(h);
+  scene.background.set(P.bg);FOGC.set(P.fog);scene.fog.color.copy(FOGC);paintSky(P.sky);
+  // la luz de fuera la aplica towerAnim (50_juego.js) a partir de LIGHTS: se cambian los valores de fuera y de la terraza
+  [LIGHTS.out,LIGHTS[3]].forEach(L=>{L[2]=P.hemi[0];L[3]=P.hemi[1];L[4]=P.hemi[2];});
+  // las luces cálidas de fuera (ventanas, farolillos) casi no se notan de día
+  LIGHTS.out[0][4]=0.55*P.pts;LIGHTS.out[1][4]=0.2*P.pts;LIGHTS[3][0][4]=0.6*P.pts;LIGHTS[3][1][4]=0.6*P.pts;
+  sun.color.set(P.sun[0]);sun.intensity=P.sun[1];
+  SKY.stars.material.opacity=P.stars;SKY.stars.visible=P.stars>0.01;SKY.moon.material.opacity=P.moon;SKY.moon.visible=P.moon>0.01;SKY.moonHalo.material.opacity=0.5*P.moon;
+  flies.p.material.opacity=P.flies;flies.p.visible=P.flies>0.02;winL.intensity=P.win;
+}
+Object.assign(window.__j,{DAY,dayStep,mixPal,setHour:h=>{DAY.force=h===null?null:h%24;dayT=99;dayStep(0);}});
 
 /* ===== 54_datos_pociones.js ===== */
 /* =====================================================================
@@ -2840,6 +2906,18 @@ function loadGame(){if(!PLAY)return;try{if(/[?&]reset/.test(location.search))loc
   if(GS.phase==='fin1')GS.phase='fin';                                          // partidas guardadas con la versión anterior
   if(!GS.done.length&&GS.clothes.includes('barret'))GS.done=[0];}
 loadGame();
+/* ---------- botones de lugares (arriba a la derecha): no hay ninguno al empezar; cada uno aparece la primera vez
+   que Bruna entra caminando en ese lugar y se guarda con la partida. En las demos (vuelo, turbo) se ven todos. ---------- */
+if(!Array.isArray(GS.places))GS.places=[];
+const PLACE_R={Bosque:4,Estanque:3.5,'Torreón':4,Trono:3.5,Terraza:3.5,'Sótano':3,Puente:3,'Árbol':5,Cueva:2.2,Setas:4,Casa:2.2,Casita:2.2};
+const placeIn={};
+function inPlace(n){const t=TP[n],y=t[2]===null?gY(t[0],t[1]):t[2];return Math.hypot(S.pos.x-t[0],S.pos.z-t[1])<(PLACE_R[n]||3)&&Math.abs(S.y-y)<1.3;}
+function placeChips(){const names=Object.keys(TP);[...$('chips').children].forEach((b,i)=>{b.style.display=!PLAY||GS.places.includes(names[i])?'':'none';});}
+Object.keys(TP).forEach(n=>placeIn[n]=inPlace(n));placeChips();
+function placesStep(){if(!PLAY)return;const walking=!FL.on&&!FL.phase;
+  for(const n in TP){const now=inPlace(n);
+    if(now&&!placeIn[n]&&walking&&!GS.places.includes(n)){GS.places.push(n);saveGame();placeChips();}
+    placeIn[n]=now;}}
 const findIng=id=>{for(const p of NIVEL1.pociones)for(const i of p.ingredientes||[])if(i.id===id)return i;return null;};
 const POT=()=>NIVEL1.pociones[GS.pot];
 
@@ -3014,6 +3092,8 @@ function nextLine(){
 
 /* ---------- el Conillet: mensajes en el chat de la libreta ---------- */
 BN.tail.material=BN.tail.material.clone();BN.tail.material.emissive=new THREE.Color('#7dff6a');BN.tail.material.emissiveIntensity=0;
+// cola arcoíris: cuando hay mensaje, la cola brilla y recorre los colores del arcoíris (con un halo para que se vea de noche)
+const tailGlow=halo(BN.tail,0,0,-0.02,0.3,'#ffffff',0);tailGlow.material.fog=false;
 const bnGlow=halo(BN.root,0,0.22,0,1.3,'#9dff8a',0);
 function conill(text,quiet){GS.chat.push(text);GS.unread++;saveGame();badges();if(!quiet){sfx('notify');toast('En Conillet té un missatge · mira la llibreta',2600);}}
 function badges(){
@@ -3041,7 +3121,7 @@ function placePots(){
     if(s.type==='shelf'){base=wM(s.lvl,PI-0.8,0.42).multiply(TRS(s.x,0.13+s.row*0.5,0.14));parent=G[s.lvl];}
     else if(s.type==='ward'){base=WARD_M.clone().multiply(TRS(s.x,s.y,0.44));parent=G[s.lvl];g.scale.setScalar(1.3);}
     else if(s.type==='lift'){g.position.set(s.x,0.01,s.z);lift.g.add(g);}
-    else if(s.lvl==='t'){g.position.set(TURRET_SPOT.x,TURRET_SPOT.y,TURRET_SPOT.z);TW.add(g);steps.push({m:g,y:TURRET_SPOT.y-0.3});}
+    else if(s.lvl==='t'){g.position.set(TURRET_SPOT.x,TURRET_SPOT.y,TURRET_SPOT.z);TW.add(g);const id=ing.id;steps.push({m:g,y:TURRET_SPOT.y-0.3,off:()=>GS.got[id]||GS.pot>0});}  // la escalera no lo vuelve a mostrar una vez cogido
     else{g.position.set(s.x,L(s.lvl),s.z);parent=G[s.lvl];}
     if(base)g.position.setFromMatrixPosition(base);
     if(parent!==TW&&s.type!=='lift')parent.add(g);
@@ -3279,7 +3359,7 @@ function spellStep(dt){
 /* ---------- bucle del juego ---------- */
 let tAcc=0,guideBand=-1;
 function gameStep(dt){
-  tAcc+=dt;const t=S.t;
+  tAcc+=dt;const t=S.t;placesStep();
   // armario
   ward.open+=((GS.wardOpen?1:0)-ward.open)*(1-Math.exp(-dt*4));for(const d of ward.doors)d.h.rotation.y=d.s*ward.open*1.9;
   // cosas recogibles: flotan y brillan (las de la poción en curso, más)
@@ -3303,7 +3383,9 @@ function gameStep(dt){
   if(POW.setas&&!MUSH.glow){MUSH.glow=1;MUSH.forEach(M=>M.cap.traverse(o=>{if(o.isMesh&&o.material.emissive)o.material.emissiveIntensity=0.5;}));}
   if(POW.plantas&&mode==='tower')for(const p of plants){if(p===BIGP&&babaBusy())continue;p.jaw.rotation.x=-0.1-0.06*Math.sin(t*2+p.ph);p.st.rotation.x=0.15+0.08*Math.sin(t*1.3+p.ph);}
   // Conillet: la cola parpadea si hay mensajes sin leer
-  BN.tail.material.emissiveIntensity=GS.unread?(Math.sin(t*9)>0?1.4:0.1):0;
+  if(GS.unread){const hue=(t*0.22)%1,pul=0.85+0.15*Math.sin(t*4);BN.tail.material.emissive.setHSL(hue,1,0.55);BN.tail.material.emissiveIntensity=1.1*pul;
+    tailGlow.material.color.setHSL(hue,1,0.6);tailGlow.material.opacity=0.75*pul;tailGlow.scale.setScalar(0.3*(0.9+0.15*pul));}
+  else{BN.tail.material.emissiveIntensity=0;tailGlow.material.opacity=0;}
   // te guía: brilla entero y salta cuando estás cerca
   let glow=0;
   if(GS.guide&&!GS.got[GS.guide]&&targetPos(GS.guide,_w)){
@@ -3335,7 +3417,7 @@ if(PLAY){
 }
 hatB.visible=GS.clothes.includes('barret');
 wandUI();badges();
-Object.assign(window.__j,{GS,POW,NIVEL1,POTS,potionActions,keyAt,groundAt,openNotebook,openBook,askHint,cast,sfx,nextLine,TURRET_SPOT,ward,giveIngredient,startPotion,plants,REWARD});
+Object.assign(window.__j,{placeChips,placesStep,GS,POW,NIVEL1,POTS,potionActions,keyAt,groundAt,openNotebook,openBook,askHint,cast,sfx,nextLine,TURRET_SPOT,ward,giveIngredient,startPotion,plants,REWARD});
 Object.defineProperty(window.__j,'dOn',{get:()=>dOn});
 Object.defineProperty(window.__j,'stirOn',{get:()=>stirOn});
 
@@ -3666,7 +3748,7 @@ function p3Step(dt){
     ROCK.worm.position.set(h.x,h.y-0.35+up*0.45,h.z);ROCK.worm.children.forEach((c,i)=>c.position.x=Math.sin(t*8+i*0.8)*0.03*i);
     if(ROCK.wt>3.5){ROCK.wst=null;ROCK.worm.visible=false;toast(TXT.gusanoSeEsconde,3000);}}
 }
-Object.assign(window.__j,{UST,ROCK,FOODS,BFLY,uni,UNI});
+Object.assign(window.__j,{UST,ROCK,FOODS,BFLY,uni,UNI,wearShoes,B});
 
 /* ===== 58_pocion4.js ===== */
 /* =====================================================================
@@ -3920,9 +4002,33 @@ const CAT={g:new THREE.Group(),x:0,y:0,z:0,yaw:0,on:false,tail:null};
  const hd=new THREE.Group();hd.position.set(0,0.36,0.17);g.add(hd);mk(SPH(0.11,14,10),c,0,0,0,hd);
  [1,-1].forEach(s=>{const e=mk(new THREE.ConeGeometry(0.045,0.09,4),c,s*0.065,0.1,0,hd);e.rotation.z=-s*0.25;mk(SPH(0.022,8,6),ey,s*0.042,0.015,0.095,hd);mk(SPH(0.01,6,5),k,s*0.042,0.015,0.11,hd);});
  const hat=new THREE.Group();hat.position.set(0.03,0.11,0);hat.rotation.z=-0.35;hd.add(hat);mk(new THREE.CylinderGeometry(0.08,0.08,0.012,14),LM('#2f2440'),0,0,0,hat);mk(new THREE.ConeGeometry(0.05,0.12,12),LM('#2f2440'),0,0.06,0,hat);mk(SPH(0.02,6,5),LM('#e0484c'),0.05,0.02,0.03,hat);
- [[0.06,0.06],[-0.06,0.06],[0.06,-0.12],[-0.06,-0.12]].forEach(([x,z])=>mk(new THREE.CylinderGeometry(0.025,0.025,0.14,6),c,x,0.07,z,g));
+ // patas con cadera y rodilla (para caminar y sentarse); orden: delantera izq., delantera der., trasera izq., trasera der.
+ CAT.legs=[[0.06,0.06,0],[-0.06,0.06,PI],[0.06,-0.12,PI],[-0.06,-0.12,0]].map(([x,z,ph])=>{const hip=new THREE.Group();hip.position.set(x,0.15,z);g.add(hip);
+   mk(new THREE.CylinderGeometry(0.026,0.023,0.08,6),c,0,-0.04,0,hip);const kn=new THREE.Group();kn.position.y=-0.08;hip.add(kn);
+   mk(new THREE.CylinderGeometry(0.022,0.02,0.07,6),c,0,-0.035,0,kn);mk(SPH(1,8,6),c,0,-0.07,0.012,kn).scale.set(0.026,0.016,0.034);return {hip,kn,ph,front:z>0};});
+ CAT.body=g.children[0];CAT.ph=0;CAT.v=0;CAT.ride=false;
  const tail=new THREE.Group();tail.position.set(0,0.25,-0.2);g.add(tail);const t1=mk(new THREE.CylinderGeometry(0.02,0.025,0.22,6),c,0,0.1,-0.03,tail);t1.rotation.x=-0.5;const t2=mk(new THREE.CylinderGeometry(0.018,0.02,0.18,6),c,0,0.24,0.0,tail);t2.rotation.x=0.5;CAT.tail=tail;
  g.scale.setScalar(1.25);g.traverse(o=>{if(o.isMesh)o.castShadow=true;});g.visible=false;scene.add(g);}
+// el gato: camina detrás de Bruna (patas que se doblan y alternan, cuerpo y cola que se balancean)
+// y, cuando vuela, va sentado en la escoba detrás de ella. Con los bolets salta con ella (sigue su altura).
+function catStep(dt,t){
+  const fly=FL.state==='fly';
+  if(fly&&!CAT.ride){CAT.ride=true;B.root.add(CAT.g);CAT.g.position.set(0,0.41,-0.36);CAT.g.rotation.set(0,0,0);CAT.g.scale.setScalar(0.88);}
+  if(!fly&&CAT.ride){CAT.ride=false;scene.add(CAT.g);CAT.g.scale.setScalar(1.25);const side=S.yaw-PI/2-0.6;CAT.x=S.pos.x+Math.sin(side);CAT.z=S.pos.z+Math.cos(side);CAT.y=S.y;}
+  if(CAT.ride){// sentado: patas de atrás dobladas, las de delante rectas, se balancea con el viento
+    CAT.legs.forEach(l=>{l.hip.rotation.x=l.front?0.15:-1.25;l.kn.rotation.x=l.front?0:2.2;});
+    CAT.body.rotation.x=-0.25;CAT.g.position.y=0.41+Math.sin(t*3)*0.01;CAT.tail.rotation.set(0.6,0,Math.sin(t*4)*0.4);return;}
+  const side=S.yaw-PI/2-0.6,tx=S.pos.x+Math.sin(side)*1.0,tz=S.pos.z+Math.cos(side)*1.0;
+  const dx=tx-CAT.x,dz=tz-CAT.z,d=Math.hypot(dx,dz);let mv=0;
+  if(d>8){CAT.x=tx;CAT.z=tz;}else{const k=Math.min(1,dt*3);mv=d*k;CAT.x+=dx*k;CAT.z+=dz*k;}
+  if(d>0.05)CAT.yaw=Math.atan2(dx,dz);CAT.y+=(S.y-CAT.y)*Math.min(1,dt*6);
+  // velocidad real (suavizada) → amplitud y ritmo del paso
+  CAT.v+=((dt>0?mv/dt:0)-CAT.v)*Math.min(1,dt*8);const w=clamp(CAT.v/1.2,0,1);CAT.ph+=mv/0.32*TAU;
+  CAT.legs.forEach(l=>{const p=CAT.ph+l.ph+(l.front?0:0.6);l.hip.rotation.x=Math.sin(p)*0.55*w;l.kn.rotation.x=(l.front?-1:1)*Math.max(0,Math.cos(p))*0.7*w;});
+  CAT.body.rotation.x=0;CAT.body.rotation.z=Math.sin(CAT.ph)*0.05*w;
+  CAT.g.position.set(CAT.x,CAT.y+Math.abs(Math.sin(CAT.ph))*0.012*w,CAT.z);CAT.g.rotation.y=CAT.yaw+Math.sin(CAT.ph)*0.04*w;
+  CAT.tail.rotation.set(0,0,Math.sin(t*2+CAT.ph*0.5)*(0.3+0.25*w));
+}
 function catAppear(){CAT.on=true;CAT.x=S.pos.x+1;CAT.z=S.pos.z;CAT.y=S.y;CAT.g.visible=true;for(let i=0;i<16;i++)emit('dust',CAT.x,CAT.y+0.3,CAT.z,1,{sp:1.5,size:0.08,color:pick(['#ffd84a','#c98aff','#fff3b0'])});}
 REWARD.gat={w:new THREE.Group(),noWard:true,lab:'',wear(){}};
 if(GS.clothes.includes('gat')){CAT.on=true;CAT.g.visible=true;CAT.x=S.pos.x+1;CAT.z=S.pos.z;CAT.y=S.y;}
@@ -4023,10 +4129,7 @@ function p5Step(dt){
   const lo=spell.type==='llum';if(lo){const f=Math.min(1,spell.t*2,(7-spell.t)*1.5);lightOrb.visible=true;lightOrb.position.set(S.pos.x+0.6*Math.cos(t*1.5),S.y+1.9+Math.sin(t*2)*0.15,S.pos.z+0.6*Math.sin(t*1.5));lightOrb.scale.setScalar(Math.max(0.01,f));orbL.position.copy(lightOrb.position);orbL.intensity=1.8*f;}
   else if(lightOrb.visible){lightOrb.visible=false;orbL.intensity=0;}
   // el gato sigue a Bruna
-  if(CAT.on){const side=S.yaw-PI/2-0.6,tx=S.pos.x+Math.sin(side)*1.0,tz=S.pos.z+Math.cos(side)*1.0;
-    const dx=tx-CAT.x,dz=tz-CAT.z,d=Math.hypot(dx,dz);if(d>8){CAT.x=tx;CAT.z=tz;}else{CAT.x+=dx*Math.min(1,dt*3);CAT.z+=dz*Math.min(1,dt*3);}
-    if(d>0.05)CAT.yaw=Math.atan2(dx,dz);CAT.y+=((FL.on?S.y+0.3:S.y)-CAT.y)*Math.min(1,dt*6);
-    CAT.g.position.set(CAT.x,CAT.y+(d>0.2?Math.abs(Math.sin(t*10))*0.04:0),CAT.z);CAT.g.rotation.y=CAT.yaw;CAT.tail.rotation.z=Math.sin(t*2)*0.3;}
+  if(CAT.on)catStep(dt,t);
   // final del nivel: el certificado
   if(PLAY&&GS.pot===4&&GS.phase==='premio'&&!dOn&&!certOn)showCertificate();
   // luces alrededor del torreón cuando la poción está hecha
@@ -4204,7 +4307,7 @@ if(TITLE.on){
       <button id="tgo" aria-label="Accedir a la zona de proves">${SPARK4}<span>Accedir a la zona de proves</span></button></div>
       <div class="cred">Un joc creat per Ayla Sainz i Pere Nadal</div></div>`;
   document.body.appendChild(d);
-  const v=document.createElement('div');v.id='tver';v.textContent='v.1';document.body.appendChild(v);
+  const v=document.createElement('div');v.id='tver';v.textContent='v.1.2';document.body.appendChild(v);
   const p=document.createElement('div');p.id='tproves';p.innerHTML='<div class="card"></div>';document.body.appendChild(p);
   p.addEventListener('click',e=>{const t=e.target.closest('[data-go]');if(t){sfx('click');provesView(t.dataset.go);}else if(e.target===p)provesView('');});
   [d,p].forEach(e=>e.addEventListener('pointerdown',ev=>ev.stopPropagation()));
@@ -4214,7 +4317,20 @@ if(TITLE.on){
 }
 function startGame(){if(!TITLE.on)return;TITLE.on=false;audioInit();sfx('magic');$('tscreen').classList.add('out');
   setTimeout(()=>{['tscreen','tver','tproves'].forEach(id=>{const e=$(id);if(e)e.remove();});},900);
-  showTitleUI(false);camera.fov=38;camera.updateProjectionMatrix();}
+  camera.fov=38;camera.updateProjectionMatrix();startIntro();}
+
+/* ---------- inicio de partida: la cámara da una vuelta de 360° alrededor de Bruna (encàrrec v.1, 2.7) ----------
+   Empieza alta y lejos, gira despacio y acaba a su espalda, a la distancia por defecto (cam.dist).
+   Los controles se ocultan durante la vuelta; tocar la pantalla o pulsar una tecla la salta. */
+const INTRO={on:false,t:0,T:7,end:{yaw:0,pitch:0,dist:0}};
+function startIntro(){INTRO.on=true;INTRO.t=0;INTRO.t0=performance.now();INTRO.end={yaw:S.yaw+PI,pitch:cam.pitch,dist:cam.dist};introCam(0);}
+function endIntro(){if(!INTRO.on)return;INTRO.on=false;Object.assign(cam,INTRO.end);showTitleUI(false);}
+function introCam(u){const e=u*u*(3-2*u),E=INTRO.end;
+  // comença molt amunt (vista d'ocell, ~65°) i lluny, i baixa mentre gira fins a l'esquena de la Bruna
+  cam.yaw=E.yaw-(1-e)*TAU;cam.dist=E.dist*(2.3-1.3*e);cam.pitch=E.pitch+(1-e)*0.78;}
+function introStep(dt){if(!INTRO.on)return;INTRO.t+=dt;const u=Math.min(1,INTRO.t/INTRO.T);introCam(u);if(u>=1)endIntro();}
+const introSkip=()=>{if(INTRO.on&&performance.now()-INTRO.t0>300)endIntro();};   // (no salta con el mismo toque de «Juga»)
+addEventListener('pointerdown',introSkip,true);addEventListener('keydown',introSkip,true);
 
 /* ---------- cada fotograma: encuadre según la pantalla y la escena viva (todo muy sutil) ---------- */
 function titleCam(){
@@ -4229,7 +4345,7 @@ function titleCam(){
 }
 const _tv=new THREE.Vector3();
 function titleStep(dt){
-  if(!TITLE.on)return;TITLE.t+=dt;const t=TITLE.t;
+  introStep(dt);if(!TITLE.on)return;TITLE.t+=dt;const t=TITLE.t;
   titleCam();
   // Bruna: respira, balanceo suave, parpadeo y la varita que se mueve un poco
   const b=TS.bruna;
@@ -4253,7 +4369,7 @@ function titleStep(dt){
   // destellos de ambiente
   for(const s of TS.twinkles){const v=Math.max(0,Math.sin(t*s.sp+s.ph));s.s.material.opacity=v*v*0.9;s.s.scale.setScalar(s.sz*(0.5+v*0.5));}
 }
-Object.assign(window.__j,{TITLE,TS,TSC,startGame,provesView,camera});
+Object.assign(window.__j,{TITLE,TS,TSC,INTRO,endIntro,startGame,provesView,camera});
 
 })();
 </script>

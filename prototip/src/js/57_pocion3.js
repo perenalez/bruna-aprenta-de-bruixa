@@ -148,4 +148,4 @@ function p3Step(dt){
     ROCK.worm.position.set(h.x,h.y-0.35+up*0.45,h.z);ROCK.worm.children.forEach((c,i)=>c.position.x=Math.sin(t*8+i*0.8)*0.03*i);
     if(ROCK.wt>3.5){ROCK.wst=null;ROCK.worm.visible=false;toast(TXT.gusanoSeEsconde,3000);}}
 }
-Object.assign(window.__j,{UST,ROCK,FOODS,BFLY,uni,UNI});
+Object.assign(window.__j,{UST,ROCK,FOODS,BFLY,uni,UNI,wearShoes,B});

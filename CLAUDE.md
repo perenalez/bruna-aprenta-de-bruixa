@@ -15,7 +15,7 @@ Joc 3D per a navegador, amb prioritat al mòbil. L'encàrrec complet és a
   Pendent: la bruixa adulta (ara és una veu), la llibreta en pla subjectiu i Vite.
 - **Encàrrec v.1** (`ENCARGO-CLAUDE-CODE.md`, referència a `referencias/`), branca `encarrec-v1`.
   Es fa pas a pas i s'espera l'OK d'en Pere a cada pas. Pas 1 (portada nova i zona de proves) fet i
-  aprovat. Crèdits: «Un joc creat per Ayla Sainz i Pere Nadal» (no «Laia»).
+  aprovat. Pas 2 (correccions) fet i publicat com a **v.1.2**. Crèdits: «Un joc creat per Ayla Sainz i Pere Nadal» (no «Laia»).
 
 ## Publicació
 

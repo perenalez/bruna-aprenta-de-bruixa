@@ -94,7 +94,8 @@ const WALK=1.15,RUN=3.7,JUMPV=4.3;
 const S={pos:new THREE.Vector3(-0.6,0,10.5),y:0,yaw:PI,tyaw:PI,turn:0,speed:0,acc:0,vy:0,air:false,prep:-1,ph:0,t:0,skid:0,blinkT:2,jumpHeld:false,jumpReq:false,surf:'grass',depth:0,wake:0,idleT:0};
 S.y=landH(S.pos.x,S.pos.z);
 const input={x:0,y:0},K={};
-const cam={yaw:0.12,pitch:0.32,dist:5.8},camT=new THREE.Vector3(S.pos.x,S.y+0.8,S.pos.z);
+// cámara: distancia por defecto más abierta (encàrrec v.1, 2.7)
+const cam={yaw:0.12,pitch:0.36,dist:7.6},camT=new THREE.Vector3(S.pos.x,S.y+0.8,S.pos.z);
 const tv=new THREE.Vector3();
 const spring=(k,c)=>({x:0,v:0,k,c});
 const stepS=(s,target,dt)=>{s.v+=(-(s.x-target)*s.k-s.v*s.c)*dt;s.x+=s.v*dt;return s.x;};

@@ -16,7 +16,7 @@ ok(t.on, 'la portada no surt');
 for (const s of ['Hola! Benvingudes a la nostra aventura!', 'Bruna,', "l'aprenenta de bruixa", 'Segueix les passes fins convertir-te en una bruixa de veritat!', 'Juga', 'Accedir a la zona de proves', 'Un joc creat per Ayla Sainz i Pere Nadal'])
   ok(t.texto.includes(s), 'falta el text: ' + s);
 ok(!/Laia/.test(t.texto), 'surt «Laia» en lloc d\'«Ayla»');
-ok(t.ver === 'v.1', 'la versió no és v.1');
+ok(t.ver === 'v.1.2', 'la versió no és v.1.2');
 ok(t.hud === 'hidden', 'els controls del joc es veuen a la portada');
 ok(t.bruna && t.star && t.uni && t.conill, 'falten models a l\'escena de la portada');
 // zona de proves → Testejar → llista → Tornar
@@ -36,11 +36,16 @@ ok(await page.evaluate(() => !document.getElementById('tproves').classList.conta
 await page.click('#tplay', { force: true });
 await page.waitForFunction(() => !document.getElementById('tscreen'), null, { timeout: 15000 }).catch(() => {});
 const g = await page.evaluate(() => ({ on: window.__j.TITLE.on, ts: !!document.getElementById('tscreen'), pr: !!document.getElementById('tproves'), ver: !!document.getElementById('tver'),
-  hud: getComputedStyle(document.getElementById('joy')).visibility, fov: window.__j.camera.fov }));
+  hud: getComputedStyle(document.getElementById('joy')).visibility, fov: window.__j.camera.fov, intro: window.__j.INTRO.on }));
 ok(!g.on && !g.ts && !g.pr && !g.ver, 'la portada no desapareix en prémer «Juga» ' + JSON.stringify(g));
-ok(g.hud !== 'hidden', 'els controls no tornen');
+ok(g.intro && g.hud === 'hidden', 'en començar no fa la volta de 360° amb els controls amagats');
+await page.mouse.click(200, 300);
+await page.waitForTimeout(300);
+const f = await page.evaluate(() => ({ intro: window.__j.INTRO.on, hud: getComputedStyle(document.getElementById('joy')).visibility, dist: window.__j.cam.dist }));
+ok(!f.intro && f.hud !== 'hidden', 'tocar la pantalla no salta la volta o els controls no tornen');
+ok(Math.abs(f.dist - 7.6) < 0.01, 'la càmera no queda a la distància nova per defecte (7.6)');
 ok(Math.abs(g.fov - 38) < 0.01, 'la càmera del joc no torna al seu angle');
 await browser.close();
 if (errores.length) fallos.push('Errors:\n' + errores.join('\n'));
 if (fallos.length) { console.error('✗ Portada:\n- ' + fallos.join('\n- ')); process.exit(1); }
-console.log('✓ Portada: textos, v.1, zona de proves (4 proves «Aviat»), Tornar i Juga');
+console.log('✓ Portada: textos, v.1.2, zona de proves (4 proves «Aviat»), Tornar, Juga i volta de 360°');

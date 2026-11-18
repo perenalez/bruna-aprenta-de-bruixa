@@ -19,6 +19,18 @@ function loadGame(){if(!PLAY)return;try{if(/[?&]reset/.test(location.search))loc
   if(GS.phase==='fin1')GS.phase='fin';                                          // partidas guardadas con la versión anterior
   if(!GS.done.length&&GS.clothes.includes('barret'))GS.done=[0];}
 loadGame();
+/* ---------- botones de lugares (arriba a la derecha): no hay ninguno al empezar; cada uno aparece la primera vez
+   que Bruna entra caminando en ese lugar y se guarda con la partida. En las demos (vuelo, turbo) se ven todos. ---------- */
+if(!Array.isArray(GS.places))GS.places=[];
+const PLACE_R={Bosque:4,Estanque:3.5,'Torreón':4,Trono:3.5,Terraza:3.5,'Sótano':3,Puente:3,'Árbol':5,Cueva:2.2,Setas:4,Casa:2.2,Casita:2.2};
+const placeIn={};
+function inPlace(n){const t=TP[n],y=t[2]===null?gY(t[0],t[1]):t[2];return Math.hypot(S.pos.x-t[0],S.pos.z-t[1])<(PLACE_R[n]||3)&&Math.abs(S.y-y)<1.3;}
+function placeChips(){const names=Object.keys(TP);[...$('chips').children].forEach((b,i)=>{b.style.display=!PLAY||GS.places.includes(names[i])?'':'none';});}
+Object.keys(TP).forEach(n=>placeIn[n]=inPlace(n));placeChips();
+function placesStep(){if(!PLAY)return;const walking=!FL.on&&!FL.phase;
+  for(const n in TP){const now=inPlace(n);
+    if(now&&!placeIn[n]&&walking&&!GS.places.includes(n)){GS.places.push(n);saveGame();placeChips();}
+    placeIn[n]=now;}}
 const findIng=id=>{for(const p of NIVEL1.pociones)for(const i of p.ingredientes||[])if(i.id===id)return i;return null;};
 const POT=()=>NIVEL1.pociones[GS.pot];
 
@@ -193,6 +205,8 @@ function nextLine(){
 
 /* ---------- el Conillet: mensajes en el chat de la libreta ---------- */
 BN.tail.material=BN.tail.material.clone();BN.tail.material.emissive=new THREE.Color('#7dff6a');BN.tail.material.emissiveIntensity=0;
+// cola arcoíris: cuando hay mensaje, la cola brilla y recorre los colores del arcoíris (con un halo para que se vea de noche)
+const tailGlow=halo(BN.tail,0,0,-0.02,0.3,'#ffffff',0);tailGlow.material.fog=false;
 const bnGlow=halo(BN.root,0,0.22,0,1.3,'#9dff8a',0);
 function conill(text,quiet){GS.chat.push(text);GS.unread++;saveGame();badges();if(!quiet){sfx('notify');toast('En Conillet té un missatge · mira la llibreta',2600);}}
 function badges(){
@@ -220,7 +234,7 @@ function placePots(){
     if(s.type==='shelf'){base=wM(s.lvl,PI-0.8,0.42).multiply(TRS(s.x,0.13+s.row*0.5,0.14));parent=G[s.lvl];}
     else if(s.type==='ward'){base=WARD_M.clone().multiply(TRS(s.x,s.y,0.44));parent=G[s.lvl];g.scale.setScalar(1.3);}
     else if(s.type==='lift'){g.position.set(s.x,0.01,s.z);lift.g.add(g);}
-    else if(s.lvl==='t'){g.position.set(TURRET_SPOT.x,TURRET_SPOT.y,TURRET_SPOT.z);TW.add(g);steps.push({m:g,y:TURRET_SPOT.y-0.3});}
+    else if(s.lvl==='t'){g.position.set(TURRET_SPOT.x,TURRET_SPOT.y,TURRET_SPOT.z);TW.add(g);const id=ing.id;steps.push({m:g,y:TURRET_SPOT.y-0.3,off:()=>GS.got[id]||GS.pot>0});}  // la escalera no lo vuelve a mostrar una vez cogido
     else{g.position.set(s.x,L(s.lvl),s.z);parent=G[s.lvl];}
     if(base)g.position.setFromMatrixPosition(base);
     if(parent!==TW&&s.type!=='lift')parent.add(g);
@@ -458,7 +472,7 @@ function spellStep(dt){
 /* ---------- bucle del juego ---------- */
 let tAcc=0,guideBand=-1;
 function gameStep(dt){
-  tAcc+=dt;const t=S.t;
+  tAcc+=dt;const t=S.t;placesStep();
   // armario
   ward.open+=((GS.wardOpen?1:0)-ward.open)*(1-Math.exp(-dt*4));for(const d of ward.doors)d.h.rotation.y=d.s*ward.open*1.9;
   // cosas recogibles: flotan y brillan (las de la poción en curso, más)
@@ -482,7 +496,9 @@ function gameStep(dt){
   if(POW.setas&&!MUSH.glow){MUSH.glow=1;MUSH.forEach(M=>M.cap.traverse(o=>{if(o.isMesh&&o.material.emissive)o.material.emissiveIntensity=0.5;}));}
   if(POW.plantas&&mode==='tower')for(const p of plants){if(p===BIGP&&babaBusy())continue;p.jaw.rotation.x=-0.1-0.06*Math.sin(t*2+p.ph);p.st.rotation.x=0.15+0.08*Math.sin(t*1.3+p.ph);}
   // Conillet: la cola parpadea si hay mensajes sin leer
-  BN.tail.material.emissiveIntensity=GS.unread?(Math.sin(t*9)>0?1.4:0.1):0;
+  if(GS.unread){const hue=(t*0.22)%1,pul=0.85+0.15*Math.sin(t*4);BN.tail.material.emissive.setHSL(hue,1,0.55);BN.tail.material.emissiveIntensity=1.1*pul;
+    tailGlow.material.color.setHSL(hue,1,0.6);tailGlow.material.opacity=0.75*pul;tailGlow.scale.setScalar(0.3*(0.9+0.15*pul));}
+  else{BN.tail.material.emissiveIntensity=0;tailGlow.material.opacity=0;}
   // te guía: brilla entero y salta cuando estás cerca
   let glow=0;
   if(GS.guide&&!GS.got[GS.guide]&&targetPos(GS.guide,_w)){
@@ -514,6 +530,6 @@ if(PLAY){
 }
 hatB.visible=GS.clothes.includes('barret');
 wandUI();badges();
-Object.assign(window.__j,{GS,POW,NIVEL1,POTS,potionActions,keyAt,groundAt,openNotebook,openBook,askHint,cast,sfx,nextLine,TURRET_SPOT,ward,giveIngredient,startPotion,plants,REWARD});
+Object.assign(window.__j,{placeChips,placesStep,GS,POW,NIVEL1,POTS,potionActions,keyAt,groundAt,openNotebook,openBook,askHint,cast,sfx,nextLine,TURRET_SPOT,ward,giveIngredient,startPotion,plants,REWARD});
 Object.defineProperty(window.__j,'dOn',{get:()=>dOn});
 Object.defineProperty(window.__j,'stirOn',{get:()=>stirOn});

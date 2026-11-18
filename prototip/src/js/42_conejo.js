@@ -25,7 +25,15 @@ function buildBunny(){
   const fore=[1,-1].map(s=>{const g=new THREE.Group();g.position.set(s*0.055,-0.05,0.1);body.add(g);mk(SPH(1,10,8),mB,0,-0.05,0,g).scale.set(0.03,0.06,0.03);mk(SPH(1,10,8),mBL,0,-0.1,0.01,g).scale.set(0.032,0.022,0.04);return g;});
   const hind=[1,-1].map(s=>{const g=new THREE.Group();g.position.set(s*0.085,-0.04,-0.06);body.add(g);mk(SPH(1,12,10),mB,0,0,0,g).scale.set(0.06,0.075,0.08);
     const f=new THREE.Group();f.position.set(0,-0.07,0.02);g.add(f);mk(SPH(1,10,8),mBD,0,-0.03,0.04,f).scale.set(0.04,0.025,0.085);return {g,f};});
-  root.traverse(o=>{if(o.isMesh&&o.material!==mCheek)o.castShadow=true;});
+  // manchitas blancas por todo el cuerpo (para distinguirlo de los conejos del bosque)
+  {const mS=LM('#fbf6ec'),spot=(par,cx,cy,cz,sx,sy,sz,az,el,r)=>{const d=new THREE.Vector3(Math.cos(el)*Math.sin(az),Math.sin(el),Math.cos(el)*Math.cos(az));
+     const n=new THREE.Vector3(d.x/sx,d.y/sy,d.z/sz).normalize(),m=mk(SPH(1,10,6),mS,cx+d.x*sx,cy+d.y*sy,cz+d.z*sz,par);m.scale.set(r*0.72,r*0.62,r*0.25);
+     m.lookAt(m.position.clone().add(n));m.castShadow=false;};
+   [[1.9,0.5,0.03],[-2.0,0.6,0.026],[2.6,0.1,0.024],[-2.7,0.2,0.03],[3.14,0.55,0.028],[1.5,-0.1,0.022],[-1.4,0.05,0.024],[2.3,0.9,0.02],[-2.4,0.95,0.022],[0.0,1.25,0.02],[3.0,-0.2,0.02]]
+     .forEach(([az,el,r])=>spot(body,0,0,-0.01,0.15,0.14,0.18,az,el,r));
+   [[0.9,0.7,0.018],[-1.1,0.55,0.016],[2.6,0.5,0.02],[-2.5,0.3,0.017]].forEach(([az,el,r])=>spot(head,0,0,0,0.125,0.115,0.115,az,el,r));
+   hind.forEach(h=>spot(h.g,0,0,0,0.06,0.075,0.08,h.g.position.x>0?1.4:-1.4,0.3,0.017));}
+  root.traverse(o=>{if(o.isMesh&&o.material!==mCheek&&o.castShadow!==false)o.castShadow=true;});
   return {root,rig,body,head,ears,fore,hind,tail,nose};
 }
 const BN=Object.assign(buildBunny(),{x:0,y:0,z:0,yaw:0,v:0,ph:0,gy:0,lastG:0,onLift:false,landed:true,pit:spring(70,11),sq:spring(160,13),eL:spring(60,6),eR:spring(55,6.5),look:0,twT:2,tw:0});

@@ -87,9 +87,33 @@ const CAT={g:new THREE.Group(),x:0,y:0,z:0,yaw:0,on:false,tail:null};
  const hd=new THREE.Group();hd.position.set(0,0.36,0.17);g.add(hd);mk(SPH(0.11,14,10),c,0,0,0,hd);
  [1,-1].forEach(s=>{const e=mk(new THREE.ConeGeometry(0.045,0.09,4),c,s*0.065,0.1,0,hd);e.rotation.z=-s*0.25;mk(SPH(0.022,8,6),ey,s*0.042,0.015,0.095,hd);mk(SPH(0.01,6,5),k,s*0.042,0.015,0.11,hd);});
  const hat=new THREE.Group();hat.position.set(0.03,0.11,0);hat.rotation.z=-0.35;hd.add(hat);mk(new THREE.CylinderGeometry(0.08,0.08,0.012,14),LM('#2f2440'),0,0,0,hat);mk(new THREE.ConeGeometry(0.05,0.12,12),LM('#2f2440'),0,0.06,0,hat);mk(SPH(0.02,6,5),LM('#e0484c'),0.05,0.02,0.03,hat);
- [[0.06,0.06],[-0.06,0.06],[0.06,-0.12],[-0.06,-0.12]].forEach(([x,z])=>mk(new THREE.CylinderGeometry(0.025,0.025,0.14,6),c,x,0.07,z,g));
+ // patas con cadera y rodilla (para caminar y sentarse); orden: delantera izq., delantera der., trasera izq., trasera der.
+ CAT.legs=[[0.06,0.06,0],[-0.06,0.06,PI],[0.06,-0.12,PI],[-0.06,-0.12,0]].map(([x,z,ph])=>{const hip=new THREE.Group();hip.position.set(x,0.15,z);g.add(hip);
+   mk(new THREE.CylinderGeometry(0.026,0.023,0.08,6),c,0,-0.04,0,hip);const kn=new THREE.Group();kn.position.y=-0.08;hip.add(kn);
+   mk(new THREE.CylinderGeometry(0.022,0.02,0.07,6),c,0,-0.035,0,kn);mk(SPH(1,8,6),c,0,-0.07,0.012,kn).scale.set(0.026,0.016,0.034);return {hip,kn,ph,front:z>0};});
+ CAT.body=g.children[0];CAT.ph=0;CAT.v=0;CAT.ride=false;
  const tail=new THREE.Group();tail.position.set(0,0.25,-0.2);g.add(tail);const t1=mk(new THREE.CylinderGeometry(0.02,0.025,0.22,6),c,0,0.1,-0.03,tail);t1.rotation.x=-0.5;const t2=mk(new THREE.CylinderGeometry(0.018,0.02,0.18,6),c,0,0.24,0.0,tail);t2.rotation.x=0.5;CAT.tail=tail;
  g.scale.setScalar(1.25);g.traverse(o=>{if(o.isMesh)o.castShadow=true;});g.visible=false;scene.add(g);}
+// el gato: camina detrás de Bruna (patas que se doblan y alternan, cuerpo y cola que se balancean)
+// y, cuando vuela, va sentado en la escoba detrás de ella. Con los bolets salta con ella (sigue su altura).
+function catStep(dt,t){
+  const fly=FL.state==='fly';
+  if(fly&&!CAT.ride){CAT.ride=true;B.root.add(CAT.g);CAT.g.position.set(0,0.41,-0.36);CAT.g.rotation.set(0,0,0);CAT.g.scale.setScalar(0.88);}
+  if(!fly&&CAT.ride){CAT.ride=false;scene.add(CAT.g);CAT.g.scale.setScalar(1.25);const side=S.yaw-PI/2-0.6;CAT.x=S.pos.x+Math.sin(side);CAT.z=S.pos.z+Math.cos(side);CAT.y=S.y;}
+  if(CAT.ride){// sentado: patas de atrás dobladas, las de delante rectas, se balancea con el viento
+    CAT.legs.forEach(l=>{l.hip.rotation.x=l.front?0.15:-1.25;l.kn.rotation.x=l.front?0:2.2;});
+    CAT.body.rotation.x=-0.25;CAT.g.position.y=0.41+Math.sin(t*3)*0.01;CAT.tail.rotation.set(0.6,0,Math.sin(t*4)*0.4);return;}
+  const side=S.yaw-PI/2-0.6,tx=S.pos.x+Math.sin(side)*1.0,tz=S.pos.z+Math.cos(side)*1.0;
+  const dx=tx-CAT.x,dz=tz-CAT.z,d=Math.hypot(dx,dz);let mv=0;
+  if(d>8){CAT.x=tx;CAT.z=tz;}else{const k=Math.min(1,dt*3);mv=d*k;CAT.x+=dx*k;CAT.z+=dz*k;}
+  if(d>0.05)CAT.yaw=Math.atan2(dx,dz);CAT.y+=(S.y-CAT.y)*Math.min(1,dt*6);
+  // velocidad real (suavizada) → amplitud y ritmo del paso
+  CAT.v+=((dt>0?mv/dt:0)-CAT.v)*Math.min(1,dt*8);const w=clamp(CAT.v/1.2,0,1);CAT.ph+=mv/0.32*TAU;
+  CAT.legs.forEach(l=>{const p=CAT.ph+l.ph+(l.front?0:0.6);l.hip.rotation.x=Math.sin(p)*0.55*w;l.kn.rotation.x=(l.front?-1:1)*Math.max(0,Math.cos(p))*0.7*w;});
+  CAT.body.rotation.x=0;CAT.body.rotation.z=Math.sin(CAT.ph)*0.05*w;
+  CAT.g.position.set(CAT.x,CAT.y+Math.abs(Math.sin(CAT.ph))*0.012*w,CAT.z);CAT.g.rotation.y=CAT.yaw+Math.sin(CAT.ph)*0.04*w;
+  CAT.tail.rotation.set(0,0,Math.sin(t*2+CAT.ph*0.5)*(0.3+0.25*w));
+}
 function catAppear(){CAT.on=true;CAT.x=S.pos.x+1;CAT.z=S.pos.z;CAT.y=S.y;CAT.g.visible=true;for(let i=0;i<16;i++)emit('dust',CAT.x,CAT.y+0.3,CAT.z,1,{sp:1.5,size:0.08,color:pick(['#ffd84a','#c98aff','#fff3b0'])});}
 REWARD.gat={w:new THREE.Group(),noWard:true,lab:'',wear(){}};
 if(GS.clothes.includes('gat')){CAT.on=true;CAT.g.visible=true;CAT.x=S.pos.x+1;CAT.z=S.pos.z;CAT.y=S.y;}
@@ -190,10 +214,7 @@ function p5Step(dt){
   const lo=spell.type==='llum';if(lo){const f=Math.min(1,spell.t*2,(7-spell.t)*1.5);lightOrb.visible=true;lightOrb.position.set(S.pos.x+0.6*Math.cos(t*1.5),S.y+1.9+Math.sin(t*2)*0.15,S.pos.z+0.6*Math.sin(t*1.5));lightOrb.scale.setScalar(Math.max(0.01,f));orbL.position.copy(lightOrb.position);orbL.intensity=1.8*f;}
   else if(lightOrb.visible){lightOrb.visible=false;orbL.intensity=0;}
   // el gato sigue a Bruna
-  if(CAT.on){const side=S.yaw-PI/2-0.6,tx=S.pos.x+Math.sin(side)*1.0,tz=S.pos.z+Math.cos(side)*1.0;
-    const dx=tx-CAT.x,dz=tz-CAT.z,d=Math.hypot(dx,dz);if(d>8){CAT.x=tx;CAT.z=tz;}else{CAT.x+=dx*Math.min(1,dt*3);CAT.z+=dz*Math.min(1,dt*3);}
-    if(d>0.05)CAT.yaw=Math.atan2(dx,dz);CAT.y+=((FL.on?S.y+0.3:S.y)-CAT.y)*Math.min(1,dt*6);
-    CAT.g.position.set(CAT.x,CAT.y+(d>0.2?Math.abs(Math.sin(t*10))*0.04:0),CAT.z);CAT.g.rotation.y=CAT.yaw;CAT.tail.rotation.z=Math.sin(t*2)*0.3;}
+  if(CAT.on)catStep(dt,t);
   // final del nivel: el certificado
   if(PLAY&&GS.pot===4&&GS.phase==='premio'&&!dOn&&!certOn)showCertificate();
   // luces alrededor del torreón cuando la poción está hecha

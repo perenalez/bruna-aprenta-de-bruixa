@@ -52,6 +52,7 @@ Per obrir-lo sense servidor, n'hi ha prou amb obrir `dist/index.local.html` al n
 | `46_turbo_setas.js` | **Turbo i fruita, bolets saltadors, planeig amb el vestit i volar des de qualsevol lloc** (vegeu més avall) |
 | `50_juego.js` | Física combinada bosc/torreó, `stepMove`, accions (portes, ascensor, acariciar), teletransports, llums per zona, visibilitat, càmera, bucle i API de depuració `window.__j` |
 | `54_datos_pociones.js` | **Dades del nivell 1** (`NIVEL1`, `TXT`): pocions, ingredients amb on són (`spot`) i pistes en dues capes, premis, poders i textos de la història. Afegir pocions = afegir dades aquí |
+| `51_hora_del_dia.js` | **Llum segons l'hora real** (v.1): paletes `PALS` (nit, alba, dia, posta, capvespre) i punts `DAYK`; `dayStep` canvia cel, boira, fons, `LIGHTS.out`/terrassa, sol, estrelles, lluna, lluernes i finestra. `?hora=21.5` o `__j.setHour(h)` per provar |
 | `55_pociones.js` | **Esquelet del joc:** partida guardada (`GS`, a `localStorage`), poders (`POW`), so (música i `sfx()` amb Web Audio, sense fitxers), llibreta (poció, diari, xat amb el Conillet), sac, llibre, caldero amb capes, armari de la Bruna, barret, vareta (Sol i Pluja), el Conillet que guia, i la poció 1 sencera. Les accions entren per `potionActions()` dins `actions()` |
 
 ## Conceptes clau
@@ -134,12 +135,22 @@ Al joc complet s'ha d'activar a partir del **nivell 4**. Encara no hi ha sistema
 - **Idioma:** el joc és en **català** (decisió del Pere). Els textos de la història són a `54_datos_pociones.js` (`TXT`); els noms dels botons de salt ràpid, a `TP_CA` (`50_juego.js`), perquè les claus internes (`Bosque`, `Trono`…) les fan servir els tests.
 - **Simplificacions pendents:** la llibreta s'obre com una finestra (encara no amb la càmera a les mans de la Bruna) i la bruixa adulta encara és només una veu amb bafarades.
 
+## Canvis de la v.1 (encàrrec, pas 2)
+
+- **Pot violeta** (escala del torreó): estava a la llista `steps` i `towerAnim` el tornava a fer visible; ara l'entrada té `off()` i no es mostra un cop agafat.
+- **Gat** (`59_pocion5.js`, `catStep`): potes amb maluc i genoll, cicle de caminar segons la velocitat real; quan `FL.state==='fly'` va assegut a l'escombra (fill de `B.root`, darrere la Bruna). Segueix l'alçada de la Bruna (salta amb ella als bolets).
+- **Botons de llocs** (`55_pociones.js`): `GS.places`; cap botó al començament; `placesStep` desbloqueja un lloc quan la Bruna hi entra caminant (radi `PLACE_R`, no volant). A les demos es veuen tots.
+- **Conill**: taques blanques al model (`buildBunny`, també a la portada); la cua, quan hi ha missatges, recorre l'arc de Sant Martí amb un halo (`tailGlow`).
+- **Càmera**: distància per defecte 7.6 (abans 5.8) i pitch 0.36. En prémer «Juga», volta de 360° (`INTRO`, a `60_portada.js`) que acaba a l'esquena; controls amagats; un toc o una tecla la salta.
+- **Sabates màgiques**: doble salt (`S.dbl`) amb espurnes (`doubleJumpFx`) i planeig després del doble salt mantenint «Saltar» (també dins el torreó).
+- Versió **v.1.2** (`1.2.0` a `package.json`, `#tver` a la portada), nom triat per en Pere. La volta inicial comença a vista d'ocell (pitch +0.78, distància ×2.3) i dura 7 s. Test: `tests/v1.mjs`.
+
 ## Portada (`60_portada.js`)
 
 - Feta segons l'encàrrec v.1, pas 1 (`../ENCARGO-CLAUDE-CODE.md`, referència `../referencias/portada-referencia.png`). Escena pròpia (`TSC`, separada del món) amb els models del joc: Bruna (`buildBruna`, `mkHat`, vestit de bruixa) en pla mitjà mirant l'espectador amb la vareta aixecada, calder davant a l'esquerra, el Conill, el torreó a l'esquerra i l'unicorn (`uni.g.clone()`) a la dreta, arbres de copa taronja (`taperTube` + `blobs` + `PAL.orange`), bolets blancs i blavosos, cel de posta (`TSC.background`, degradat fix a la pantalla).
 - **Peces només de portada** (no existeixen al joc): la vareta amb estrella, l'espiral rosa i el torreó amb teulada cònica taronja. No s'ha tocat cap model original.
 - Animacions subtils a `titleStep`: respiració i parpelleig de la Bruna, vareta que es mou, partícules de la vareta, vapor i bombolles del calder, destellos d'ambient. Càmera fixa (`TITLE.cam`): baixa i mirant una mica amunt; en pantalles més estretes que 0.46 s'allunya; en horitzontal els textos van a l'esquerra i la càmera es desplaça perquè la Bruna quedi a la dreta.
-- HTML: `#tscreen` (textos, «Juga», targeta «Accedir a la zona de proves», crèdits «Un joc creat per Ayla Sainz i Pere Nadal»), `#tver` (v.1) i `#tproves` (zona de proves → «Testejar» → llista `PROVES`, totes desactivades amb «Aviat» → «Tornar»). Per activar una prova, treure el `disabled` del seu botó a `provesView`.
+- HTML: `#tscreen` (textos, «Juga», targeta «Accedir a la zona de proves», crèdits «Un joc creat per Ayla Sainz i Pere Nadal»), `#tver` (v.1.2) i `#tproves` (zona de proves → «Testejar» → llista `PROVES`, totes desactivades amb «Aviat» → «Tornar»). Per activar una prova, treure el `disabled` del seu botó a `provesView`.
 - El bucle de `50_juego.js` dibuixa `titleScene()||scene` i crida `titleStep`. «Juga» (`startGame`) torna al joc exactament com abans (fov 38). `?sinportada` a l'URL la salta.
 - Test: `tests/portada.mjs` (dins `npm test`). Captures: `node tests/capturas-portada.mjs` → `docs/portada/`.
 
