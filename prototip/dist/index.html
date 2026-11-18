@@ -4543,7 +4543,11 @@ function starShape(r1,r2,inner){const s=new THREE.Shape();for(let i=0;i<10;i++){
 function pcHair(head,style,hm){const g=new THREE.Group();head.add(g);
   const sp=(x,y,z,sx,sy,sz,rx,ry,rz)=>{const m=mk(SPH(1,14,10),hm,x,y,z,g);m.scale.set(sx,sy,sz);m.rotation.set(rx||0,ry||0,rz||0);return m;};
   // casquet de dalt i peça del clatell (perquè el darrere del cap no quedi pelat)
-  const cap=(k)=>{k=k||1;mk(new THREE.SphereGeometry(1,26,14,0,TAU,0,1.25),hm,0,0.022,-0.014,g).scale.set(0.236*k,0.218*k,0.226*k);sp(0,-0.03,-0.08,0.214*k,0.175*k,0.15*k);};
+  // casquet de dalt + «casc» que cobreix els costats i el darrere del cap fins sota les orelles (deixa la cara lliure),
+  // perquè la pell del cap no surti per sobre dels cabells
+  const cap=(k)=>{k=k||1;mk(new THREE.SphereGeometry(1,26,14,0,TAU,0,1.25),hm,0,0.022,-0.014,g).scale.set(0.236*k,0.218*k,0.226*k);
+    const sh=mk(new THREE.SphereGeometry(1,28,16,PI/2+1.0,TAU-2.0,0,2.05),hm,0,0.01,-0.012,g);const kk=Math.max(k,1);sh.scale.set(0.232*kk,0.222*kk,0.228*kk);
+    sp(0,-0.03,-0.08,0.214*k,0.175*k,0.15*k);};
   const fringe=()=>[1,-1].forEach(s=>sp(s*0.124,0.128,0.094,0.122,0.046,0.06,0.25,s*0.55,-s*0.62));
   const sides=(h)=>[1,-1].forEach(s=>sp(s*0.203,0.03-h*0.4,-0.005,0.045,h,0.1,0,0,-s*0.1));
   switch(style){
