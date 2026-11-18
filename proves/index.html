@@ -1708,14 +1708,16 @@ function animate(dt){
   S.t+=dt;const t=S.t,v=S.speed,inW=sat(S.depth/0.3);
   const w=ease(sat(v/0.5)),run=ease(sat((v-1.5)/1.9)),grounded=!S.air;
   // --- ciclo de pasos ---
-  const duty=lerp(0.6,0.27,run),SL=(0.14+0.26*sat(v/WALK)+0.16*run)*(1-0.25*inW),f=v>0.05?0.86*v*duty/SL:0;
+  // carrera con turbo y sabates màgiques: zancadas larguísimas, el pie apenas toca el suelo y el cuerpo flota
+  const dash=P.dash=(P.dash||0)+(((S.dash||(S.air&&P.dash>0.5&&S.speed>8))?1:0)-(P.dash||0))*(1-Math.exp(-dt*6));
+  const duty=lerp(lerp(0.6,0.27,run),0.12,dash),SL=(0.14+0.26*sat(v/WALK)+0.16*run)*(1-0.25*inW)*(1+0.18*dash),f=v>0.05?0.86*v*duty/SL:0;
   const ph0=S.ph;S.ph=(S.ph+f*dt)%1;
-  const lift=(0.035+0.035*sat(v/WALK)+0.1*run)+0.14*inW;
+  const lift=(0.035+0.035*sat(v/WALK)+0.1*run)+0.14*inW+0.1*dash;
   const twist=Math.sin(S.ph*TAU)*(0.07+0.05*run)*w;                         // pelvis: adelanta la cadera del pie que avanza
   // objetivo de la pelvis (rebote vertical)
   const hb=0.5-0.5*Math.cos((S.ph-duty/2)*2*TAU),bobW=-Math.cos(S.ph*2*TAU)*0.013*w*(1-run),bobR=(2*hb-1)*0.05*run;
   const sq=stepS(SP.squat,S.prep>=0?0.2:0,dt);
-  let py=STAND-0.034*w+bobW+bobR-clamp(sq,-0.05,0.2)+Math.sin(t*1.9)*0.004*(1-w);
+  let py=STAND-0.034*w+bobW+bobR-clamp(sq,-0.05,0.2)+Math.sin(t*1.9)*0.004*(1-w)+dash*0.075*hb;   // con dash, vuela entre zancada y zancada
   const airK=P.air===undefined?0:P.air;P.air=airK+((S.air?1:0)-airK)*(1-Math.exp(-dt*(S.air?14:20)));
   // pies
   py=lerp(py,0.44+Math.sin(t*2.2)*0.006,FL.k);                                 // sentada en la escoba
@@ -1735,13 +1737,14 @@ function animate(dt){
     if(c&&!L.contact&&S.prep<0){const k=sat(v/RUN);let s2=surfHere(wx,wz,S.y);
       sfxStep(s2,k);
       if(s2==='water'||v>1.0||s2==='path'||s2==='sand'||s2==='wood')burst(s2,wx,groundY(wx,wz,S.y),wz,s2==='water'?0.25+0.75*k:(0.2+0.8*k)*(s2==='grass'&&v<2.4?0:1),S.yaw+PI);}
+    if(c&&!L.contact&&dash>0.5)emit('dust',wx,groundY(wx,wz,S.y)+0.04,wz,4,{sp:1.3,size:0.06,color:pick(['#ffe36a','#fff3b0','#c98aff','#ff9ad8'])});   // chispas de las sabates
     L.contact=c;
   }
   if(FL.k>0.01)flightLegs(F);
   // la pelvis no puede subir más de lo que dan las piernas
   pelvisVy+=((py-pelvisY)/Math.max(dt,1e-4)-pelvisVy)*(1-Math.exp(-dt*14));pelvisY=py;
   // --- torso ---
-  const lean=stepS(SP.lean,0.05*w+0.2*run+clamp(S.acc*0.03,-0.22,0.22)-(S.skid>0?0.45:0)+(S.prep>=0?0.2:0),dt);
+  const lean=stepS(SP.lean,0.05*w+0.2*run+0.16*dash+clamp(S.acc*0.03,-0.22,0.22)-(S.skid>0?0.45:0)+(S.prep>=0?0.2:0),dt);
   const bank=stepS(SP.bank,clamp(-S.turn*v*0.035,-0.4,0.4),dt);
   const sway=Math.sin(S.ph*TAU)*0.011*w*(1-run*0.5),roll=Math.cos(S.ph*TAU)*0.032*w;
   B.pelvis.position.set(sway,pelvisY,-lean*0.05);
@@ -2097,7 +2100,7 @@ fp.addEventListener('pointerdown',e=>e.stopPropagation());
    - Setas gigantes: al caer encima, Bruna sale disparada. Bajando, Espacio apretado = planea (el vestido hace de paracaídas).
    - Con la escoba a la espalda: Control+Mayús+Espacio despega desde cualquier sitio; en el móvil, al saltar aparece «Volar».
    ===================================================================== */
-const TURBO={v:35,max:100,on:false,held:false,drainFoot:14,drainFly:18,fruit:20,foot:6.6,fly:16,emptyT:-9,sparkT:0};
+const TURBO={v:35,max:100,on:false,held:false,drainFoot:14,drainFly:18,fruit:20,foot:6.6,footShoes:12,fly:16,emptyT:-9,sparkT:0};
 const TURBO_LEVEL=DEMO==='turbo';       // en el juego completo: llega con la poción 3 (POW.turbo)
 const turboOn=()=>TURBO_LEVEL||POW.turbo;
 
@@ -2368,7 +2371,8 @@ function stepMove(dt){
   mode=inTowerZone(S.pos.x,S.pos.z,S.y)?'tower':'forest';
   S.depth=mode==='forest'?waterDepth(S.pos.x,S.pos.z):0;{const wa=waterAt(S.pos.x,S.pos.z);WL=wa>-1e8?wa:WY;}
   ts*=lerp(1,0.5,sat(S.depth/0.36));
-  if(ts>0&&!S.air&&!act&&!lift.riding&&turboUse(dt,false))ts=TURBO.foot;      // turbo a pie
+  // turbo a pie; con las sabates màgiques corre muchísimo más, casi sin tocar el suelo (v.1.2)
+  S.dash=false;if(ts>0&&!S.air&&!act&&!lift.riding&&turboUse(dt,false)){S.dash=shoesOn;ts=shoesOn?TURBO.footShoes:TURBO.foot;}
   if(S.glide&&ts>0)ts=Math.max(ts,4.6);                                        // planeando avanza más
   if(act||lift.riding)ts=0;
   if(ts>0){const sy=Math.sin(cam.yaw),cy=Math.cos(cam.yaw);S.tyaw=Math.atan2(-sy*iy+cy*ix,-cy*iy-sy*ix);}
@@ -4360,7 +4364,7 @@ const RAYS='<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M6 9L20 15M3 21
 @media (min-aspect-ratio:1/1) and (max-height:520px){#tscreen .sub{display:none}#tscreen h1{font-size:clamp(40px,13vh,70px)}#tplay{font-size:26px;padding:8px 34px 10px}#tgo{width:60px;height:60px;font-size:9px}}`;document.head.appendChild(css);}
 // pruebas de la zona de proves (se activan a medida que se hacen)
 const PROVA_OPEN={};   // cada prova feta s'hi apunta (62_proves_personatge.js…)
-const PROVES=[{id:'personatge',lab:'Crea el teu personatge'},{id:'nivells',lab:'Saltar nivells'},{id:'render',lab:'Nou motor de render'},{id:'alba',lab:'Moviment estil Alba'}];
+const PROVES=[{id:'personatge',lab:'Crea el teu personatge'},{id:'nivells',lab:'Saltar nivells'},{id:'render',lab:'Nou motor de render · moviment Alba'}];   // en Pere: «el nou render i el moviment Alba són el mateix»
 function showTitleUI(on){['hud','joy','acts','chips','top','hint','bwand','spells','ctx','tbar','frost'].forEach(id=>{const e=$(id);if(e)e.style.visibility=on?'hidden':'';});}
 function provesView(v){const p=$('tproves');if(!p)return;p.classList.toggle('on',!!v);if(!v)return;
   const c=p.querySelector('.card');
@@ -4916,6 +4920,14 @@ if(NV.on){
   b.addEventListener('pointerdown',e=>e.stopPropagation());b.addEventListener('click',()=>{sfx('click');const p=$('pnvp');if(p&&p.classList.contains('on'))p.classList.remove('on');else nvPanel();});
 }
 Object.assign(window.__j,{NV,openLevels,nvPanel,nvSetHab,nvSetRoba,nvRoba});
+
+/* ===== 64_proves_motor.js ===== */
+/* =====================================================================
+   ZONA DE PROVES · «NOU MOTOR DE RENDER · MOVIMENT ALBA» (encàrrec passos 5 i 6, que en Pere va unir)
+   La prova és una pàgina a part (proves/alba → dist/prova-alba.html): l'illa estil Alba amb el motor nou
+   i un botó «Motor: nou / actual» per comparar fps. «Sortir» torna aquí, a la llista de proves.
+   ===================================================================== */
+PROVA_OPEN.render=()=>{location.href='./prova-alba'+(/\.local\.html/.test(location.pathname)?'.local':'')+'.html';};
 
 })();
 </script>
