@@ -4,13 +4,15 @@
      22:00–6:00 noche (la de siempre: azul-lila, luna, estrellas, luciérnagas, ventana del torreón encendida)
      6:00–7:30 amanecer (rosado) · 7:30–19:30 día · 19:30–21:00 atardecer (naranja) · 21:00–22:00 anochecer
    Cada paleta tiene un punto de referencia; entre dos puntos se mezcla poco a poco.
+   La luz de día NO es más fuerte que la de noche (si no, lo blanco —el unicornio, el camino— se «quema»):
+   el día se nota en los colores (cielo azul, luz neutra), con la suma de luces por debajo de 1.
    Para probar: ?hora=21.5 en la URL (o window.__j.setHour(21.5); null vuelve a la hora real).
    ===================================================================== */
 const PALS={
   night:{bg:'#40398f',fog:'#7667c2',sky:['#d6b0f6','#8f80e2','#3d368c'],hemi:['#c4b6ff','#8a9a66',1.0],sun:['#ffe2f2',0.5],stars:0.85,moon:1,flies:1,win:0.5,pts:1},
-  dawn:{bg:'#b48ac8',fog:'#e6a8c0',sky:['#ffd2b0','#f0a2c4','#8070c4'],hemi:['#ffd8e6','#94a070',1.1],sun:['#ffbe96',0.75],stars:0.2,moon:0.35,flies:0.35,win:0.3,pts:0.6},
-  day:{bg:'#8ec4ee',fog:'#bcdcf2',sky:['#f2f8ff','#b4d8f6','#6ca4e6'],hemi:['#f2f6ff','#8cae5c',1.18],sun:['#fff2d8',0.9],stars:0,moon:0,flies:0.06,win:0,pts:0.15},
-  sunset:{bg:'#9a68b0',fog:'#e89a9c',sky:['#ffc488','#f2869c','#6e56ac'],hemi:['#ffd4c0','#8f9a62',1.05],sun:['#ffb070',0.75],stars:0.15,moon:0.3,flies:0.5,win:0.35,pts:0.8},
+  dawn:{bg:'#b48ac8',fog:'#e6a8c0',sky:['#ffd2b0','#f0a2c4','#8070c4'],hemi:['#f4d4e2','#8a9a6a',0.78],sun:['#ffc8a0',0.45],stars:0.2,moon:0.35,flies:0.35,win:0.3,pts:0.6},
+  day:{bg:'#8ec4ee',fog:'#bcdcf2',sky:['#f2f8ff','#b4d8f6','#6ca4e6'],hemi:['#dde6f6','#7f9a5c',0.72],sun:['#fff0dc',0.42],stars:0,moon:0,flies:0.06,win:0,pts:0.15},
+  sunset:{bg:'#9a68b0',fog:'#e89a9c',sky:['#ffc488','#f2869c','#6e56ac'],hemi:['#f0ccc0','#8a9462',0.8],sun:['#ffb880',0.45],stars:0.15,moon:0.3,flies:0.5,win:0.35,pts:0.8},
   dusk:{bg:'#4c4396',fog:'#8674c4',sky:['#dcb0ec','#9282dc','#423a92'],hemi:['#c8b8f6','#8a9a66',1.0],sun:['#ffd8e8',0.55],stars:0.6,moon:0.85,flies:0.85,win:0.45,pts:1}
 };
 // [hora, paleta]: la luz es exactamente esa paleta en esa hora y se mezcla con la siguiente

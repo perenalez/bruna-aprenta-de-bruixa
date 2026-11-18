@@ -184,7 +184,7 @@ function startGame(){if(!TITLE.on)return;TITLE.on=false;audioInit();sfx('magic')
    Los controles se ocultan durante la vuelta; tocar la pantalla o pulsar una tecla la salta. */
 const INTRO={on:false,t:0,T:7,end:{yaw:0,pitch:0,dist:0}};
 function startIntro(){INTRO.on=true;INTRO.t=0;INTRO.t0=performance.now();INTRO.end={yaw:S.yaw+PI,pitch:cam.pitch,dist:cam.dist};introCam(0);}
-function endIntro(){if(!INTRO.on)return;INTRO.on=false;Object.assign(cam,INTRO.end);showTitleUI(false);}
+function endIntro(){if(!INTRO.on)return;INTRO.on=false;Object.assign(cam,INTRO.end);showTitleUI(false);startLead();}   // la primera vegada, en Conillet la guia
 function introCam(u){const e=u*u*(3-2*u),E=INTRO.end;
   // comença molt amunt (vista d'ocell, ~65°) i lluny, i baixa mentre gira fins a l'esquena de la Bruna
   cam.yaw=E.yaw-(1-e)*TAU;cam.dist=E.dist*(2.3-1.3*e);cam.pitch=E.pitch+(1-e)*0.78;}

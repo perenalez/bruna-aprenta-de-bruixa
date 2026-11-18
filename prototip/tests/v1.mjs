@@ -98,7 +98,30 @@ const salt = await page.evaluate(() => {
 ok(salt.amb > salt.sense * 1.4, `el doble salt no puja més (amb sabates ${salt.amb.toFixed(2)} m, sense ${salt.sense.toFixed(2)} m)`);
 ok(salt.planeja && salt.vy > -2, 'després del doble salt no planeja mantenint premut');
 
+// v.1.2 · la primera vegada, en Conillet es posa davant, parla i guia la Bruna pel camí fins al torreó amb una llumeta
+const guia = await page.evaluate(() => {
+  const j = window.__j, S = j.S; for (let i = 0; i < 20 && j.dOn; i++) j.nextLine(); j.GS.phase = 'inicio'; j.GS.flags.guia = 0; j.GS.places.length = 0;
+  j.teleport('Bosque'); j.step(30); j.startLead();
+  for (let i = 0; i < 300 && j.LEAD.st === 'front'; i++) j.step(1);
+  const parla = j.LEAD.st === 'talk' && document.getElementById('dlg').innerText.includes('Conillet');
+  for (let i = 0; i < 6 && j.dOn; i++) j.nextLine();
+  const guiant = j.LEAD.st === 'lead';
+  // la Bruna camina pel camí cap al torreó; el conill ha d'anar per davant (més a prop del torreó que ella)
+  let davant = 0, n = 0;
+  for (let k = 0; k < 900 && j.LEAD.st === 'lead'; k++) {
+    const z = S.pos.z - 0.06; S.pos.set(j.pathX ? j.pathX(z) : S.pos.x, 0, z); S.y = j.gY(S.pos.x, S.pos.z); j.step(1);
+    if (k % 30 === 0 && k > 60) { n++; if (j.BN.z < S.pos.z - 0.5) davant++; }
+  }
+  const arriba = j.LEAD.st === 'arrived' || !j.LEAD.on;
+  for (let i = 0; i < 6 && j.dOn; i++) j.nextLine();
+  return { parla, guiant, davant, n, arriba, fi: !j.LEAD.on, desat: !!j.GS.flags.guia };
+});
+ok(guia.parla, 'en Conillet no es posa a parlar en començar');
+ok(guia.guiant, 'després de parlar, en Conillet no comença a guiar');
+ok(guia.n > 3 && guia.davant >= guia.n - 1, `en Conillet no va per davant de la Bruna (${guia.davant}/${guia.n})`);
+ok(guia.arriba && guia.fi && guia.desat, 'en arribar al torreó la guia no s\'acaba o no es desa');
+
 await browser.close();
 if (errores.length) fallos.push('Errors:\n' + errores.join('\n'));
 if (fallos.length) { console.error('✗ v.1:\n- ' + fallos.join('\n- ')); process.exit(1); }
-console.log('✓ v.1: pot violeta, gat, llocs, hora del dia, Conill, doble salt', JSON.stringify({ salt: { amb: +salt.amb.toFixed(2), sense: +salt.sense.toFixed(2) } }));
+console.log('✓ v.1: pot violeta, gat, llocs, hora del dia, Conill, doble salt, Conillet guia', JSON.stringify({ salt: { amb: +salt.amb.toFixed(2), sense: +salt.sense.toFixed(2) } }));

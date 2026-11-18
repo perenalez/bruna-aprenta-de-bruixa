@@ -505,6 +505,7 @@ function gameStep(dt){
     const d=Math.hypot(_w.x-S.pos.x,_w.z-S.pos.z)+Math.abs(_w.y-S.y)*2.5;glow=sat(1-d/16);
     const band=d<3?3:d<7?2:d<12?1:0;if(band!==guideBand&&tAcc>1){if(band>guideBand&&band>0)toast(['','Conillet: tebi…','Conillet: calent, calent!','Conillet: que et cremes!'][band],1600);guideBand=band;}
     if(d<3&&!FL.on){BN.root.position.y+=Math.abs(Math.sin(t*7))*0.3;}}
+  if(LEAD.on)glow=Math.max(glow,0.55);leadStep(dt);
   bnGlow.material.opacity+=(glow*0.9-bnGlow.material.opacity)*(1-Math.exp(-dt*4));
   spellStep(dt);
   potionExtraStep(dt);

@@ -156,6 +156,10 @@ const NIVEL1={
 const TXT={
   voz:'La veu del torreó',
   conill:'Conillet',
+  // el Conillet guia la Bruna fins al torreó la primera vegada (55a_conillet_guia.js)
+  guia:['Hola! Soc el teu Conillet.','Estàs perduda? No pateixis, t\'ajudaré.','Segueix-me! Mira la llumeta.'],
+  guiaToast:'Segueix en Conillet i la seva llumeta',
+  guiaFi:['Ja hi som! Aquest és el torreó.','Entra-hi: algú t\'està esperant.'],
   bienvenida:['Bruna… t\'he estat esperant. T\'he estat esperant des que vas néixer.',
               'Per tornar a casa t\'hauràs de convertir en bruixa. Jo t\'ensenyaré.',
               'La teva primera tasca: la poció Arcoíris. Puja a la cuina del calder i llegeix el llibre de conjurs.'],

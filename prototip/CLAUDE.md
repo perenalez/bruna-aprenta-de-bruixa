@@ -53,6 +53,7 @@ Per obrir-lo sense servidor, n'hi ha prou amb obrir `dist/index.local.html` al n
 | `50_juego.js` | Física combinada bosc/torreó, `stepMove`, accions (portes, ascensor, acariciar), teletransports, llums per zona, visibilitat, càmera, bucle i API de depuració `window.__j` |
 | `54_datos_pociones.js` | **Dades del nivell 1** (`NIVEL1`, `TXT`): pocions, ingredients amb on són (`spot`) i pistes en dues capes, premis, poders i textos de la història. Afegir pocions = afegir dades aquí |
 | `51_hora_del_dia.js` | **Llum segons l'hora real** (v.1): paletes `PALS` (nit, alba, dia, posta, capvespre) i punts `DAYK`; `dayStep` canvia cel, boira, fons, `LIGHTS.out`/terrassa, sol, estrelles, lluna, lluernes i finestra. `?hora=21.5` o `__j.setHour(h)` per provar |
+| `55a_conillet_guia.js` | **Conillet guia** (v.1.2): la primera partida, en acabar la volta de la càmera (`startLead` des d'`endIntro`), es posa davant la Bruna, parla (`TXT.guia`) i la guia pel camí (`pathX`) fins al clar del torreó amb una llumeta (`leadOrb`); l'espera si es queda enrere. `bunnyStep` fa servir `leadTarget()`. Es desa a `GS.flags.guia` |
 | `55_pociones.js` | **Esquelet del joc:** partida guardada (`GS`, a `localStorage`), poders (`POW`), so (música i `sfx()` amb Web Audio, sense fitxers), llibreta (poció, diari, xat amb el Conillet), sac, llibre, caldero amb capes, armari de la Bruna, barret, vareta (Sol i Pluja), el Conillet que guia, i la poció 1 sencera. Les accions entren per `potionActions()` dins `actions()` |
 
 ## Conceptes clau
@@ -143,6 +144,7 @@ Al joc complet s'ha d'activar a partir del **nivell 4**. Encara no hi ha sistema
 - **Conill**: taques blanques al model (`buildBunny`, també a la portada); la cua, quan hi ha missatges, recorre l'arc de Sant Martí amb un halo (`tailGlow`).
 - **Càmera**: distància per defecte 7.6 (abans 5.8) i pitch 0.36. En prémer «Juga», volta de 360° (`INTRO`, a `60_portada.js`) que acaba a l'esquena; controls amagats; un toc o una tecla la salta.
 - **Sabates màgiques**: doble salt (`S.dbl`) amb espurnes (`doubleJumpFx`) i planeig després del doble salt mantenint «Saltar» (també dins el torreó).
+- **Llum de dia sense cremar:** de dia la llum (hemi + sol) és més fluixa que de nit; el dia es nota pels colors. Si es puja, el blanc (unicorn, camí) es crema.
 - Versió **v.1.2** (`1.2.0` a `package.json`, `#tver` a la portada), nom triat per en Pere. La volta inicial comença a vista d'ocell (pitch +0.78, distància ×2.3) i dura 7 s. Test: `tests/v1.mjs`.
 
 ## Portada (`60_portada.js`)

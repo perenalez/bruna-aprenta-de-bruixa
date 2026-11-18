@@ -61,10 +61,12 @@ function bunnyStep(dt){
   // punto objetivo: sobre el rastro, FOLLOW metros detrás de Bruna
   let need=FOLLOW,tx=S.pos.x,tz=S.pos.z,ty=BN.lastG;
   for(let i=trail.length-1;i>0;i--){const a=trail[i],b=trail[i-1],d=Math.hypot(a.x-b.x,a.z-b.z);if(d>=need){const k=need/d;tx=a.x+(b.x-a.x)*k;tz=a.z+(b.z-a.z)*k;ty=a.y+(b.y-a.y)*k;need=0;break;}need-=d;tx=b.x;tz=b.z;ty=b.y;}
+  // guiando a Bruna hasta el torreón (55a_conillet_guia.js): el objetivo es el camino, por delante de ella
+  if(LEAD.on){if(LEAD.st==='talk'||LEAD.st==='arrived'){tx=BN.x;tz=BN.z;}else{const L0=leadTarget();tx=L0.x;tz=L0.z;}ty=BN.gy;}
   // si se ha quedado muy lejos (p. ej. tras el ascensor), aparece detrás
-  if(Math.hypot(tx-BN.x,tz-BN.z)>9)bunnyReset();
+  else if(Math.hypot(tx-BN.x,tz-BN.z)>9)bunnyReset();
   const dx=tx-BN.x,dz=tz-BN.z,dist=Math.hypot(dx,dz),dB=Math.hypot(S.pos.x-BN.x,S.pos.z-BN.z);
-  let want=BN.onLift?0:(dist>0.2?clamp(dist*2.8,0,dist>2.5?8.5:5.0):0);if(dB<0.8)want=0;
+  let want=BN.onLift?0:(dist>0.2?clamp(dist*2.8,0,dist>2.5?(LEAD.on?5.5:8.5):5.0):0);if(dB<0.8&&!LEAD.on)want=0;
   BN.v+=clamp(want-BN.v,-7*dt,4.5*dt);if(BN.v<0.02&&want===0)BN.v=0;
   // fase de salto
   const prevPh=BN.ph,hopF=1.7+BN.v*0.55;

@@ -277,4 +277,4 @@ function loop(now){
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
-window.__j={render:()=>renderer.render(titleScene()||scene,camera),step:(n,dt)=>{for(let i=0;i<n;i++)frame(dt||1/60);updateCam(1);},S,cam,K,input,ACT,actions,teleport,lift,doors,landH,groundY,parts,get mode(){return mode;},get key(){return curKey;},get act(){return act;},OX,OY,OZ,BN,GT,H1,H2,RXB,BZ,BL,trail,gY,waterAt,FL,FLY,broom,canLaunch,TURBO,MUSH,FRUIT,tryFly,canMountHere,get inCave(){return inCave;}};
+window.__j={render:()=>renderer.render(titleScene()||scene,camera),step:(n,dt)=>{for(let i=0;i<n;i++)frame(dt||1/60);updateCam(1);},S,cam,K,input,ACT,actions,teleport,lift,doors,landH,groundY,parts,get mode(){return mode;},get key(){return curKey;},get act(){return act;},OX,OY,OZ,BN,GT,H1,H2,RXB,BZ,BL,trail,gY,pathX,waterAt,FL,FLY,broom,canLaunch,TURBO,MUSH,FRUIT,tryFly,canMountHere,get inCave(){return inCave;}};
