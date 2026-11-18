@@ -9,7 +9,7 @@
    «Accedir a la zona de proves» abre #tproves: botón «Testejar» → lista de pruebas (desactivadas, «Aviat»).
    ?sinportada en la URL la salta (para pruebas).
    ===================================================================== */
-const TITLE={on:PLAY&&!/[?&]sinportada/.test(location.search),t:0,
+const TITLE={on:PLAY&&!/[?&](sinportada|prova=nivell)/.test(location.search),t:0,
   // cámara de la portada (pensada para un móvil vertical, aspecto 0.46)
   cam:{x:0,y:0.55,z:2.75,lx:0.05,ly:1.08,fov:44,fovH:40,asp:0.46}};
 const TSC=new THREE.Scene();

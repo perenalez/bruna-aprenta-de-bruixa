@@ -16,7 +16,12 @@ const POW_EXTRA={plantas:false};Object.assign(POW,POW_EXTRA);if(!PLAY)POW.planta
 const GS={pot:0,phase:'inicio',bag:[],got:{},layers:[],diary:[],chat:[],unread:0,clothes:[],wardOpen:false,hint:{},guide:null,done:[],cheese:false,flags:{}};
 const PROVA={on:false};   // partida de prova (zona de proves): no es desa res
 function saveGame(){if(!PLAY||PROVA.on)return;try{localStorage.setItem(SAVE,JSON.stringify(GS));}catch(e){}}
-function loadGame(){if(!PLAY)return;try{if(/[?&]reset/.test(location.search))localStorage.removeItem(SAVE);const s=localStorage.getItem(SAVE);if(s)Object.assign(GS,JSON.parse(s));}catch(e){}
+// partida de prova de «Saltar nivells» (?prova=nivell1&fetes=0,1): comença de zero, amb les pocions marcades fetes, i no es desa
+const NIVELL_PROVA=PLAY&&/[?&]prova=nivell\d/.test(location.search);
+function loadProva(){PROVA.on=true;const m=/[?&]fetes=([\d,]*)/.exec(location.search),fetes=m?m[1].split(',').filter(x=>x!=='').map(Number).filter(i=>NIVEL1.pociones[i]):[];
+  fetes.sort((a,b)=>a-b).forEach(i=>{const P=NIVEL1.pociones[i];GS.done.push(i);if(P.premio&&P.premio.ropa)GS.clothes.push(P.premio.ropa);(P.diario||[]).forEach(t=>GS.diary.push(t));});
+  if(fetes.length){GS.pot=Math.max(...fetes);GS.phase='fin';GS.wardOpen=true;GS.flags.guia=1;}}
+function loadGame(){if(!PLAY)return;if(NIVELL_PROVA){loadProva();return;}try{if(/[?&]reset/.test(location.search))localStorage.removeItem(SAVE);const s=localStorage.getItem(SAVE);if(s)Object.assign(GS,JSON.parse(s));}catch(e){}
   if(GS.phase==='fin1')GS.phase='fin';                                          // partidas guardadas con la versión anterior
   if(!GS.done.length&&GS.clothes.includes('barret'))GS.done=[0];}
 loadGame();
@@ -26,7 +31,7 @@ if(!Array.isArray(GS.places))GS.places=[];
 const PLACE_R={Bosque:4,Estanque:3.5,'Torreón':4,Trono:3.5,Terraza:3.5,'Sótano':3,Puente:3,'Árbol':5,Cueva:2.2,Setas:4,Casa:2.2,Casita:2.2};
 const placeIn={};
 function inPlace(n){const t=TP[n],y=t[2]===null?gY(t[0],t[1]):t[2];return Math.hypot(S.pos.x-t[0],S.pos.z-t[1])<(PLACE_R[n]||3)&&Math.abs(S.y-y)<1.3;}
-function placeChips(){const names=Object.keys(TP);[...$('chips').children].forEach((b,i)=>{b.style.display=!PLAY||GS.places.includes(names[i])?'':'none';});}
+function placeChips(){const names=Object.keys(TP);[...$('chips').children].forEach((b,i)=>{b.style.display=!PLAY||NIVELL_PROVA||GS.places.includes(names[i])?'':'none';});}
 Object.keys(TP).forEach(n=>placeIn[n]=inPlace(n));placeChips();
 function placesStep(){if(!PLAY)return;const walking=!FL.on&&!FL.phase;
   for(const n in TP){const now=inPlace(n);
@@ -278,6 +283,7 @@ const dressW=new THREE.Group();{const c=LM('#2f2440'),p=LM('#7a4fb0');
 const dressSaved=[];
 function wearDress(){if(dressSaved.length)return;const c=LM('#2f2440'),s=LM('#3a2a52',{side:THREE.DoubleSide});
   B.root.traverse(o=>{if(o.isMesh&&o.material&&o.material.map&&o!==hatB){dressSaved.push([o,o.material]);o.material=o.material.side===THREE.DoubleSide?s:c;}});}
+function unwearDress(){dressSaved.forEach(([o,m])=>o.material=m);dressSaved.length=0;}
 // premios de cada poción: qué aparece en el armario y qué pasa al ponérselo
 const REWARD={barret:{w:hatW,lab:'Posar-se el barret',wear(){hatB.visible=true;}},vestit:{w:dressW,lab:'Posar-se el vestit',wear:wearDress}};
 // libro de conjuros (sobre la mesa de la cocina) y caldero

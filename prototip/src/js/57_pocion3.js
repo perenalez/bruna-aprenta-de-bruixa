@@ -77,10 +77,11 @@ const wingG=()=>{const g=new THREE.Group(),m=LM('#fffdf6',{emissive:'#ffffff',em
 const shoesW=new THREE.Group();
 { [-1,1].forEach(s=>{const sh=mk(RBox(0.108,0.074,0.2,0.034),LM('#5a3a8a'),s*0.09,0,0,shoesW);const w=wingG();w.position.set(s*0.15,0.04,-0.02);w.rotation.z=-s*0.5;shoesW.add(w);});
   shoesW.scale.setScalar(2.2);shoesW.position.setFromMatrixPosition(WARD_M.clone().multiply(TRS(-0.4,1.1,0.45)));shoesW.rotation.y=PI+0.05;shoesW.visible=false;G[1].add(shoesW);}
-let shoesOn=false;
-function wearShoes(){if(shoesOn)return;shoesOn=true;
+let shoesOn=false;const shoeWings=[];
+function wearShoes(){if(shoesOn)return;shoesOn=true;if(shoeWings.length){shoeWings.forEach(o=>o.visible=true);return;}
   [B.legL,B.legR].forEach((L0,i)=>{L0.foot.traverse(o=>{if(o.isMesh&&o.material&&o.material.color&&o.material.color.getHexString()==='34303f')o.material=LM('#5a3a8a');});
-    const w=wingG();w.position.set((i?-1:1)*0.07,0.0,-0.02);w.rotation.z=(i?1:-1)*0.6;L0.foot.add(w);});}
+    const w=wingG();w.position.set((i?-1:1)*0.07,0.0,-0.02);w.rotation.z=(i?1:-1)*0.6;L0.foot.add(w);shoeWings.push(w);});}
+function unwearShoes(){shoesOn=false;shoeWings.forEach(o=>o.visible=false);}
 REWARD.sabates={w:shoesW,lab:'Posar-se les sabates',wear:wearShoes};
 if(GS.clothes.includes('sabates'))wearShoes();
 
