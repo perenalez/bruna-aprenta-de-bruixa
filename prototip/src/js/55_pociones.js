@@ -18,9 +18,13 @@ const PROVA={on:false};   // partida de prova (zona de proves): no es desa res
 function saveGame(){if(!PLAY||PROVA.on)return;try{localStorage.setItem(SAVE,JSON.stringify(GS));}catch(e){}}
 // partida de prova de «Saltar nivells» (?prova=nivell1&fetes=0,1): comença de zero, amb les pocions marcades fetes, i no es desa
 const NIVELL_PROVA=PLAY&&/[?&]prova=nivell\d/.test(location.search);
-function loadProva(){PROVA.on=true;const m=/[?&]fetes=([\d,]*)/.exec(location.search),fetes=m?m[1].split(',').filter(x=>x!=='').map(Number).filter(i=>NIVEL1.pociones[i]):[];
+// subnivell (?poc=3): comença amb la poció 3 encarregada i les anteriors ja fetes
+function loadProva(){PROVA.on=true;const pc=/[?&]poc=(\d)/.exec(location.search),poc=pc?+pc[1]:0;
+  const m=/[?&]fetes=([\d,]*)/.exec(location.search);let fetes=m?m[1].split(',').filter(x=>x!=='').map(Number).filter(i=>NIVEL1.pociones[i]):[];
+  if(poc)fetes=[...Array(poc-1).keys()];
   fetes.sort((a,b)=>a-b).forEach(i=>{const P=NIVEL1.pociones[i];GS.done.push(i);if(P.premio&&P.premio.ropa)GS.clothes.push(P.premio.ropa);(P.diario||[]).forEach(t=>GS.diary.push(t));});
-  if(fetes.length){GS.pot=Math.max(...fetes);GS.phase='fin';GS.wardOpen=true;GS.flags.guia=1;}}
+  if(fetes.length){GS.pot=Math.max(...fetes);GS.phase='fin';GS.wardOpen=true;GS.flags.guia=1;}
+  if(poc&&NIVEL1.pociones[poc-1]){GS.pot=poc-1;GS.phase='leer';GS.flags.guia=1;}}   // la veu ja l'ha encarregada: toca llegir el llibre
 function loadGame(){if(!PLAY)return;if(NIVELL_PROVA){loadProva();return;}try{if(/[?&]reset/.test(location.search))localStorage.removeItem(SAVE);const s=localStorage.getItem(SAVE);if(s)Object.assign(GS,JSON.parse(s));}catch(e){}
   if(GS.phase==='fin1')GS.phase='fin';                                          // partidas guardadas con la versión anterior
   if(!GS.done.length&&GS.clothes.includes('barret'))GS.done=[0];}

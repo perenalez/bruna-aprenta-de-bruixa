@@ -9,6 +9,15 @@ await page.click('#tgo'); await page.click('#tproves [data-go=llista]'); await p
 const lv = await page.evaluate(() => [...document.querySelectorAll('#pnv .lv button')].map(b => ({ t: b.textContent, off: b.disabled })));
 ok(lv.length === 5, 'hi hauria d\'haver 5 nivells');
 ok(!lv[0].off && lv.slice(1).every(b => b.off && /Aviat/.test(b.t)), 'només el nivell 1 hauria d\'estar actiu');
+// subnivells: Nivell 1 → una entrada per cada poció
+await page.click('#pnv [data-nv="1"]');
+const sub = await page.evaluate(() => [...document.querySelectorAll('#pnv [data-poc]')].map(b => b.textContent));
+ok(sub.length === 5 && sub[0].startsWith('1.1') && /Arco/.test(sub[0]) && sub[4].startsWith('1.5'), 'no surten els 5 subnivells: ' + sub.join(' | '));
+await Promise.all([page.waitForNavigation(), page.click('#pnv [data-poc="3"]')]);
+await page.waitForFunction(() => window.__j && window.__j.S && window.__j.NV, null, { timeout: 30000 });
+const p3 = await page.evaluate(() => ({ pot: window.__j.GS.pot, ph: window.__j.GS.phase, done: window.__j.GS.done.join(), cl: window.__j.GS.clothes.join(), lab: document.querySelector('#title small').textContent }));
+ok(p3.pot === 2 && p3.ph === 'leer' && p3.done === '0,1' && p3.cl === 'barret,vestit', 'el subnivell 1.3 no comença amb la poció 3 i les dues anteriors fetes: ' + JSON.stringify(p3));
+ok(/Nivell 1\.3/.test(p3.lab), 'no diu que és el nivell 1.3');
 // entrar al nivell 1 amb les pocions 1–4 fetes
 const base = page.url().split('?')[0];
 await page.goto(base + '?prova=nivell1&fetes=0,1,2,3');
@@ -44,4 +53,4 @@ ok(a.partida === 'partida-real', 'la prova ha sobreescrit la partida de «Juga»
 await browser.close();
 if (errores.length) fallos.push('Errors:\n' + errores.join('\n'));
 if (fallos.length) { console.error('✗ Nivells:\n- ' + fallos.join('\n- ')); process.exit(1); }
-console.log('✓ Nivells: nivell 1 actiu, pocions fetes amb premis i poders, interruptors, «Aplicar» i partida intacta');
+console.log('✓ Nivells: nivell 1 actiu, subnivells per poció, pocions fetes amb premis i poders, interruptors, «Aplicar» i partida intacta');

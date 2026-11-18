@@ -21,6 +21,9 @@ const NV_ROBA=[['barret','Barret'],['vestit','Vestit de bruixa'],['sabates','Sab
 #pnv .lv button{aspect-ratio:1;border-radius:16px;background:linear-gradient(#ffd75e,#f7b12c);color:#5a2e10;font-weight:700;font-size:26px;box-shadow:inset 0 2px 0 rgba(255,250,210,.7),0 4px 0 #c27a1c;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
 #pnv .lv button small{font-size:10px;font-weight:600;margin-top:3px}
 #pnv .lv button:disabled{background:rgba(255,255,255,.16);color:rgba(255,255,255,.6);box-shadow:none;cursor:default}
+#pnv .sub{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+#pnv .sub button{display:flex;align-items:center;gap:12px;text-align:left;border-radius:14px;padding:11px 14px;background:rgba(255,255,255,.16);color:#fff;font-size:16px;font-weight:600}
+#pnv .sub button b{flex:none;background:linear-gradient(#ffd75e,#f7b12c);color:#5a2e10;border-radius:10px;padding:4px 8px;font-size:15px}
 #pnv .back,#pnvp .back{background:rgba(255,255,255,.18);color:#fff;font-weight:600;font-size:15px;padding:9px 22px;border-radius:999px}
 #pnvb{position:fixed;left:calc(env(safe-area-inset-left) + 10px);top:calc(env(safe-area-inset-top) + 56px);z-index:25;background:rgba(90,60,160,.9);color:#fff;border:2px solid rgba(255,255,255,.5);border-radius:999px;font:700 14px Fredoka,system-ui;padding:8px 16px;cursor:pointer}
 #pnvp{left:calc(env(safe-area-inset-left) + 10px);top:calc(env(safe-area-inset-top) + 100px);bottom:calc(env(safe-area-inset-bottom) + 170px);width:min(330px,calc(100vw - 20px));border-radius:20px;padding:14px;display:none;flex-direction:column;gap:8px;overflow-y:auto}
@@ -35,17 +38,26 @@ const NV_ROBA=[['barret','Barret'],['vestit','Vestit de bruixa'],['sabates','Sab
 function openLevels(){if(typeof provesView==='function')provesView('');let d=$('pnv');
   if(!d){d=document.createElement('div');d.id='pnv';document.body.appendChild(d);d.addEventListener('pointerdown',e=>e.stopPropagation());
     d.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;sfx('click');
-      if(b.dataset.nv){location.href=location.pathname+'?prova=nivell'+b.dataset.nv;return;}
+      if(b.dataset.nv){nvSub(+b.dataset.nv);return;}
+      if(b.dataset.poc){location.href=location.pathname+'?prova=nivell1&poc='+b.dataset.poc;return;}
+      if(b.dataset.a==='nivells'){openLevels();return;}
       if(b.dataset.a==='back'){d.classList.remove('on');provesView('llista');}});}
   d.innerHTML=`<div class="card"><h3>Saltar nivells</h3><p>Tria un nivell per jugar-lo de prova, amb tot el dels nivells anteriors ja aconseguit. No es desa ni toca la teva partida.</p>
     <div class="lv">${NIVELLS.map(l=>`<button data-nv="${l.n}" ${l.ok?'':'disabled'} aria-label="Nivell ${l.n}">${l.n}<small>${l.ok?'Nivell':'Aviat'}</small></button>`).join('')}</div>
     <button class="back" data-a="back">Tornar</button></div>`;
   d.classList.add('on');}
+// subnivells: una entrada per cada poció del nivell
+function nvSub(n){const d=$('pnv');
+  d.innerHTML=`<div class="card"><h3>Nivell ${n}</h3><p>Tria per quina poció vols començar. Les anteriors ja estaran fetes, amb els seus premis.</p>
+    <div class="sub">${NIVEL1.pociones.map((P,i)=>`<button data-poc="${i+1}"><b>${n}.${i+1}</b><span>${P.nombre}</span></button>`).join('')}</div>
+    <button class="back" data-a="nivells">Tornar</button></div>`;}
 PROVA_OPEN.nivells=openLevels;
 if(PLAY&&/[?&]prova=zona/.test(location.search))setTimeout(()=>provesView('llista'),300);
 
 /* ---------- dins la partida de prova: el panell ---------- */
 const NV={on:NIVELL_PROVA,fetes:NIVELL_PROVA?GS.done.slice():[]};
+// poció en curs (si l'última feta ja està acabada, la següent que encarregarà la veu)
+const nvCur=()=>Math.min(NIVEL1.pociones.length-1,GS.phase==='fin'&&GS.done.includes(GS.pot)?GS.pot+1:GS.pot);
 const nvHas=k=>k==='escoba'?POW.escoba&&FL.state!=='stand':!!POW[k];
 function nvSetHab(k,on){
   if(k==='escoba'){POW.escoba=on;if(on){broom.g.visible=true;if(FL.state==='stand')broomTo('back');}else{if(FL.on||FL.phase)endFlight();broomTo('stand');broom.g.visible=false;}}
@@ -64,7 +76,7 @@ function nvPanel(){let p=$('pnvp');
       if(b.dataset.a==='apply')location.href=location.pathname+'?prova=nivell1&fetes='+NV.fetes.sort((a,b)=>a-b).join(',');
       if(b.dataset.a==='back')location.href=location.pathname+'?prova=zona';
       if(b.dataset.a==='close')p.classList.remove('on');});}
-  p.innerHTML=`<h3>Nivell 1 · proves</h3><p class="sub">Partida de prova: no es desa res.</p>
+  p.innerHTML=`<h3>Nivell 1.${nvCur()+1} · proves</h3><p class="sub">${NIVEL1.pociones[nvCur()].nombre} · partida de prova: no es desa res.</p>
     <h4>Habilitats</h4>${NV_HAB.map(([k,l])=>`<label>${l}<input type="checkbox" data-hab="${k}" ${nvHas(k)?'checked':''}></label>`).join('')}
     <h4>Roba i companys</h4>${NV_ROBA.map(([k,l])=>`<label>${l}<input type="checkbox" data-roba="${k}" ${nvRoba(k)?'checked':''}></label>`).join('')}
     <h4>Pocions fetes</h4><p class="sub">Marca-les i prem «Aplicar»: la prova torna a començar amb els premis d'aquestes pocions.</p>
@@ -74,7 +86,7 @@ function nvPanel(){let p=$('pnvp');
   p.classList.add('on');}
 if(NV.on){
   showTitleUI(false);camera.fov=38;camera.updateProjectionMatrix();
-  const sm=document.querySelector('#title small');if(sm&&sm.firstChild&&sm.firstChild.nodeType===3)sm.firstChild.textContent='Prova · Nivell 1 · ';
+  const sm=document.querySelector('#title small');if(sm&&sm.firstChild&&sm.firstChild.nodeType===3)sm.firstChild.textContent='Prova · Nivell 1.'+(nvCur()+1)+' · ';
   const b=document.createElement('button');b.id='pnvb';b.textContent='🧪 Proves';document.body.appendChild(b);
   b.addEventListener('pointerdown',e=>e.stopPropagation());b.addEventListener('click',()=>{sfx('click');const p=$('pnvp');if(p&&p.classList.contains('on'))p.classList.remove('on');else nvPanel();});
 }
