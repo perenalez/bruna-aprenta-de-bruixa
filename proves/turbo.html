@@ -1850,10 +1850,12 @@ function bunnyStep(dt){
   // punto objetivo: sobre el rastro, FOLLOW metros detrás de Bruna
   let need=FOLLOW,tx=S.pos.x,tz=S.pos.z,ty=BN.lastG;
   for(let i=trail.length-1;i>0;i--){const a=trail[i],b=trail[i-1],d=Math.hypot(a.x-b.x,a.z-b.z);if(d>=need){const k=need/d;tx=a.x+(b.x-a.x)*k;tz=a.z+(b.z-a.z)*k;ty=a.y+(b.y-a.y)*k;need=0;break;}need-=d;tx=b.x;tz=b.z;ty=b.y;}
+  // guiando a Bruna hasta el torreón (55a_conillet_guia.js): el objetivo es el camino, por delante de ella
+  if(LEAD.on){if(LEAD.st==='talk'||LEAD.st==='arrived'){tx=BN.x;tz=BN.z;}else{const L0=leadTarget();tx=L0.x;tz=L0.z;}ty=BN.gy;}
   // si se ha quedado muy lejos (p. ej. tras el ascensor), aparece detrás
-  if(Math.hypot(tx-BN.x,tz-BN.z)>9)bunnyReset();
+  else if(Math.hypot(tx-BN.x,tz-BN.z)>9)bunnyReset();
   const dx=tx-BN.x,dz=tz-BN.z,dist=Math.hypot(dx,dz),dB=Math.hypot(S.pos.x-BN.x,S.pos.z-BN.z);
-  let want=BN.onLift?0:(dist>0.2?clamp(dist*2.8,0,dist>2.5?8.5:5.0):0);if(dB<0.8)want=0;
+  let want=BN.onLift?0:(dist>0.2?clamp(dist*2.8,0,dist>2.5?(LEAD.on?5.5:8.5):5.0):0);if(dB<0.8&&!LEAD.on)want=0;
   BN.v+=clamp(want-BN.v,-7*dt,4.5*dt);if(BN.v<0.02&&want===0)BN.v=0;
   // fase de salto
   const prevPh=BN.ph,hopF=1.7+BN.v*0.55;
@@ -2545,7 +2547,7 @@ function loop(now){
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
-window.__j={render:()=>renderer.render(titleScene()||scene,camera),step:(n,dt)=>{for(let i=0;i<n;i++)frame(dt||1/60);updateCam(1);},S,cam,K,input,ACT,actions,teleport,lift,doors,landH,groundY,parts,get mode(){return mode;},get key(){return curKey;},get act(){return act;},OX,OY,OZ,BN,GT,H1,H2,RXB,BZ,BL,trail,gY,waterAt,FL,FLY,broom,canLaunch,TURBO,MUSH,FRUIT,tryFly,canMountHere,get inCave(){return inCave;}};
+window.__j={render:()=>renderer.render(titleScene()||scene,camera),step:(n,dt)=>{for(let i=0;i<n;i++)frame(dt||1/60);updateCam(1);},S,cam,K,input,ACT,actions,teleport,lift,doors,landH,groundY,parts,get mode(){return mode;},get key(){return curKey;},get act(){return act;},OX,OY,OZ,BN,GT,H1,H2,RXB,BZ,BL,trail,gY,pathX,waterAt,FL,FLY,broom,canLaunch,TURBO,MUSH,FRUIT,tryFly,canMountHere,get inCave(){return inCave;}};
 
 /* ===== 51_hora_del_dia.js ===== */
 /* =====================================================================
@@ -2554,13 +2556,15 @@ window.__j={render:()=>renderer.render(titleScene()||scene,camera),step:(n,dt)=>
      22:00–6:00 noche (la de siempre: azul-lila, luna, estrellas, luciérnagas, ventana del torreón encendida)
      6:00–7:30 amanecer (rosado) · 7:30–19:30 día · 19:30–21:00 atardecer (naranja) · 21:00–22:00 anochecer
    Cada paleta tiene un punto de referencia; entre dos puntos se mezcla poco a poco.
+   La luz de día NO es más fuerte que la de noche (si no, lo blanco —el unicornio, el camino— se «quema»):
+   el día se nota en los colores (cielo azul, luz neutra), con la suma de luces por debajo de 1.
    Para probar: ?hora=21.5 en la URL (o window.__j.setHour(21.5); null vuelve a la hora real).
    ===================================================================== */
 const PALS={
   night:{bg:'#40398f',fog:'#7667c2',sky:['#d6b0f6','#8f80e2','#3d368c'],hemi:['#c4b6ff','#8a9a66',1.0],sun:['#ffe2f2',0.5],stars:0.85,moon:1,flies:1,win:0.5,pts:1},
-  dawn:{bg:'#b48ac8',fog:'#e6a8c0',sky:['#ffd2b0','#f0a2c4','#8070c4'],hemi:['#ffd8e6','#94a070',1.1],sun:['#ffbe96',0.75],stars:0.2,moon:0.35,flies:0.35,win:0.3,pts:0.6},
-  day:{bg:'#8ec4ee',fog:'#bcdcf2',sky:['#f2f8ff','#b4d8f6','#6ca4e6'],hemi:['#f2f6ff','#8cae5c',1.18],sun:['#fff2d8',0.9],stars:0,moon:0,flies:0.06,win:0,pts:0.15},
-  sunset:{bg:'#9a68b0',fog:'#e89a9c',sky:['#ffc488','#f2869c','#6e56ac'],hemi:['#ffd4c0','#8f9a62',1.05],sun:['#ffb070',0.75],stars:0.15,moon:0.3,flies:0.5,win:0.35,pts:0.8},
+  dawn:{bg:'#b48ac8',fog:'#e6a8c0',sky:['#ffd2b0','#f0a2c4','#8070c4'],hemi:['#f4d4e2','#8a9a6a',0.78],sun:['#ffc8a0',0.45],stars:0.2,moon:0.35,flies:0.35,win:0.3,pts:0.6},
+  day:{bg:'#8ec4ee',fog:'#bcdcf2',sky:['#f2f8ff','#b4d8f6','#6ca4e6'],hemi:['#dde6f6','#7f9a5c',0.72],sun:['#fff0dc',0.42],stars:0,moon:0,flies:0.06,win:0,pts:0.15},
+  sunset:{bg:'#9a68b0',fog:'#e89a9c',sky:['#ffc488','#f2869c','#6e56ac'],hemi:['#f0ccc0','#8a9462',0.8],sun:['#ffb880',0.45],stars:0.15,moon:0.3,flies:0.5,win:0.35,pts:0.8},
   dusk:{bg:'#4c4396',fog:'#8674c4',sky:['#dcb0ec','#9282dc','#423a92'],hemi:['#c8b8f6','#8a9a66',1.0],sun:['#ffd8e8',0.55],stars:0.6,moon:0.85,flies:0.85,win:0.45,pts:1}
 };
 // [hora, paleta]: la luz es exactamente esa paleta en esa hora y se mezcla con la siguiente
@@ -2757,6 +2761,10 @@ const NIVEL1={
 const TXT={
   voz:'La veu del torreó',
   conill:'Conillet',
+  // el Conillet guia la Bruna fins al torreó la primera vegada (55a_conillet_guia.js)
+  guia:['Hola! Soc el teu Conillet.','Estàs perduda? No pateixis, t\'ajudaré.','Segueix-me! Mira la llumeta.'],
+  guiaToast:'Segueix en Conillet i la seva llumeta',
+  guiaFi:['Ja hi som! Aquest és el torreó.','Entra-hi: algú t\'està esperant.'],
   bienvenida:['Bruna… t\'he estat esperant. T\'he estat esperant des que vas néixer.',
               'Per tornar a casa t\'hauràs de convertir en bruixa. Jo t\'ensenyaré.',
               'La teva primera tasca: la poció Arcoíris. Puja a la cuina del calder i llegeix el llibre de conjurs.'],
@@ -3392,6 +3400,7 @@ function gameStep(dt){
     const d=Math.hypot(_w.x-S.pos.x,_w.z-S.pos.z)+Math.abs(_w.y-S.y)*2.5;glow=sat(1-d/16);
     const band=d<3?3:d<7?2:d<12?1:0;if(band!==guideBand&&tAcc>1){if(band>guideBand&&band>0)toast(['','Conillet: tebi…','Conillet: calent, calent!','Conillet: que et cremes!'][band],1600);guideBand=band;}
     if(d<3&&!FL.on){BN.root.position.y+=Math.abs(Math.sin(t*7))*0.3;}}
+  if(LEAD.on)glow=Math.max(glow,0.55);leadStep(dt);
   bnGlow.material.opacity+=(glow*0.9-bnGlow.material.opacity)*(1-Math.exp(-dt*4));
   spellStep(dt);
   potionExtraStep(dt);
@@ -3420,6 +3429,54 @@ wandUI();badges();
 Object.assign(window.__j,{placeChips,placesStep,GS,POW,NIVEL1,POTS,potionActions,keyAt,groundAt,openNotebook,openBook,askHint,cast,sfx,nextLine,TURRET_SPOT,ward,giveIngredient,startPotion,plants,REWARD});
 Object.defineProperty(window.__j,'dOn',{get:()=>dOn});
 Object.defineProperty(window.__j,'stirOn',{get:()=>stirOn});
+
+/* ===== 55a_conillet_guia.js ===== */
+/* =====================================================================
+   EL CONILLET GUIA FINS AL TORREÓ (v.1.2, petició d'en Pere)
+   La primera vegada que es juga, en acabar la volta de la càmera, en Conillet es posa davant de la Bruna,
+   li parla («Hola! Soc el teu Conillet…») i, amb una llumeta damunt del cap, va saltant pel camí fins al
+   clar del torreó. Si la Bruna es queda enrere, l'espera. En arribar, li diu que entri i torna a seguir-la.
+   Es guarda a la partida (GS.flags.guia) i no torna a passar. Els textos són a TXT (54_datos_pociones.js).
+   ===================================================================== */
+const LEAD={on:false,st:'',t:0,s:0,route:[],len:[]};
+// ruta: el camí del bosc (pathX) des de l'inici fins davant de la porta del torreó
+{const z0=9,z1=OZ+11.5;for(let z=z0;z>=z1;z-=1){LEAD.route.push({x:pathX(z),z});}
+ let a=0;LEAD.len=LEAD.route.map((p,i)=>i?(a+=Math.hypot(p.x-LEAD.route[i-1].x,p.z-LEAD.route[i-1].z)):0);}
+const LEAD_END=LEAD.route[LEAD.route.length-1];
+// punt de la ruta a una distància s del començament, i distància de la ruta més propera a un punt
+function routeAt(s){const R=LEAD.route,L=LEAD.len;s=clamp(s,0,L[L.length-1]);let i=1;while(i<L.length-1&&L[i]<s)i++;
+  const a=R[i-1],b=R[i],k=(s-L[i-1])/Math.max(1e-6,L[i]-L[i-1]);return {x:a.x+(b.x-a.x)*k,z:a.z+(b.z-a.z)*k};}
+function routeS(x,z){let best=1e9,bs=0;const R=LEAD.route;for(let i=1;i<R.length;i++){const a=R[i-1],b=R[i],dx=b.x-a.x,dz=b.z-a.z,l2=dx*dx+dz*dz;
+  const k=clamp(((x-a.x)*dx+(z-a.z)*dz)/l2,0,1),px=a.x+dx*k,pz=a.z+dz*k,d=Math.hypot(x-px,z-pz);if(d<best){best=d;bs=LEAD.len[i-1]+Math.sqrt(l2)*k;}}return bs;}
+// la llumeta damunt del cap (i una llum de debò perquè es vegi de nit)
+const leadOrb=new THREE.Group();{mk(SPH(0.05,12,8),new THREE.MeshBasicMaterial({color:'#fff6c8'}),0,0,0,leadOrb);
+  const h=halo(leadOrb,0,0,0,0.7,'#ffe27a',0.9);h.material.fog=false;halo(leadOrb,0,0,0,1.3,'#ffd0a0',0.3).material.fog=false;
+  leadOrb.add(new THREE.PointLight('#ffe0a0',0.9,6,1.6));leadOrb.visible=false;scene.add(leadOrb);}
+// on vol anar el conill ara (el fa servir bunnyStep a 42_conejo.js en lloc del rastre de la Bruna)
+function leadTarget(){
+  // davant de la Bruna però una mica de costat, perquè des de la càmera (darrere d'ella) es vegi
+  if(LEAD.st==='front'){const f=2.6,sd=1.0,a=S.yaw;return {x:S.pos.x+Math.sin(a)*f+Math.cos(a)*sd,z:S.pos.z+Math.cos(a)*f-Math.sin(a)*sd,wait:false};}
+  const sB=routeS(S.pos.x,S.pos.z),dB=Math.hypot(S.pos.x-BN.x,S.pos.z-BN.z);
+  // va uns metres per davant de la Bruna; si ella s'ha quedat enrere (o s'ha desviat), s'atura i l'espera
+  const ahead=dB>6.5?routeS(BN.x,BN.z):Math.max(LEAD.s,sB+3.2);LEAD.s=Math.max(LEAD.s,Math.min(ahead,LEAD.len[LEAD.len.length-1]));
+  const p=routeAt(LEAD.s);return {x:p.x,z:p.z,wait:dB>6.5};
+}
+function startLead(){if(!PLAY||GS.flags.guia||GS.phase!=='inicio'||LEAD.on)return;LEAD.on=true;LEAD.st='front';LEAD.t=0;LEAD.s=routeS(S.pos.x,S.pos.z);}
+function endLead(){LEAD.on=false;LEAD.st='';leadOrb.visible=false;GS.flags.guia=1;saveGame();}
+function leadStep(dt){
+  if(!LEAD.on)return;LEAD.t+=dt;
+  // si la Bruna arriba d'una altra manera al torreó (o vola, o ja ha començat la història), s'acaba
+  if(GS.phase!=='inicio'||FL.on||lift.riding){endLead();return;}
+  leadOrb.visible=true;leadOrb.position.set(BN.x,BN.root.position.y+0.62+Math.sin(S.t*3)*0.05,BN.z);
+  if(LEAD.st==='front'){
+    // quan ja és davant de la Bruna (o han passat uns segons), li parla
+    const d=Math.hypot(BN.x-S.pos.x,BN.z-S.pos.z);
+    if((d<3.2&&BN.v<0.3&&LEAD.t>0.8)||LEAD.t>4){LEAD.st='talk';sfx('notify');say(TXT.conill,TXT.guia,()=>{LEAD.st='lead';LEAD.t=0;toast(TXT.guiaToast,3500);});}
+  }else if(LEAD.st==='lead'){
+    if(Math.hypot(S.pos.x-LEAD_END.x,S.pos.z-LEAD_END.z)<4.5){LEAD.st='arrived';say(TXT.conill,TXT.guiaFi,endLead);}
+  }
+}
+Object.assign(window.__j,{LEAD,startLead,endLead,leadTarget});
 
 /* ===== 56_pocion2.js ===== */
 /* =====================================================================
@@ -4324,7 +4381,7 @@ function startGame(){if(!TITLE.on)return;TITLE.on=false;audioInit();sfx('magic')
    Los controles se ocultan durante la vuelta; tocar la pantalla o pulsar una tecla la salta. */
 const INTRO={on:false,t:0,T:7,end:{yaw:0,pitch:0,dist:0}};
 function startIntro(){INTRO.on=true;INTRO.t=0;INTRO.t0=performance.now();INTRO.end={yaw:S.yaw+PI,pitch:cam.pitch,dist:cam.dist};introCam(0);}
-function endIntro(){if(!INTRO.on)return;INTRO.on=false;Object.assign(cam,INTRO.end);showTitleUI(false);}
+function endIntro(){if(!INTRO.on)return;INTRO.on=false;Object.assign(cam,INTRO.end);showTitleUI(false);startLead();}   // la primera vegada, en Conillet la guia
 function introCam(u){const e=u*u*(3-2*u),E=INTRO.end;
   // comença molt amunt (vista d'ocell, ~65°) i lluny, i baixa mentre gira fins a l'esquena de la Bruna
   cam.yaw=E.yaw-(1-e)*TAU;cam.dist=E.dist*(2.3-1.3*e);cam.pitch=E.pitch+(1-e)*0.78;}
