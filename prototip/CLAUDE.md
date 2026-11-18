@@ -54,6 +54,8 @@ Per obrir-lo sense servidor, n'hi ha prou amb obrir `dist/index.local.html` al n
 | `54_datos_pociones.js` | **Dades del nivell 1** (`NIVEL1`, `TXT`): pocions, ingredients amb on són (`spot`) i pistes en dues capes, premis, poders i textos de la història. Afegir pocions = afegir dades aquí |
 | `51_hora_del_dia.js` | **Llum segons l'hora real** (v.1): paletes `PALS` (nit, alba, dia, posta, capvespre) i punts `DAYK`; `dayStep` canvia cel, boira, fons, `LIGHTS.out`/terrassa, sol, estrelles, lluna, lluernes i finestra. `?hora=21.5` o `__j.setHour(h)` per provar |
 | `55a_conillet_guia.js` | **Conillet guia** (v.1.2): la primera partida, en acabar la volta de la càmera (`startLead` des d'`endIntro`), es posa davant la Bruna, parla (`TXT.guia`) i la guia pel camí (`pathX`) fins al clar del torreó amb una llumeta (`leadOrb`); l'espera si es queda enrere. `bunnyStep` fa servir `leadTarget()`. Es desa a `GS.flags.guia` |
+| `61_personatge.js` | **Personatge modular** (pas 3): dades de totes les opcions (`PC_PELL`, `PC_PENTINAT`, `PC_CABELL`, `PC_ROBA`, `PC_BRUIXA`, `PC_COMPL`, `PC_SABATES`, `PC_MITJONS`), textures (`pcTex`) i `applyLook(rig, look)` / `buildDoll(look)`: vesteix un ninot `buildBruna()` nou (no toca la Bruna del joc). Pensat per reutilitzar-lo (pinta màgica) |
+| `62_proves_personatge.js` | **Zona de proves · «Crea el teu personatge»**: pantalla `#pcre` amb 9 pestanyes, fitxes amb miniatura 3D (`pcThumb`), vista que gira, «Aleatori», desat a `localStorage` (`bruna-personatge-v1`) i «Fet!» (`playTest`): partida de prova al clar de l'estany amb `PROVA.on` (no es desa res) i el ninot copiant l'esquelet de la Bruna (`provaStep`). `?prova=personatge` l'obre directament |
 | `55_pociones.js` | **Esquelet del joc:** partida guardada (`GS`, a `localStorage`), poders (`POW`), so (música i `sfx()` amb Web Audio, sense fitxers), llibreta (poció, diari, xat amb el Conillet), sac, llibre, caldero amb capes, armari de la Bruna, barret, vareta (Sol i Pluja), el Conillet que guia, i la poció 1 sencera. Les accions entren per `potionActions()` dins `actions()` |
 
 ## Conceptes clau
@@ -146,6 +148,12 @@ Al joc complet s'ha d'activar a partir del **nivell 4**. Encara no hi ha sistema
 - **Sabates màgiques**: doble salt (`S.dbl`) amb espurnes (`doubleJumpFx`) i planeig després del doble salt mantenint «Saltar» (també dins el torreó).
 - **Llum de dia sense cremar:** de dia la llum (hemi + sol) és més fluixa que de nit; el dia es nota pels colors. Si es puja, el blanc (unicorn, camí) es crema.
 - Versió **v.1.2** (`1.2.0` a `package.json`, `#tver` a la portada), nom triat per en Pere. La volta inicial comença a vista d'ocell (pitch +0.78, distància ×2.3) i dura 7 s. Test: `tests/v1.mjs`.
+
+## Zona de proves (encàrrec pas 3 →)
+
+- Cada prova s'apunta a `PROVA_OPEN[id]` (60_portada.js) i llavors surt activa a la llista amb «Prova-ho»; les altres, «Aviat».
+- Normes de «Crea el teu personatge» (`pcPick`): el vestit sencer treu dalt i baix (i al revés); els barrets de bruixa i els complements de cap comparteixen la ranura `cap`; les mitges i els mitjons comparteixen `mitjons`; tornar a tocar una peça la treu (pell, pentinat i cabell sempre n'hi ha un). Les ulleres també són d'una en una (decisió nostra).
+- Test: `tests/personatge.mjs`. Captures: `node tests/capturas-personatge.mjs` → `docs/personatge/`.
 
 ## Portada (`60_portada.js`)
 

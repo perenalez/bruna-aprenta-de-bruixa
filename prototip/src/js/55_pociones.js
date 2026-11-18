@@ -14,7 +14,8 @@ if(!PLAY)Object.keys(POW).forEach(k=>POW[k]=true);
 const SAVE='bruna-nivel1-v1';
 const POW_EXTRA={plantas:false};Object.assign(POW,POW_EXTRA);if(!PLAY)POW.plantas=true;
 const GS={pot:0,phase:'inicio',bag:[],got:{},layers:[],diary:[],chat:[],unread:0,clothes:[],wardOpen:false,hint:{},guide:null,done:[],cheese:false,flags:{}};
-function saveGame(){if(!PLAY)return;try{localStorage.setItem(SAVE,JSON.stringify(GS));}catch(e){}}
+const PROVA={on:false};   // partida de prova (zona de proves): no es desa res
+function saveGame(){if(!PLAY||PROVA.on)return;try{localStorage.setItem(SAVE,JSON.stringify(GS));}catch(e){}}
 function loadGame(){if(!PLAY)return;try{if(/[?&]reset/.test(location.search))localStorage.removeItem(SAVE);const s=localStorage.getItem(SAVE);if(s)Object.assign(GS,JSON.parse(s));}catch(e){}
   if(GS.phase==='fin1')GS.phase='fin';                                          // partidas guardadas con la versión anterior
   if(!GS.done.length&&GS.clothes.includes('barret'))GS.done=[0];}

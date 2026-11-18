@@ -26,7 +26,8 @@ ok(z.on && z.txt.includes('Testejar'), 'la zona de proves no s\'obre');
 await page.click('#tproves [data-go=llista]');
 const l = await page.evaluate(() => [...document.querySelectorAll('#tproves li button')].map(b => ({ t: b.innerText, off: b.disabled })));
 ok(l.length === 4, 'la llista hauria de tenir 4 proves');
-for (const n of ['Crea el teu personatge', 'Saltar nivells', 'Nou motor de render', 'Moviment estil Alba'])
+ok(l.some(b => b.t.includes('Crea el teu personatge') && !b.off), '«Crea el teu personatge» no està activada');
+for (const n of ['Saltar nivells', 'Nou motor de render', 'Moviment estil Alba'])
   ok(l.some(b => b.t.includes(n) && b.t.includes('Aviat') && b.off), 'prova no desactivada o sense «Aviat»: ' + n);
 await page.click('#tproves [data-go=zona]');
 ok(await page.evaluate(() => document.getElementById('tproves').innerText.includes('Testejar')), '«Tornar» no torna a la zona');
@@ -48,4 +49,4 @@ ok(Math.abs(g.fov - 38) < 0.01, 'la càmera del joc no torna al seu angle');
 await browser.close();
 if (errores.length) fallos.push('Errors:\n' + errores.join('\n'));
 if (fallos.length) { console.error('✗ Portada:\n- ' + fallos.join('\n- ')); process.exit(1); }
-console.log('✓ Portada: textos, v.1.2, zona de proves (4 proves «Aviat»), Tornar, Juga i volta de 360°');
+console.log('✓ Portada: textos, v.1.2, zona de proves (personatge actiu, 3 «Aviat»), Tornar, Juga i volta de 360°');

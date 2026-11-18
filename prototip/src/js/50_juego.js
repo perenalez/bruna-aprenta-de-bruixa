@@ -272,8 +272,8 @@ let last=performance.now();
 function loop(now){
   const dt=clamp((now-last)/1000,0,0.04);last=Math.max(last,now);   // el primer rAF puede llegar con una marca de tiempo anterior: dt negativo
   if(dt<=0){requestAnimationFrame(loop);return;}
-  frame(dt);updateCam(dt);titleStep(dt);renderCtx();
-  renderer.render(titleScene()||scene,camera);
+  frame(dt);updateCam(dt);titleStep(dt);provaStep();renderCtx();
+  if(!PCR.open)renderer.render(titleScene()||scene,camera);   // amb el creador de personatge obert no cal dibuixar el joc
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);

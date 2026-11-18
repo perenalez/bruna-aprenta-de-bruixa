@@ -144,18 +144,20 @@ const RAYS='<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M6 9L20 15M3 21
 #tproves ul{list-style:none;margin:0 0 16px;padding:0;display:flex;flex-direction:column;gap:8px}
 #tproves li button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.14);color:#fff;font-size:16px;font-weight:600;text-align:left}
 #tproves li button:disabled{cursor:default;opacity:.62}
+#tproves li em.go{background:#ffd75e}
 #tproves li em{flex:none;font-style:normal;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;background:rgba(255,230,140,.9);color:#5a2e10}
 #tproves .back{margin-top:12px;background:rgba(255,255,255,.18);color:#fff;font-weight:600;font-size:16px;padding:9px 26px;border-radius:999px}
 @media (min-aspect-ratio:1/1){#tscreen{align-items:flex-start;padding-left:calc(env(safe-area-inset-left) + 5vw);background:linear-gradient(90deg,rgba(80,50,150,.6),rgba(80,50,150,.35) 38%,rgba(80,50,150,0) 58%)}#tscreen .top{align-items:flex-start;text-align:left;width:46vw}#tscreen .sub{max-width:none}#tscreen h1{font-size:clamp(48px,11vh,120px)}#tscreen .bot{max-width:46vw;align-items:flex-start}#tscreen .row{display:flex;gap:16px}#tscreen .cred{max-width:46vw}}
 @media (min-aspect-ratio:1/1) and (max-height:520px){#tscreen .sub{display:none}#tscreen h1{font-size:clamp(40px,13vh,70px)}#tplay{font-size:26px;padding:8px 34px 10px}#tgo{width:60px;height:60px;font-size:9px}}`;document.head.appendChild(css);}
 // pruebas de la zona de proves (se activan a medida que se hacen)
+const PROVA_OPEN={};   // cada prova feta s'hi apunta (62_proves_personatge.js…)
 const PROVES=[{id:'personatge',lab:'Crea el teu personatge'},{id:'nivells',lab:'Saltar nivells'},{id:'render',lab:'Nou motor de render'},{id:'alba',lab:'Moviment estil Alba'}];
 function showTitleUI(on){['hud','joy','acts','chips','top','hint','bwand','spells','ctx','tbar','frost'].forEach(id=>{const e=$(id);if(e)e.style.visibility=on?'hidden':'';});}
 function provesView(v){const p=$('tproves');if(!p)return;p.classList.toggle('on',!!v);if(!v)return;
   const c=p.querySelector('.card');
   if(v==='zona')c.innerHTML=`<h3>Zona de proves</h3><p>Aquí provem coses noves abans de posar-les al joc. El que facis aquí no canvia la teva partida.</p>
     <button class="main" data-go="llista">${SPARK4}Testejar</button><br><button class="back" data-go="">Tornar</button>`;
-  else c.innerHTML=`<h3>Testejar</h3><p>Tria una prova.</p><ul>${PROVES.map(t=>`<li><button disabled data-prova="${t.id}">${t.lab}<em>Aviat</em></button></li>`).join('')}</ul>
+  else c.innerHTML=`<h3>Testejar</h3><p>Tria una prova.</p><ul>${PROVES.map(t=>PROVA_OPEN[t.id]?`<li><button data-prova="${t.id}">${t.lab}<em class="go">Prova-ho</em></button></li>`:`<li><button disabled data-prova="${t.id}">${t.lab}<em>Aviat</em></button></li>`).join('')}</ul>
     <button class="back" data-go="zona">Tornar</button>`;}
 if(TITLE.on){
   buildTitleScene();
@@ -169,7 +171,8 @@ if(TITLE.on){
   document.body.appendChild(d);
   const v=document.createElement('div');v.id='tver';v.textContent='v.1.2';document.body.appendChild(v);
   const p=document.createElement('div');p.id='tproves';p.innerHTML='<div class="card"></div>';document.body.appendChild(p);
-  p.addEventListener('click',e=>{const t=e.target.closest('[data-go]');if(t){sfx('click');provesView(t.dataset.go);}else if(e.target===p)provesView('');});
+  p.addEventListener('click',e=>{const t=e.target.closest('[data-go]'),pr=e.target.closest('[data-prova]');
+    if(t){sfx('click');provesView(t.dataset.go);}else if(pr&&!pr.disabled&&PROVA_OPEN[pr.dataset.prova]){sfx('click');PROVA_OPEN[pr.dataset.prova]();}else if(e.target===p)provesView('');});
   [d,p].forEach(e=>e.addEventListener('pointerdown',ev=>ev.stopPropagation()));
   showTitleUI(true);
   $('tplay').addEventListener('click',startGame);
