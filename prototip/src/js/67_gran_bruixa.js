@@ -82,6 +82,10 @@ function gbStep(dt){
 }
 if(GBX.on){
   TXT.voz='La Gran Bruixa';   // a les proves, la que parla és ella (no el torreó)
+  // les bafarades són com les del Conillet al tutorial (65_tutorial.js), no la genèrica
+  {const css=document.createElement('style');css.textContent=`
+#dlg{background:linear-gradient(170deg,rgba(143,106,208,.97),rgba(106,74,168,.97))!important;border:2px solid rgba(255,255,255,.45);border-radius:20px!important;box-shadow:0 6px 0 rgba(50,25,90,.55),0 14px 30px rgba(30,10,50,.35)!important;font-family:Fredoka,"Trebuchet MS",system-ui,sans-serif}
+#dlg b{font:700 13px Fredoka,system-ui!important;color:#ffd75e!important}#dlg p{font:500 16px/1.35 Fredoka,system-ui!important;color:#fff!important}#dlg i{color:#ffd75e!important}`;document.head.appendChild(css);}
   GBX.g=buildGranBruixa();GBX.g.position.set(GBX.pos.x,L(0),GBX.pos.z);GBX.g.rotation.y=GBX.yaw;G[0].add(GBX.g);
 }
 Object.assign(window.__j,{GBX,buildGranBruixa});

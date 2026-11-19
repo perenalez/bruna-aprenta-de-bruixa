@@ -17,7 +17,7 @@ const r = await page.evaluate(async () => {
   const d = new THREE.Vector3(j.BN.x - j.S.pos.x, 0, j.BN.z - j.S.pos.z), fwd = new THREE.Vector3(Math.sin(j.S.yaw), 0, Math.cos(j.S.yaw));
   out.dbg = { dot: +d.dot(fwd).toFixed(2), dist: +d.length().toFixed(2), st: j.LEAD.st, by: +j.BN.yaw.toFixed(2), sy: +j.S.yaw.toFixed(2), cy: +j.cam.yaw.toFixed(2) };
   out.davant = d.dot(fwd) > 0.5; out.mira = Math.cos(j.BN.yaw - Math.atan2(j.S.pos.x - j.BN.x, j.S.pos.z - j.BN.z)) > 0.7;
-  for (let k = 0; k < 5; k++) j.tutNext();
+  for (let k = 0; k < 6; k++) j.tutNext();
   await wait(300); out.p5 = document.querySelector('#tut p').textContent; out.hlJoy = getComputedStyle(document.getElementById('tuthl')).display;
   out.boto5 = !!document.querySelector('#tut button');
   j.K.w = true; j.step(70); j.K.w = false; await wait(400); out.i6 = j.TUT.i; out.gest = getComputedStyle(document.getElementById('tutg')).display;
@@ -30,11 +30,11 @@ const r = await page.evaluate(async () => {
   return out;
 });
 ok(r.intro && r.hud === 'hidden', 'no fa la volta de 360° amb els controls amagats');
-ok(r.p0.includes('Bruna i Ayla'), 'en Conillet no saluda la Bruna i qui juga pel nom: ' + r.p0);
+ok(r.p0.includes('Ayla') && !r.p0.includes('Bruna i'), 'en Conillet no saluda qui juga pel nom: ' + r.p0);
 ok(r.davant && r.mira, 'en Conillet no és davant de la Bruna mirant-la ' + JSON.stringify(r.dbg));
 ok(/controlador/.test(r.p5) && r.hlJoy === 'block' && !r.boto5, 'el pas del joystick no il·lumina el joystick o no espera que es mogui la Bruna');
-ok(r.i6 === 6 && r.gest === 'block', 'en moure la Bruna no passa al pas de la càmera amb els cercles');
-ok(r.i7 === 7, 'en girar la càmera no passa al pas següent');
+ok(r.i6 === 7 && r.gest === 'block', 'en moure la Bruna no passa al pas de la càmera amb els cercles');
+ok(r.i7 === 8, 'en girar la càmera no passa al pas següent');
 ok(r.cua, 'no s\'encén la cua quan en parla');
 ok(r.hlNote === 'block', 'no s\'il·lumina la llibreta');
 ok(!r.fi.tut && r.fi.lead && r.fi.st === 'lead', 'en acabar no el guia cap al torreó: ' + JSON.stringify(r.fi));

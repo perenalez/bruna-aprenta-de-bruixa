@@ -5067,11 +5067,12 @@ const TUT={on:INICI_PROVA,i:-1,nom:'',tail:false,t0:0,p0:null,cam0:null};
 const tutTouch=matchMedia('(pointer:coarse)').matches;
 // {N} = nom de qui juga · hl: element que s'il·lumina · gest: cercles de la càmera · wait: què ha de passar per seguir
 const TUT_PASSOS=[
-  {t:'Hola, hola! Què tal esteu, Bruna i {N}?'},
-  {t:'Una mica perdudes, oi? No us amoineu: jo us acompanyaré durant tota l\'estona.'},
-  {t:'Em dic Conillet i soc un conill màgic. Com podeu veure, som en un bosc una mica especial!'},
+  {t:'Hola, hola, {N}! Et donem la benvinguda a la nostra aventura!'},
+  {t:'Mira, ella és la Bruna: la bruixeta que has d\'ajudar a convertir-se en una bruixa de veritat.'},
+  {t:'Està una mica perduda, oi? No et preocupis: jo us acompanyaré durant tota l\'estona.'},
+  {t:'Em dic Conillet i soc un conill màgic. Com pots veure, som en un bosc una mica especial!'},
   {t:'Hi ha llocs secrets, torreons de bruixa, unicorns i granotes de tres ulls.'},
-  {t:'Abans de començar, us explicaré breument com funciona aquest món.'},
+  {t:'Abans de començar, t\'explicaré breument com funciona aquest món.'},
   {t:'{N}, veuràs que a l\'esquerra de la pantalla hi ha una mena de controlador: és el que permet moure la Bruna. Prova de moure-la!',hl:'#joy',wait:'move',
    hint:tutTouch?'Arrossega el cercle del joystick':'Fes servir les tecles W A S D'},
   {t:'Molt bé! També pots canviar el punt de vista amb el dit: arrossega per girar l\'entorn i pessiga per apropar-te o allunyar-te, com quan amplies una foto. De vegades, canviant el punt de vista es veuen coses noves!',gest:true,wait:'cam',
@@ -5252,7 +5253,7 @@ function aqStroke(c,k,under){
   hx*=k;hz=hz*k+0.15*(1-k);kn=kn*k+0.4*(1-k)*Math.max(0,Math.sin(c*TAU*2));
   B.pelvis.position.set(0,STAND,0);B.pelvis.rotation.set(0,0,0);
   aqLegs((L,s)=>{L.hip.rotation.set(hx,0,s*hz);L.knee.rotation.x=kn;L.foot.rotation.x=0.9;});
-  B.chest.rotation.set(-0.08*Math.sin(c*TAU)*k,0,0);B.head.rotation.set(under?-0.55:-0.95,0,0);   // el cap mira endavant
+  B.chest.rotation.set(-0.08*Math.sin(c*TAU)*k,0,0);B.head.rotation.set(under?-0.55:-0.6,0,0);   // el cap mira endavant
 }
 // col·loca la Bruna estirada: P és el centre del cos
 const _aqo=new THREE.Vector3(),_aqe=new THREE.Euler(0,0,0,'YXZ');
@@ -5287,7 +5288,7 @@ function aquaStep(dt){
     const c=AQ.ph,pulse=c<0.35?0.6*Math.sin(c/0.35*PI):(c>=0.6&&c<0.8?1.3*Math.sin((c-0.6)/0.2*PI):0.15);
     AQ.hv+=(swimV*(0.45+pulse)-AQ.hv)*(1-Math.exp(-dt*4));
     P.x+=Math.sin(AQ.yaw)*AQ.hv*dt;P.z+=Math.cos(AQ.yaw)*AQ.hv*dt;
-    const surfY=-0.13+aqWave(P.x,P.z,t);
+    const surfY=-0.02+aqWave(P.x,P.z,t);   // amb el cos més alt, el cap queda ben fora de l'aigua
     if(!under){
       P.y+=(surfY-P.y)*(1-Math.exp(-dt*4));AQ.v.y=0;
       if(diveReq){AQ.st='under';AQ.v.y=-2.2;aqSplash(P.x,P.z,6,0.5);sfx('splash');}
@@ -5295,7 +5296,7 @@ function aquaStep(dt){
         AQ.st='raft';const nx=clamp(P.x,AQ_RAFT.x-AQ_RAFT.hw+0.35,AQ_RAFT.x+AQ_RAFT.hw-0.35),nz=clamp(P.z,AQ_RAFT.z-AQ_RAFT.hd+0.35,AQ_RAFT.z+AQ_RAFT.hd-0.35);
         P.set(nx,raftY,nz);AQ.hv=0;aqSplash(nx,nz,8,0.6);sfx('jump');}
       AQ.air=Math.min(AQ.airMax,AQ.air+dt*5);AQ.forced=false;
-      AQ.pitch+=(1.3-AQ.pitch)*(1-Math.exp(-dt*3));
+      AQ.pitch+=(1.0-AQ.pitch)*(1-Math.exp(-dt*3));   // a la superfície, més dreta
       AQ.splashT-=dt;if(inp.m>0&&AQ.splashT<0&&c>0.55&&c<0.62){AQ.splashT=0.5;aqSplash(P.x-Math.sin(AQ.yaw)*0.5,P.z-Math.cos(AQ.yaw)*0.5,3,0.35);}
     }else{
       // sota l'aigua: «Bussejar» baixa, «Saltar» puja, si no, sura una mica cap amunt
@@ -5450,6 +5451,10 @@ function gbStep(dt){
 }
 if(GBX.on){
   TXT.voz='La Gran Bruixa';   // a les proves, la que parla és ella (no el torreó)
+  // les bafarades són com les del Conillet al tutorial (65_tutorial.js), no la genèrica
+  {const css=document.createElement('style');css.textContent=`
+#dlg{background:linear-gradient(170deg,rgba(143,106,208,.97),rgba(106,74,168,.97))!important;border:2px solid rgba(255,255,255,.45);border-radius:20px!important;box-shadow:0 6px 0 rgba(50,25,90,.55),0 14px 30px rgba(30,10,50,.35)!important;font-family:Fredoka,"Trebuchet MS",system-ui,sans-serif}
+#dlg b{font:700 13px Fredoka,system-ui!important;color:#ffd75e!important}#dlg p{font:500 16px/1.35 Fredoka,system-ui!important;color:#fff!important}#dlg i{color:#ffd75e!important}`;document.head.appendChild(css);}
   GBX.g=buildGranBruixa();GBX.g.position.set(GBX.pos.x,L(0),GBX.pos.z);GBX.g.rotation.y=GBX.yaw;G[0].add(GBX.g);
 }
 Object.assign(window.__j,{GBX,buildGranBruixa});

@@ -103,7 +103,7 @@ function aqStroke(c,k,under){
   hx*=k;hz=hz*k+0.15*(1-k);kn=kn*k+0.4*(1-k)*Math.max(0,Math.sin(c*TAU*2));
   B.pelvis.position.set(0,STAND,0);B.pelvis.rotation.set(0,0,0);
   aqLegs((L,s)=>{L.hip.rotation.set(hx,0,s*hz);L.knee.rotation.x=kn;L.foot.rotation.x=0.9;});
-  B.chest.rotation.set(-0.08*Math.sin(c*TAU)*k,0,0);B.head.rotation.set(under?-0.55:-0.95,0,0);   // el cap mira endavant
+  B.chest.rotation.set(-0.08*Math.sin(c*TAU)*k,0,0);B.head.rotation.set(under?-0.55:-0.6,0,0);   // el cap mira endavant
 }
 // col·loca la Bruna estirada: P és el centre del cos
 const _aqo=new THREE.Vector3(),_aqe=new THREE.Euler(0,0,0,'YXZ');
@@ -138,7 +138,7 @@ function aquaStep(dt){
     const c=AQ.ph,pulse=c<0.35?0.6*Math.sin(c/0.35*PI):(c>=0.6&&c<0.8?1.3*Math.sin((c-0.6)/0.2*PI):0.15);
     AQ.hv+=(swimV*(0.45+pulse)-AQ.hv)*(1-Math.exp(-dt*4));
     P.x+=Math.sin(AQ.yaw)*AQ.hv*dt;P.z+=Math.cos(AQ.yaw)*AQ.hv*dt;
-    const surfY=-0.13+aqWave(P.x,P.z,t);
+    const surfY=-0.02+aqWave(P.x,P.z,t);   // amb el cos més alt, el cap queda ben fora de l'aigua
     if(!under){
       P.y+=(surfY-P.y)*(1-Math.exp(-dt*4));AQ.v.y=0;
       if(diveReq){AQ.st='under';AQ.v.y=-2.2;aqSplash(P.x,P.z,6,0.5);sfx('splash');}
@@ -146,7 +146,7 @@ function aquaStep(dt){
         AQ.st='raft';const nx=clamp(P.x,AQ_RAFT.x-AQ_RAFT.hw+0.35,AQ_RAFT.x+AQ_RAFT.hw-0.35),nz=clamp(P.z,AQ_RAFT.z-AQ_RAFT.hd+0.35,AQ_RAFT.z+AQ_RAFT.hd-0.35);
         P.set(nx,raftY,nz);AQ.hv=0;aqSplash(nx,nz,8,0.6);sfx('jump');}
       AQ.air=Math.min(AQ.airMax,AQ.air+dt*5);AQ.forced=false;
-      AQ.pitch+=(1.3-AQ.pitch)*(1-Math.exp(-dt*3));
+      AQ.pitch+=(1.0-AQ.pitch)*(1-Math.exp(-dt*3));   // a la superfície, més dreta
       AQ.splashT-=dt;if(inp.m>0&&AQ.splashT<0&&c>0.55&&c<0.62){AQ.splashT=0.5;aqSplash(P.x-Math.sin(AQ.yaw)*0.5,P.z-Math.cos(AQ.yaw)*0.5,3,0.35);}
     }else{
       // sota l'aigua: «Bussejar» baixa, «Saltar» puja, si no, sura una mica cap amunt

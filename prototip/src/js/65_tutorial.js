@@ -12,11 +12,12 @@ const TUT={on:INICI_PROVA,i:-1,nom:'',tail:false,t0:0,p0:null,cam0:null};
 const tutTouch=matchMedia('(pointer:coarse)').matches;
 // {N} = nom de qui juga · hl: element que s'il·lumina · gest: cercles de la càmera · wait: què ha de passar per seguir
 const TUT_PASSOS=[
-  {t:'Hola, hola! Què tal esteu, Bruna i {N}?'},
-  {t:'Una mica perdudes, oi? No us amoineu: jo us acompanyaré durant tota l\'estona.'},
-  {t:'Em dic Conillet i soc un conill màgic. Com podeu veure, som en un bosc una mica especial!'},
+  {t:'Hola, hola, {N}! Et donem la benvinguda a la nostra aventura!'},
+  {t:'Mira, ella és la Bruna: la bruixeta que has d\'ajudar a convertir-se en una bruixa de veritat.'},
+  {t:'Està una mica perduda, oi? No et preocupis: jo us acompanyaré durant tota l\'estona.'},
+  {t:'Em dic Conillet i soc un conill màgic. Com pots veure, som en un bosc una mica especial!'},
   {t:'Hi ha llocs secrets, torreons de bruixa, unicorns i granotes de tres ulls.'},
-  {t:'Abans de començar, us explicaré breument com funciona aquest món.'},
+  {t:'Abans de començar, t\'explicaré breument com funciona aquest món.'},
   {t:'{N}, veuràs que a l\'esquerra de la pantalla hi ha una mena de controlador: és el que permet moure la Bruna. Prova de moure-la!',hl:'#joy',wait:'move',
    hint:tutTouch?'Arrossega el cercle del joystick':'Fes servir les tecles W A S D'},
   {t:'Molt bé! També pots canviar el punt de vista amb el dit: arrossega per girar l\'entorn i pessiga per apropar-te o allunyar-te, com quan amplies una foto. De vegades, canviant el punt de vista es veuen coses noves!',gest:true,wait:'cam',
