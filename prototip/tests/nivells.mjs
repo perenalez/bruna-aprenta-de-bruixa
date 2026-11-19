@@ -5,6 +5,7 @@ const fallos = [];
 const ok = (c, m) => { if (!c) fallos.push(m); };
 const { browser, page, errores } = await abrirJuego({ congelar: false });
 await page.evaluate(() => localStorage.setItem('bruna-nivel1-v1', JSON.stringify({ pot: 0, phase: 'inicio', marca: 'partida-real' })));
+await page.evaluate(() => sessionStorage.setItem('bruna-proves', '1'));   // contrasenya ja posada
 await page.click('#tgo'); await page.click('#tproves [data-go=llista]'); await page.click('#tproves [data-prova=nivells]');
 const lv = await page.evaluate(() => [...document.querySelectorAll('#pnv .lv button')].map(b => ({ t: b.textContent, off: b.disabled })));
 ok(lv.length === 5, 'hi hauria d\'haver 5 nivells');

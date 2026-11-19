@@ -38,7 +38,12 @@ function leadStep(dt){
   if(LEAD.st==='front'){
     // quan ja és davant de la Bruna (o han passat uns segons), li parla
     const d=Math.hypot(BN.x-S.pos.x,BN.z-S.pos.z);
-    if((d<3.2&&BN.v<0.3&&LEAD.t>0.8)||LEAD.t>4){LEAD.st='talk';sfx('notify');say(TXT.conill,TXT.guia,()=>{LEAD.st='lead';LEAD.t=0;toast(TXT.guiaToast,3500);});}
+    // amb el tutorial (65_tutorial.js) no diu res: el tutorial porta la conversa
+    if((d<3.2&&BN.v<0.3&&LEAD.t>0.8)||LEAD.t>4){LEAD.st='talk';if(LEAD.tut)return;sfx('notify');say(TXT.conill,TXT.guia,()=>{LEAD.st='lead';LEAD.t=0;toast(TXT.guiaToast,3500);});}
+  }else if(LEAD.st==='talk'&&LEAD.tut){
+    // mentre parla al tutorial: de cara a la Bruna, saltironeja i brilla
+    BN.root.position.y+=Math.abs(Math.sin(S.t*6))*0.14;
+    BN.yaw+=wrapA(Math.atan2(S.pos.x-BN.x,S.pos.z-BN.z)-BN.yaw)*(1-Math.exp(-dt*8));BN.root.rotation.y=BN.yaw;   // de cara a la Bruna
   }else if(LEAD.st==='lead'){
     if(Math.hypot(S.pos.x-LEAD_END.x,S.pos.z-LEAD_END.z)<4.5){LEAD.st='arrived';say(TXT.conill,TXT.guiaFi,endLead);}
   }

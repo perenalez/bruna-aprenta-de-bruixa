@@ -1,5 +1,5 @@
 /* =====================================================================
-   ZONA DE PROVES · «SALTAR NIVELLS» (encàrrec pas 4)
+   ZONA DE PROVES · «PROVAR NIVELLS» (encàrrec pas 4; abans «Saltar nivells»)
    Pantalla amb un botó per nivell (Nivell 1 … Nivell 5): només s'activen els que existeixen al codi (ara, el 1).
    En triar-ne un, comença una partida de prova en aquell nivell (?prova=nivell1): de zero i sense desar res.
    Dins, el botó «Proves» obre un panell amb interruptors per activar o desactivar cada habilitat
@@ -40,16 +40,17 @@ function openLevels(){if(typeof provesView==='function')provesView('');let d=$('
     d.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;sfx('click');
       if(b.dataset.nv){nvSub(+b.dataset.nv);return;}
       if(b.dataset.poc){location.href=location.pathname+'?prova=nivell1&poc='+b.dataset.poc;return;}
+      if(b.dataset.inici){location.href=location.pathname+'?prova=inici';return;}
       if(b.dataset.a==='nivells'){openLevels();return;}
       if(b.dataset.a==='back'){d.classList.remove('on');provesView('llista');}});}
-  d.innerHTML=`<div class="card"><h3>Saltar nivells</h3><p>Tria un nivell per jugar-lo de prova, amb tot el dels nivells anteriors ja aconseguit. No es desa ni toca la teva partida.</p>
+  d.innerHTML=`<div class="card"><h3>Provar nivells</h3><p>Tria un nivell per jugar-lo de prova, amb tot el dels nivells anteriors ja aconseguit. No es desa ni toca la teva partida.</p>
     <div class="lv">${NIVELLS.map(l=>`<button data-nv="${l.n}" ${l.ok?'':'disabled'} aria-label="Nivell ${l.n}">${l.n}<small>${l.ok?'Nivell':'Aviat'}</small></button>`).join('')}</div>
     <button class="back" data-a="back">Tornar</button></div>`;
   d.classList.add('on');}
 // subnivells: una entrada per cada poció del nivell
 function nvSub(n){const d=$('pnv');
   d.innerHTML=`<div class="card"><h3>Nivell ${n}</h3><p>Tria per quina poció vols començar. Les anteriors ja estaran fetes, amb els seus premis.</p>
-    <div class="sub">${NIVEL1.pociones.map((P,i)=>`<button data-poc="${i+1}"><b>${n}.${i+1}</b><span>${P.nombre}</span></button>`).join('')}</div>
+    <div class="sub"><button data-inici="1"><b>${n}.0</b><span>Pantalla d'inici (tutorial)</span></button>${NIVEL1.pociones.map((P,i)=>`<button data-poc="${i+1}"><b>${n}.${i+1}</b><span>${P.nombre}</span></button>`).join('')}</div>
     <button class="back" data-a="nivells">Tornar</button></div>`;}
 PROVA_OPEN.nivells=openLevels;
 if(PLAY&&/[?&]prova=zona/.test(location.search))setTimeout(()=>provesView('llista'),300);

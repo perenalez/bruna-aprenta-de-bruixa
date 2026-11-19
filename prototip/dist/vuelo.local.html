@@ -1739,7 +1739,7 @@ const B=buildBruna();scene.add(B.root);
 /* =====================================================================
    CONTROL Y ANIMACIÓN PROCEDURAL
    ===================================================================== */
-const WALK=2.5,RUN=5.75,JUMPV=4.6;   // velocitats i salt flotant com a Alba (abans 1.15, 3.7 i 4.3)
+const WALK=2.5,RUN=4.5,JUMPV=4.6;   // caminar com a Alba; córrer 4,5 (en Pere, 19-11); salt flotant (abans 1.15, 3.7 i 4.3)
 const S={pos:new THREE.Vector3(-0.6,0,10.5),y:0,yaw:PI,tyaw:PI,turn:0,speed:0,acc:0,vy:0,air:false,prep:-1,ph:0,t:0,skid:0,blinkT:2,jumpHeld:false,jumpReq:false,surf:'grass',depth:0,wake:0,idleT:0};
 S.y=landH(S.pos.x,S.pos.z);
 const input={x:0,y:0},K={};
@@ -3015,6 +3015,7 @@ const PROVA={on:false};   // partida de prova (zona de proves): no es desa res
 function saveGame(){if(!PLAY||PROVA.on)return;try{localStorage.setItem(SAVE,JSON.stringify(GS));}catch(e){}}
 // partida de prova de «Saltar nivells» (?prova=nivell1&fetes=0,1): comença de zero, amb les pocions marcades fetes, i no es desa
 const NIVELL_PROVA=PLAY&&/[?&]prova=nivell\d/.test(location.search);
+const INICI_PROVA=PLAY&&/[?&]prova=inici/.test(location.search);   // «Pantalla d'inici» (65_tutorial.js): partida nova de prova
 // subnivell (?poc=3): comença amb la poció 3 encarregada i les anteriors ja fetes
 function loadProva(){PROVA.on=true;const pc=/[?&]poc=(\d)/.exec(location.search),poc=pc?+pc[1]:0;
   const m=/[?&]fetes=([\d,]*)/.exec(location.search);let fetes=m?m[1].split(',').filter(x=>x!=='').map(Number).filter(i=>NIVEL1.pociones[i]):[];
@@ -3022,7 +3023,7 @@ function loadProva(){PROVA.on=true;const pc=/[?&]poc=(\d)/.exec(location.search)
   fetes.sort((a,b)=>a-b).forEach(i=>{const P=NIVEL1.pociones[i];GS.done.push(i);if(P.premio&&P.premio.ropa)GS.clothes.push(P.premio.ropa);(P.diario||[]).forEach(t=>GS.diary.push(t));});
   if(fetes.length){GS.pot=Math.max(...fetes);GS.phase='fin';GS.wardOpen=true;GS.flags.guia=1;}
   if(poc&&NIVEL1.pociones[poc-1]){GS.pot=poc-1;GS.phase='leer';GS.flags.guia=1;}}   // la veu ja l'ha encarregada: toca llegir el llibre
-function loadGame(){if(!PLAY)return;if(NIVELL_PROVA){loadProva();return;}try{if(/[?&]reset/.test(location.search))localStorage.removeItem(SAVE);const s=localStorage.getItem(SAVE);if(s)Object.assign(GS,JSON.parse(s));}catch(e){}
+function loadGame(){if(!PLAY)return;if(NIVELL_PROVA||INICI_PROVA){loadProva();return;}try{if(/[?&]reset/.test(location.search))localStorage.removeItem(SAVE);const s=localStorage.getItem(SAVE);if(s)Object.assign(GS,JSON.parse(s));}catch(e){}
   if(GS.phase==='fin1')GS.phase='fin';                                          // partidas guardadas con la versión anterior
   if(!GS.done.length&&GS.clothes.includes('barret'))GS.done=[0];}
 loadGame();
@@ -3504,7 +3505,7 @@ function gameStep(dt){
   if(POW.setas&&!MUSH.glow){MUSH.glow=1;MUSH.forEach(M=>M.cap.traverse(o=>{if(o.isMesh&&o.material.emissive)o.material.emissiveIntensity=0.5;}));}
   if(POW.plantas&&mode==='tower')for(const p of plants){if(p===BIGP&&babaBusy())continue;p.jaw.rotation.x=-0.1-0.06*Math.sin(t*2+p.ph);p.st.rotation.x=0.15+0.08*Math.sin(t*1.3+p.ph);}
   // Conillet: la cola parpadea si hay mensajes sin leer
-  if(GS.unread){const hue=(t*0.22)%1,pul=0.85+0.15*Math.sin(t*4);BN.tail.material.emissive.setHSL(hue,1,0.55);BN.tail.material.emissiveIntensity=1.1*pul;
+  if(GS.unread||TUT.tail){const hue=(t*0.22)%1,pul=0.85+0.15*Math.sin(t*4);BN.tail.material.emissive.setHSL(hue,1,0.55);BN.tail.material.emissiveIntensity=1.1*pul;
     tailGlow.material.color.setHSL(hue,1,0.6);tailGlow.material.opacity=0.75*pul;tailGlow.scale.setScalar(0.3*(0.9+0.15*pul));}
   else{BN.tail.material.emissiveIntensity=0;tailGlow.material.opacity=0;}
   // te guía: brilla entero y salta cuando estás cerca
@@ -3584,7 +3585,12 @@ function leadStep(dt){
   if(LEAD.st==='front'){
     // quan ja és davant de la Bruna (o han passat uns segons), li parla
     const d=Math.hypot(BN.x-S.pos.x,BN.z-S.pos.z);
-    if((d<3.2&&BN.v<0.3&&LEAD.t>0.8)||LEAD.t>4){LEAD.st='talk';sfx('notify');say(TXT.conill,TXT.guia,()=>{LEAD.st='lead';LEAD.t=0;toast(TXT.guiaToast,3500);});}
+    // amb el tutorial (65_tutorial.js) no diu res: el tutorial porta la conversa
+    if((d<3.2&&BN.v<0.3&&LEAD.t>0.8)||LEAD.t>4){LEAD.st='talk';if(LEAD.tut)return;sfx('notify');say(TXT.conill,TXT.guia,()=>{LEAD.st='lead';LEAD.t=0;toast(TXT.guiaToast,3500);});}
+  }else if(LEAD.st==='talk'&&LEAD.tut){
+    // mentre parla al tutorial: de cara a la Bruna, saltironeja i brilla
+    BN.root.position.y+=Math.abs(Math.sin(S.t*6))*0.14;
+    BN.yaw+=wrapA(Math.atan2(S.pos.x-BN.x,S.pos.z-BN.z)-BN.yaw)*(1-Math.exp(-dt*8));BN.root.rotation.y=BN.yaw;   // de cara a la Bruna
   }else if(LEAD.st==='lead'){
     if(Math.hypot(S.pos.x-LEAD_END.x,S.pos.z-LEAD_END.z)<4.5){LEAD.st='arrived';say(TXT.conill,TXT.guiaFi,endLead);}
   }
@@ -4320,7 +4326,7 @@ Object.assign(window.__j,{SNZ,CAVE,QUIET,LL,FFLY,SOIL,HOUSE,VINE,CLIMB,CAT,SPICY
    «Accedir a la zona de proves» abre #tproves: botón «Testejar» → lista de pruebas (desactivadas, «Aviat»).
    ?sinportada en la URL la salta (para pruebas).
    ===================================================================== */
-const TITLE={on:PLAY&&!/[?&](sinportada|prova=nivell)/.test(location.search),t:0,
+const TITLE={on:PLAY&&!/[?&](sinportada|prova=nivell|prova=inici)/.test(location.search),t:0,
   // cámara de la portada (pensada para un móvil vertical, aspecto 0.46)
   cam:{x:0,y:0.55,z:2.75,lx:0.05,ly:1.08,fov:44,fovH:40,asp:0.46}};
 const TSC=new THREE.Scene();
@@ -4456,16 +4462,28 @@ const RAYS='<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M6 9L20 15M3 21
 #tproves li button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.14);color:#fff;font-size:16px;font-weight:600;text-align:left}
 #tproves li button:disabled{cursor:default;opacity:.62}
 #tproves li em.go{background:#ffd75e}
+#tproves .pw{display:flex;flex-direction:column;align-items:center;gap:10px}#tproves .pw input{width:100%;max-width:240px;font:600 18px Fredoka,system-ui;padding:10px 14px;border-radius:14px;border:0;outline:none;color:#4a2a6a;text-align:center}
+#tproves .err{min-height:18px;margin:8px 0 0;color:#ffe08a;font-weight:600}
 #tproves li em{flex:none;font-style:normal;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;background:rgba(255,230,140,.9);color:#5a2e10}
 #tproves .back{margin-top:12px;background:rgba(255,255,255,.18);color:#fff;font-weight:600;font-size:16px;padding:9px 26px;border-radius:999px}
 @media (min-aspect-ratio:1/1){#tscreen{align-items:flex-start;padding-left:calc(env(safe-area-inset-left) + 5vw);background:linear-gradient(90deg,rgba(80,50,150,.6),rgba(80,50,150,.35) 38%,rgba(80,50,150,0) 58%)}#tscreen .top{align-items:flex-start;text-align:left;width:46vw}#tscreen .sub{max-width:none}#tscreen h1{font-size:clamp(48px,11vh,120px)}#tscreen .bot{max-width:46vw;align-items:flex-start}#tscreen .row{display:flex;gap:16px}#tscreen .cred{max-width:46vw}}
 @media (min-aspect-ratio:1/1) and (max-height:520px){#tscreen .sub{display:none}#tscreen h1{font-size:clamp(40px,13vh,70px)}#tplay{font-size:26px;padding:8px 34px 10px}#tgo{width:60px;height:60px;font-size:9px}}`;document.head.appendChild(css);}
 // pruebas de la zona de proves (se activan a medida que se hacen)
 const PROVA_OPEN={};   // cada prova feta s'hi apunta (62_proves_personatge.js…)
-const PROVES=[{id:'personatge',lab:'Crea el teu personatge'},{id:'nivells',lab:'Saltar nivells'},{id:'render',lab:'Nou motor de render · moviment Alba'}];   // en Pere: «el nou render i el moviment Alba són el mateix»
+const PROVES=[{id:'inici',lab:'Pantalla d\'inici'},{id:'personatge',lab:'Crea el teu personatge'},{id:'nivells',lab:'Provar nivells'},{id:'render',lab:'Nou motor de render · moviment Alba'},{id:'accions',lab:'Proves de noves accions'}];   // en Pere: «el nou render i el moviment Alba són el mateix»
 function showTitleUI(on){['hud','joy','acts','chips','top','hint','bwand','spells','ctx','tbar','frost'].forEach(id=>{const e=$(id);if(e)e.style.visibility=on?'hidden':'';});}
+// la zona de proves només s'obre amb la contrasenya (en Pere, 19-11); es recorda mentre la pestanya és oberta
+const PROVES_PW='ayla';
+const provesOK=()=>{try{return sessionStorage.getItem('bruna-proves')==='1';}catch(e){return false;}};
 function provesView(v){const p=$('tproves');if(!p)return;p.classList.toggle('on',!!v);if(!v)return;
   const c=p.querySelector('.card');
+  if(v&&!provesOK()){c.innerHTML=`<h3>Zona de proves</h3><p>Escriu la contrasenya per entrar.</p>
+    <form class="pw"><input id="tpw" type="password" autocomplete="off" placeholder="Contrasenya" aria-label="Contrasenya"><button class="main" type="submit">${SPARK4}Entrar</button></form>
+    <p class="err" id="tpwerr"></p><button class="back" data-go="">Tornar</button>`;
+    const f=c.querySelector('form');f.addEventListener('submit',e=>{e.preventDefault();
+      if($('tpw').value.trim().toLowerCase()===PROVES_PW){try{sessionStorage.setItem('bruna-proves','1');}catch(er){}sfx('magic');provesView(v);}
+      else{sfx('click');$('tpwerr').textContent='No és la contrasenya. Torna-ho a provar.';$('tpw').value='';}});
+    setTimeout(()=>{const i=$('tpw');if(i)i.focus();},50);return;}
   if(v==='zona')c.innerHTML=`<h3>Zona de proves</h3><p>Aquí provem coses noves abans de posar-les al joc. El que facis aquí no canvia la teva partida.</p>
     <button class="main" data-go="llista">${SPARK4}Testejar</button><br><button class="back" data-go="">Tornar</button>`;
   else c.innerHTML=`<h3>Testejar</h3><p>Tria una prova.</p><ul>${PROVES.map(t=>PROVA_OPEN[t.id]?`<li><button data-prova="${t.id}">${t.lab}<em class="go">Prova-ho</em></button></li>`:`<li><button disabled data-prova="${t.id}">${t.lab}<em>Aviat</em></button></li>`).join('')}</ul>
@@ -4498,7 +4516,7 @@ function startGame(){if(!TITLE.on)return;TITLE.on=false;audioInit();sfx('magic')
    Los controles se ocultan durante la vuelta; tocar la pantalla o pulsar una tecla la salta. */
 const INTRO={on:false,t:0,T:7,end:{yaw:0,pitch:0,dist:0}};
 function startIntro(){INTRO.on=true;INTRO.t=0;INTRO.t0=performance.now();INTRO.end={yaw:S.yaw+PI,pitch:cam.pitch,dist:cam.dist};introCam(0);}
-function endIntro(){if(!INTRO.on)return;INTRO.on=false;Object.assign(cam,INTRO.end);showTitleUI(false);startLead();}   // la primera vegada, en Conillet la guia
+function endIntro(){if(!INTRO.on)return;INTRO.on=false;Object.assign(cam,INTRO.end);showTitleUI(false);if(TUT.on)tutStart();else startLead();}   // la primera vegada, en Conillet la guia (o el tutorial de la Pantalla d'inici)
 function introCam(u){const e=u*u*(3-2*u),E=INTRO.end;
   // comença molt amunt (vista d'ocell, ~65°) i lluny, i baixa mentre gira fins a l'esquena de la Bruna
   cam.yaw=E.yaw-(1-e)*TAU;cam.dist=E.dist*(2.3-1.3*e);cam.pitch=E.pitch+(1-e)*0.78;}
@@ -4930,7 +4948,7 @@ Object.assign(window.__j,{PCR,openCreator,closeCreator,playTest,pcPick,pcRandom,
 
 /* ===== 63_proves_nivells.js ===== */
 /* =====================================================================
-   ZONA DE PROVES · «SALTAR NIVELLS» (encàrrec pas 4)
+   ZONA DE PROVES · «PROVAR NIVELLS» (encàrrec pas 4; abans «Saltar nivells»)
    Pantalla amb un botó per nivell (Nivell 1 … Nivell 5): només s'activen els que existeixen al codi (ara, el 1).
    En triar-ne un, comença una partida de prova en aquell nivell (?prova=nivell1): de zero i sense desar res.
    Dins, el botó «Proves» obre un panell amb interruptors per activar o desactivar cada habilitat
@@ -4971,16 +4989,17 @@ function openLevels(){if(typeof provesView==='function')provesView('');let d=$('
     d.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;sfx('click');
       if(b.dataset.nv){nvSub(+b.dataset.nv);return;}
       if(b.dataset.poc){location.href=location.pathname+'?prova=nivell1&poc='+b.dataset.poc;return;}
+      if(b.dataset.inici){location.href=location.pathname+'?prova=inici';return;}
       if(b.dataset.a==='nivells'){openLevels();return;}
       if(b.dataset.a==='back'){d.classList.remove('on');provesView('llista');}});}
-  d.innerHTML=`<div class="card"><h3>Saltar nivells</h3><p>Tria un nivell per jugar-lo de prova, amb tot el dels nivells anteriors ja aconseguit. No es desa ni toca la teva partida.</p>
+  d.innerHTML=`<div class="card"><h3>Provar nivells</h3><p>Tria un nivell per jugar-lo de prova, amb tot el dels nivells anteriors ja aconseguit. No es desa ni toca la teva partida.</p>
     <div class="lv">${NIVELLS.map(l=>`<button data-nv="${l.n}" ${l.ok?'':'disabled'} aria-label="Nivell ${l.n}">${l.n}<small>${l.ok?'Nivell':'Aviat'}</small></button>`).join('')}</div>
     <button class="back" data-a="back">Tornar</button></div>`;
   d.classList.add('on');}
 // subnivells: una entrada per cada poció del nivell
 function nvSub(n){const d=$('pnv');
   d.innerHTML=`<div class="card"><h3>Nivell ${n}</h3><p>Tria per quina poció vols començar. Les anteriors ja estaran fetes, amb els seus premis.</p>
-    <div class="sub">${NIVEL1.pociones.map((P,i)=>`<button data-poc="${i+1}"><b>${n}.${i+1}</b><span>${P.nombre}</span></button>`).join('')}</div>
+    <div class="sub"><button data-inici="1"><b>${n}.0</b><span>Pantalla d'inici (tutorial)</span></button>${NIVEL1.pociones.map((P,i)=>`<button data-poc="${i+1}"><b>${n}.${i+1}</b><span>${P.nombre}</span></button>`).join('')}</div>
     <button class="back" data-a="nivells">Tornar</button></div>`;}
 PROVA_OPEN.nivells=openLevels;
 if(PLAY&&/[?&]prova=zona/.test(location.search))setTimeout(()=>provesView('llista'),300);
@@ -5030,6 +5049,100 @@ Object.assign(window.__j,{NV,openLevels,nvPanel,nvSetHab,nvSetRoba,nvRoba});
    i un botó «Motor: nou / actual» per comparar fps. «Sortir» torna aquí, a la llista de proves.
    ===================================================================== */
 PROVA_OPEN.render=()=>{location.href='./prova-alba'+(/\.local\.html/.test(location.pathname)?'.local':'')+'.html';};
+
+/* ===== 65_tutorial.js ===== */
+/* =====================================================================
+   ZONA DE PROVES · «PANTALLA D'INICI» — mini tutorial (en Pere, 19-11-2026)
+   ?prova=inici: partida de prova nova (no es desa res).
+     1. Demana el nom de qui juga (el del personatge creat, si n'hi ha).
+     2. Volta de 360° de la càmera (60_portada.js: startIntro).
+     3. En Conillet es posa de cara a la Bruna, saltironeja, brilla i parla (els textos d'en Pere).
+     4. Mentre explica cada cosa, s'il·lumina la part de la pantalla de què parla:
+        joystick (i espera que es mogui la Bruna), gestos de càmera (cercles al 40 %), saltar, llibreta.
+     5. Acaba: «Segueix-me, que anem al torreó!» i el guia fins al torreó (55a_conillet_guia.js).
+   ===================================================================== */
+const TUT={on:INICI_PROVA,i:-1,nom:'',tail:false,t0:0,p0:null,cam0:null};
+const tutTouch=matchMedia('(pointer:coarse)').matches;
+// {N} = nom de qui juga · hl: element que s'il·lumina · gest: cercles de la càmera · wait: què ha de passar per seguir
+const TUT_PASSOS=[
+  {t:'Hola, hola! Què tal esteu, Bruna i {N}?'},
+  {t:'Una mica perdudes, oi? No us amoineu: jo us acompanyaré durant tota l\'estona.'},
+  {t:'Em dic Conillet i soc un conill màgic. Com podeu veure, som en un bosc una mica especial!'},
+  {t:'Hi ha llocs secrets, torreons de bruixa, unicorns i granotes de tres ulls.'},
+  {t:'Abans de començar, us explicaré breument com funciona aquest món.'},
+  {t:'{N}, veuràs que a l\'esquerra de la pantalla hi ha una mena de controlador: és el que permet moure la Bruna. Prova de moure-la!',hl:'#joy',wait:'move',
+   hint:tutTouch?'Arrossega el cercle del joystick':'Fes servir les tecles W A S D'},
+  {t:'Molt bé! També pots canviar el punt de vista amb el dit: arrossega per girar l\'entorn i pessiga per apropar-te o allunyar-te, com quan amplies una foto. De vegades, canviant el punt de vista es veuen coses noves!',gest:true,wait:'cam',
+   hint:tutTouch?'Gira o pessiga la pantalla':'Arrossega amb el ratolí o fes servir la roda'},
+  {t:'També pots saltar, obrir portes i fer accions, com ara acariciar l\'unicorn.',hl:'#bjump'},
+  {t:'En general, aquest joc va de fer pocions màgiques, i necessiten la teva ajuda per trobar tots els ingredients.'},
+  {t:'Jo sempre seré al teu costat i et donaré pistes si no te\'n surts. Mira: la meva cua brilla quan tinc una pista per a tu.',tail:true},
+  {t:'I a la teva llibreta (aquest botó) veuràs que la pestanya «Xat» s\'omple amb els meus consells.',hl:'#bnote'},
+  {t:'Les altres dues pestanyes, «Poció» i «Diari», són per anar seguint la poció i per recordar els poders que et dona cada poció nova.',hl:'#bnote'},
+  {t:'Crec que amb això ja podem anar tirant! Segueix-me, que anem al torreó!'},
+];
+{const css=document.createElement('style');css.textContent=`
+#tut,#tutnom{font-family:Fredoka,"Trebuchet MS",system-ui,sans-serif;color:#fff}
+#tut{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 64px);transform:translateX(-50%);width:min(440px,calc(100vw - 24px));z-index:35;display:none;
+  background:linear-gradient(170deg,rgba(143,106,208,.96),rgba(106,74,168,.96));border:2px solid rgba(255,255,255,.45);border-radius:20px;padding:12px 14px 10px;box-shadow:0 6px 0 rgba(50,25,90,.55),0 14px 30px rgba(30,10,50,.35)}
+#tut.on{display:block}#tut b{display:block;font-size:13px;letter-spacing:.5px;text-transform:uppercase;color:#ffd75e;margin-bottom:3px}
+#tut p{margin:0;font-size:16px;line-height:1.35}#tut .ft{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;min-height:34px}
+#tut .hint{font-size:13px;opacity:.9;font-weight:600}#tut button{font-family:inherit;border:0;cursor:pointer;touch-action:manipulation;margin-left:auto;background:linear-gradient(#ffd75e,#f7b12c);color:#5a2e10;font-weight:700;font-size:15px;padding:7px 16px;border-radius:999px;box-shadow:0 3px 0 #c27a1c}
+#tuthl{position:fixed;z-index:34;pointer-events:none;border-radius:50%;border:4px solid #ffd75e;box-shadow:0 0 0 6px rgba(255,215,94,.35),0 0 34px rgba(255,215,94,.9);display:none;animation:tuthl 1.1s ease-in-out infinite}
+@keyframes tuthl{50%{transform:scale(1.1);box-shadow:0 0 0 12px rgba(255,215,94,.15),0 0 44px rgba(255,215,94,1)}}
+#tutg{position:fixed;left:50%;top:55%;z-index:33;pointer-events:none;display:none}#tutg i{position:absolute;width:62px;height:62px;margin:-31px;border-radius:50%;background:rgba(255,255,255,.4);border:3px solid rgba(255,255,255,.6);animation:tutblink 1s ease-in-out infinite}
+#tutg.drag .c1{animation:tutblink 1s ease-in-out infinite,tutdrag 2.4s ease-in-out infinite}#tutg.drag .c2{display:none}
+#tutg.pinch .c1{animation:tutblink 1s ease-in-out infinite,tutpl 2.4s ease-in-out infinite}#tutg.pinch .c2{animation:tutblink 1s ease-in-out infinite,tutpr 2.4s ease-in-out infinite}
+@keyframes tutblink{50%{opacity:.35}}@keyframes tutdrag{0%,100%{transform:translateX(-80px)}50%{transform:translateX(80px)}}
+@keyframes tutpl{0%,100%{transform:translateX(-95px)}50%{transform:translateX(-22px)}}@keyframes tutpr{0%,100%{transform:translateX(95px)}50%{transform:translateX(22px)}}
+#tutnom{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(60,30,100,.55)}
+#tutnom form{width:100%;max-width:340px;border-radius:24px;padding:22px 20px;text-align:center;background:linear-gradient(170deg,#8f6ad0,#6a4aa8);border:2px solid rgba(255,255,255,.4);box-shadow:0 8px 0 rgba(50,25,90,.6)}
+#tutnom h3{margin:0 0 8px;font-size:24px}#tutnom p{margin:0 0 14px;font-size:15px}#tutnom input{width:100%;font:600 20px Fredoka,system-ui;padding:11px 14px;border-radius:14px;border:0;outline:none;color:#4a2a6a;text-align:center;margin-bottom:14px}
+#tutnom button{border:0;cursor:pointer;font:700 20px Fredoka,system-ui;background:linear-gradient(#ffd75e,#f7b12c);color:#5a2e10;padding:10px 34px;border-radius:999px;box-shadow:0 4px 0 #c27a1c}
+#tutback{position:fixed;right:calc(env(safe-area-inset-right) + 10px);top:calc(env(safe-area-inset-top) + 10px);z-index:25;background:rgba(90,60,160,.85);color:#fff;border:0;border-radius:999px;font:600 12px Fredoka,system-ui;padding:7px 12px;cursor:pointer}`;
+ document.head.appendChild(css);}
+const tutEl=id=>{let e=$(id);if(!e){e=document.createElement('div');e.id=id;document.body.appendChild(e);}return e;};
+function tutNomGuardat(){try{const l=JSON.parse(localStorage.getItem('bruna-personatge-v1')||'null');return l&&l.nom?l.nom:'';}catch(e){return '';}}
+// 1. el nom
+function tutAskName(){const d=tutEl('tutnom');
+  d.innerHTML=`<form><h3>Com et dius?</h3><p>En Conillet et vol saludar pel teu nom.</p><input id="tutn" maxlength="16" autocomplete="off" placeholder="El teu nom" value="${tutNomGuardat().replace(/"/g,'&quot;')}"><button type="submit">Som-hi!</button></form>`;
+  d.addEventListener('pointerdown',e=>e.stopPropagation());
+  d.querySelector('form').addEventListener('submit',e=>{e.preventDefault();TUT.nom=$('tutn').value.trim()||'amiga';d.remove();audioInit();sfx('magic');startIntro();});}
+// 3. comença quan acaba la volta de la càmera
+function tutStart(){TUT.i=-1;LEAD.tut=true;LEAD.on=true;LEAD.st='front';LEAD.t=0;LEAD.s=routeS(S.pos.x,S.pos.z);TUT.t0=performance.now();TUT.wait=true;}
+function tutShow(){const P=TUT_PASSOS[TUT.i],c=tutEl('tut');sfx('talk');
+  c.innerHTML=`<b>${TXT.conill}</b><p>${P.t.split('{N}').join(TUT.nom)}</p><div class="ft"><span class="hint">${P.hint||''}</span>${P.wait?'':'<button>Següent ▶</button>'}</div>`;
+  c.classList.add('on');const bt=c.querySelector('button');if(bt)bt.addEventListener('click',e=>{e.stopPropagation();tutNext();});
+  TUT.tail=!!P.tail;TUT.p0={x:S.pos.x,z:S.pos.z};TUT.cam0={yaw:cam.yaw,dist:cam.dist};TUT.ts=performance.now();
+  const g=tutEl('tutg');g.innerHTML='<i class="c1"></i><i class="c2"></i>';g.style.display=P.gest?'block':'none';g.className='drag';
+  if(P.wait==='move'){LEAD.on=false;LEAD.st='';leadOrb.visible=false;}     // ara en Conillet segueix la Bruna
+}
+function tutNext(){TUT.i++;if(TUT.i<TUT_PASSOS.length){tutShow();return;}tutEnd();}
+// 5. al torreó!
+function tutEnd(){['tut','tutg','tuthl'].forEach(id=>{const e=$(id);if(e)e.style.display='none';});TUT.on=false;TUT.tail=false;
+  LEAD.tut=false;LEAD.on=true;LEAD.st='lead';LEAD.t=0;LEAD.s=routeS(S.pos.x,S.pos.z);toast(TXT.guiaToast,3500);}
+// cada 100 ms: esperar que en Conillet arribi davant, comprovar les accions, moure la llum i els cercles
+setInterval(()=>{if(!TUT.on||TUT.i<-1)return;
+  if(TUT.wait){if(LEAD.st==='talk'||performance.now()-TUT.t0>6000){TUT.wait=false;tutNext();}return;}
+  if(TUT.i<0)return;const P=TUT_PASSOS[TUT.i];
+  const hl=tutEl('tuthl'),el=P.hl&&document.querySelector(P.hl);
+  if(el&&el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden'&&getComputedStyle(el).display!=='none'){const r=el.getBoundingClientRect(),pad=10,sz=Math.max(r.width,r.height)+pad*2;
+    Object.assign(hl.style,{display:'block',left:(r.left+r.width/2-sz/2)+'px',top:(r.top+r.height/2-sz/2)+'px',width:sz+'px',height:sz+'px'});}else hl.style.display='none';
+  if(P.gest){const g=$('tutg');g.className=((performance.now()-TUT.ts)%4800)<2400?'drag':'pinch';}
+  const el2=performance.now()-TUT.ts;
+  if(P.wait==='move'&&Math.hypot(S.pos.x-TUT.p0.x,S.pos.z-TUT.p0.z)>2.5)tutNext();
+  else if(P.wait==='cam'){const moved=Math.abs(cam.yaw-TUT.cam0.yaw)>0.7||Math.abs(cam.dist-TUT.cam0.dist)>1.2;
+    if(moved&&el2>1500)tutNext();else if(el2>7000&&!$('tut').querySelector('button')){const f=$('tut').querySelector('.ft');const b=document.createElement('button');b.textContent='Següent ▶';b.addEventListener('click',e=>{e.stopPropagation();tutNext();});f.appendChild(b);}}
+},100);
+PROVA_OPEN.inici=()=>{location.href=location.pathname+'?prova=inici';};
+if(TUT.on){
+  showTitleUI(true);camera.fov=38;camera.updateProjectionMatrix();
+  const sm=document.querySelector('#title small');if(sm&&sm.firstChild&&sm.firstChild.nodeType===3)sm.firstChild.textContent='Prova · Pantalla d\'inici · ';
+  const b=document.createElement('button');b.id='tutback';b.textContent='← Zona de proves';document.body.appendChild(b);
+  b.addEventListener('pointerdown',e=>e.stopPropagation());b.addEventListener('click',()=>{location.href=location.pathname+'?prova=zona';});
+  setTimeout(tutAskName,200);
+}
+Object.assign(window.__j,{TUT,tutNext,tutStart,TUT_PASSOS});
 
 })();
 </script>

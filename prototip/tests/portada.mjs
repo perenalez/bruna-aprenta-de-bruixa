@@ -21,12 +21,19 @@ ok(t.hud === 'hidden', 'els controls del joc es veuen a la portada');
 ok(t.bruna && t.star && t.uni && t.conill, 'falten models a l\'escena de la portada');
 // zona de proves → Testejar → llista → Tornar
 await page.click('#tgo');
+// contrasenya: primer una d'equivocada, després «Ayla»
+const pw0 = await page.evaluate(() => !!document.getElementById('tpw') && !document.getElementById('tproves').innerText.includes('Testejar'));
+ok(pw0, 'la zona de proves no demana la contrasenya');
+await page.fill('#tpw', 'gat'); await page.press('#tpw', 'Enter');
+ok(await page.evaluate(() => /No és la contrasenya/.test(document.getElementById('tproves').innerText)), 'una contrasenya equivocada no avisa');
+await page.fill('#tpw', 'Ayla'); await page.press('#tpw', 'Enter');
 const z = await page.evaluate(() => ({ on: document.getElementById('tproves').classList.contains('on'), txt: document.getElementById('tproves').innerText }));
 ok(z.on && z.txt.includes('Testejar'), 'la zona de proves no s\'obre');
 await page.click('#tproves [data-go=llista]');
 const l = await page.evaluate(() => [...document.querySelectorAll('#tproves li button')].map(b => ({ t: b.innerText, off: b.disabled })));
-ok(l.length === 3, 'la llista hauria de tenir 3 proves');
-for (const n of ['Crea el teu personatge', 'Saltar nivells', 'Nou motor de render · moviment Alba']) ok(l.some(b => b.t.includes(n) && !b.off), `«${n}» no està activada`);
+ok(l.length === 5, 'la llista hauria de tenir 5 proves');
+for (const n of ["Pantalla d'inici", 'Crea el teu personatge', 'Provar nivells', 'Nou motor de render · moviment Alba']) ok(l.some(b => b.t.includes(n) && !b.off), `«${n}» no està activada`);
+ok(l.some(b => b.t.includes('Proves de noves accions') && b.off && /Aviat/.test(b.t)), '«Proves de noves accions» hauria de sortir com «Aviat»');
 await page.click('#tproves [data-go=zona]');
 ok(await page.evaluate(() => document.getElementById('tproves').innerText.includes('Testejar')), '«Tornar» no torna a la zona');
 await page.click('#tproves [data-go=""]');
@@ -47,4 +54,4 @@ ok(Math.abs(g.fov - 38) < 0.01, 'la càmera del joc no torna al seu angle');
 await browser.close();
 if (errores.length) fallos.push('Errors:\n' + errores.join('\n'));
 if (fallos.length) { console.error('✗ Portada:\n- ' + fallos.join('\n- ')); process.exit(1); }
-console.log('✓ Portada: textos, v.1.2, zona de proves (3 proves actives), Tornar, Juga i volta de 360°');
+console.log('✓ Portada: textos, v.1.2, contrasenya, zona de proves (4 actives, noves accions «Aviat»), Tornar, Juga i volta de 360°');

@@ -6,6 +6,7 @@ const ok = (c, m) => { if (!c) fallos.push(m); };
 const { browser, page, errores } = await abrirJuego({ congelar: false });
 await page.evaluate(() => { localStorage.removeItem('bruna-personatge-v1'); localStorage.setItem('bruna-nivel1-v1', JSON.stringify({ pot: 0, phase: 'inicio', marca: 'partida-real' })); });
 // s'obre des de la zona de proves
+await page.evaluate(() => sessionStorage.setItem('bruna-proves', '1'));   // contrasenya ja posada
 await page.click('#tgo');
 await page.click('#tproves [data-go=llista]');
 await page.click('#tproves [data-prova=personatge]');

@@ -18,6 +18,7 @@ const PROVA={on:false};   // partida de prova (zona de proves): no es desa res
 function saveGame(){if(!PLAY||PROVA.on)return;try{localStorage.setItem(SAVE,JSON.stringify(GS));}catch(e){}}
 // partida de prova de «Saltar nivells» (?prova=nivell1&fetes=0,1): comença de zero, amb les pocions marcades fetes, i no es desa
 const NIVELL_PROVA=PLAY&&/[?&]prova=nivell\d/.test(location.search);
+const INICI_PROVA=PLAY&&/[?&]prova=inici/.test(location.search);   // «Pantalla d'inici» (65_tutorial.js): partida nova de prova
 // subnivell (?poc=3): comença amb la poció 3 encarregada i les anteriors ja fetes
 function loadProva(){PROVA.on=true;const pc=/[?&]poc=(\d)/.exec(location.search),poc=pc?+pc[1]:0;
   const m=/[?&]fetes=([\d,]*)/.exec(location.search);let fetes=m?m[1].split(',').filter(x=>x!=='').map(Number).filter(i=>NIVEL1.pociones[i]):[];
@@ -25,7 +26,7 @@ function loadProva(){PROVA.on=true;const pc=/[?&]poc=(\d)/.exec(location.search)
   fetes.sort((a,b)=>a-b).forEach(i=>{const P=NIVEL1.pociones[i];GS.done.push(i);if(P.premio&&P.premio.ropa)GS.clothes.push(P.premio.ropa);(P.diario||[]).forEach(t=>GS.diary.push(t));});
   if(fetes.length){GS.pot=Math.max(...fetes);GS.phase='fin';GS.wardOpen=true;GS.flags.guia=1;}
   if(poc&&NIVEL1.pociones[poc-1]){GS.pot=poc-1;GS.phase='leer';GS.flags.guia=1;}}   // la veu ja l'ha encarregada: toca llegir el llibre
-function loadGame(){if(!PLAY)return;if(NIVELL_PROVA){loadProva();return;}try{if(/[?&]reset/.test(location.search))localStorage.removeItem(SAVE);const s=localStorage.getItem(SAVE);if(s)Object.assign(GS,JSON.parse(s));}catch(e){}
+function loadGame(){if(!PLAY)return;if(NIVELL_PROVA||INICI_PROVA){loadProva();return;}try{if(/[?&]reset/.test(location.search))localStorage.removeItem(SAVE);const s=localStorage.getItem(SAVE);if(s)Object.assign(GS,JSON.parse(s));}catch(e){}
   if(GS.phase==='fin1')GS.phase='fin';                                          // partidas guardadas con la versión anterior
   if(!GS.done.length&&GS.clothes.includes('barret'))GS.done=[0];}
 loadGame();
@@ -507,7 +508,7 @@ function gameStep(dt){
   if(POW.setas&&!MUSH.glow){MUSH.glow=1;MUSH.forEach(M=>M.cap.traverse(o=>{if(o.isMesh&&o.material.emissive)o.material.emissiveIntensity=0.5;}));}
   if(POW.plantas&&mode==='tower')for(const p of plants){if(p===BIGP&&babaBusy())continue;p.jaw.rotation.x=-0.1-0.06*Math.sin(t*2+p.ph);p.st.rotation.x=0.15+0.08*Math.sin(t*1.3+p.ph);}
   // Conillet: la cola parpadea si hay mensajes sin leer
-  if(GS.unread){const hue=(t*0.22)%1,pul=0.85+0.15*Math.sin(t*4);BN.tail.material.emissive.setHSL(hue,1,0.55);BN.tail.material.emissiveIntensity=1.1*pul;
+  if(GS.unread||TUT.tail){const hue=(t*0.22)%1,pul=0.85+0.15*Math.sin(t*4);BN.tail.material.emissive.setHSL(hue,1,0.55);BN.tail.material.emissiveIntensity=1.1*pul;
     tailGlow.material.color.setHSL(hue,1,0.6);tailGlow.material.opacity=0.75*pul;tailGlow.scale.setScalar(0.3*(0.9+0.15*pul));}
   else{BN.tail.material.emissiveIntensity=0;tailGlow.material.opacity=0;}
   // te guía: brilla entero y salta cuando estás cerca
