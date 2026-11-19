@@ -29,11 +29,12 @@ sun.shadow.bias = -.0006; sun.shadow.normalBias = .035;
 scene.add(sun, sun.target);
 const SUN_OFF = new THREE.Vector3(-16, 26, 11);
 
-const ctl = crearControl(canvas, { joy: $('joy'), knob: $('knob'), jump: $('bjump'), hint: $('hint') });
+const ctl = crearControl(canvas, { joy: $('joy'), knob: $('knob'), jump: $('bjump'), turbo: $('bturbo'), hint: $('hint') });
 const camT = new THREE.Vector3();
 let rig, pl, post, parts, papallones, esc = 1;
 // lista de personajes: el primero es el que sale al empezar
 let FABRIQUES = [brunaJoc, brunaEsculpida], rigs = [], actual = 0;
+const BAMBES = { on: false };
 function posarPersonatge(i, progreso) {
   if (rig) scene.remove(rig.root);
   actual = i;
@@ -41,6 +42,7 @@ function posarPersonatge(i, progreso) {
   rig = rigs[i]; esc = rig.esc ?? rig.hipY / .30;
   scene.add(rig.root);
   if (pl) { rig.root.position.set(pl.x, pl.y, pl.z); rig.root.rotation.y = pl.yaw; }
+  aletes();
   $('pers').textContent = 'Personatge: ' + (rig.nom || (i + 1));
 }
 const mundo = { ground: MON.heightAt, canStand: (x, z) => MON.heightAt(x, z) > MON.SEA - .15, obstacles: [] };
@@ -77,12 +79,15 @@ function pas(dt) {
   tAcc += dt; const t = tAcc;
   if (MOTOR.nou) VENT.uTime.value = t;            // amb el motor actual l'herba no es mou
   const inp = ctl.leer();
-  pasJugador(pl, inp, mundo, dt, esc);
+  pl.shoes = BAMBES.on; pasJugador(pl, inp, mundo, dt, esc);
   animarRig(rig, pl, dt, t, esc);
   // partículas según los eventos de la locomoción
   const fx = pl.x + Math.sin(pl.yaw) * .05, fz = pl.z + Math.cos(pl.yaw) * .05;
   if (pl.ev.jump) parts.emit('pols', pl.x, pl.gh, pl.z, 5, 1.4);
   if (pl.ev.land) parts.emit('pols', pl.x, pl.gh, pl.z, 7, 1.8);
+  // bambes: espurnes al doble salt i a cada passa de la cursa superràpida
+  if (pl.ev.dbl) parts.emit('brill', pl.x, pl.y + .05, pl.z, 14);
+  if (pl.ev.step && (pl.dashK || 0) > .5) parts.emit('brill', pl.x, pl.gh + .03, pl.z, 4);
   if (pl.ev.step) {
     const rn = clamp((pl.sp / esc - ALBA_P.walk) / (ALBA_P.run - ALBA_P.walk), 0, 1);
     parts.emit('pols', fx, pl.gh, fz, rn > .3 ? 2 : 1, .7);
@@ -114,6 +119,13 @@ $('motor').addEventListener('click', e => { MOTOR.nou = !MOTOR.nou; fpsT = 0; fp
 // «Sortir» torna a la llista de proves del joc
 $('sortir').addEventListener('click', () => { location.href = './index' + (/\.local\.html/.test(location.pathname) ? '.local' : '') + '.html?prova=zona'; });
 $('pers').addEventListener('click', () => posarPersonatge((actual + 1) % FABRIQUES.length));
+// «Bambes» (en Pere, 19-11): les sabates màgiques de la poció 3 → doble salt, planeig i, amb «Turbo», la cursa superràpida
+function aletes() { if (!rig) return; (rig.feet || []).forEach((f, i) => {
+    if (!f.userData.ales) { const g = new THREE.Group(), m = new THREE.MeshLambertMaterial({ color: '#fffdf6', emissive: '#ffffff', emissiveIntensity: .25 });
+      [[0, .04, -.02, .07], [0, .02, -.06, .055], [0, 0, -.09, .04]].forEach(([x, y, z, r]) => { const w = new THREE.Mesh(new THREE.SphereGeometry(1, 8, 6), m); w.position.set(x, y, z); w.scale.set(.012, r * .55, r); w.rotation.x = .5; g.add(w); });
+      g.position.set((i ? 1 : -1) * .07, 0, -.02); g.rotation.z = (i ? -1 : 1) * .6; f.add(g); f.userData.ales = g; }
+    f.userData.ales.visible = BAMBES.on; }); }
+$('bambes').addEventListener('click', e => { BAMBES.on = !BAMBES.on; e.currentTarget.textContent = 'Bambes: ' + (BAMBES.on ? 'sí' : 'no'); aletes(); });
 $('post').addEventListener('click', e => { post.enabled = !post.enabled; e.currentTarget.textContent = 'Desenfocament: ' + (post.enabled ? 'sí' : 'no'); });
 
 // API de depuración (mismo estilo que window.__j del juego): los tests congelan el bucle
@@ -125,7 +137,7 @@ window.__alba = {
   get motor() { return MOTOR.nou ? 'nou' : 'actual'; }, MOTOR,
   personatge(i) { posarPersonatge(i); return rig.nom; },
   input(x, y, mag) { ctl.st.forcar = (x || y) ? { x, y, mag } : null; },
-  saltar() { ctl.st.jump = true; },
+  saltar() { ctl.st.jump = true; }, mantenir(v) { ctl.st.btnHeld = v; }, turbo(v) { ctl.st.turboForcat = v; }, bambes(v) { BAMBES.on = v; aletes(); }, get BAMBES() { return BAMBES; },
   teleport(x, z) { pl.x = x; pl.z = z; pl.y = MON.heightAt(x, z); camT.set(x, pl.y + .75, z); },
   camara(yaw, pitch, dist) { ctl.st.yaw = yaw; ctl.st.pitch = pitch; ctl.st.dist = dist; },
   get llest() { return !!pl; },

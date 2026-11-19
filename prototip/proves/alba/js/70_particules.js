@@ -15,6 +15,12 @@ function crearParticules(scene, ground) {
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: '#f3e3c2', transparent: true, depthWrite: false, opacity: 0 }));
     s.visible = false; scene.add(s); parts.push({ s, life: 0, max: 1, vx: 0, vy: 0, vz: 0, kind: 'pols' });
   }
+  // espurnes de les bambes màgiques
+  const SC = ['#ffe36a', '#fff3b0', '#c98aff', '#ff9ad8'];
+  for (let i = 0; i < 40; i++) {
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: SC[i % 4], transparent: true, depthWrite: false, opacity: 0, blending: THREE.AdditiveBlending }));
+    s.visible = false; scene.add(s); parts.push({ s, life: 0, max: 1, vx: 0, vy: 0, vz: 0, kind: 'brill' });
+  }
   const bladeG = new THREE.PlaneGeometry(.05, .14);
   for (let i = 0; i < 40; i++) {
     const m = new THREE.Mesh(bladeG, new THREE.MeshLambertMaterial({ color: i % 2 ? '#e6c25a' : '#c9a33e', side: THREE.DoubleSide, transparent: true }));
@@ -23,9 +29,10 @@ function crearParticules(scene, ground) {
   function emit(kind, x, y, z, n, spread = 1) {
     for (let k = 0; k < n; k++) {
       const p = parts.find(p => p.life <= 0 && p.kind === kind); if (!p) return;
-      p.life = p.max = kind === 'pols' ? .7 + Math.random() * .5 : 1 + Math.random() * .6;
+      p.life = p.max = kind === 'pols' ? .7 + Math.random() * .5 : kind === 'brill' ? .5 + Math.random() * .4 : 1 + Math.random() * .6;
       p.s.position.set(x + (Math.random() - .5) * .2 * spread, y + .05, z + (Math.random() - .5) * .2 * spread);
-      if (kind === 'pols') { p.vx = (Math.random() - .5) * .8 * spread; p.vy = .35 + Math.random() * .4; p.vz = (Math.random() - .5) * .8 * spread; p.size = .18 + Math.random() * .16; }
+      if (kind === 'brill') { p.vx = (Math.random() - .5) * 1.6; p.vy = .6 + Math.random() * 1.2; p.vz = (Math.random() - .5) * 1.6; p.size = .07 + Math.random() * .07; }
+      else if (kind === 'pols') { p.vx = (Math.random() - .5) * .8 * spread; p.vy = .35 + Math.random() * .4; p.vz = (Math.random() - .5) * .8 * spread; p.size = .18 + Math.random() * .16; }
       else { const a = Math.random() * TAU; p.vx = Math.cos(a) * 1.4; p.vy = 2 + Math.random() * 1.8; p.vz = Math.sin(a) * 1.4; p.rx = (Math.random() - .5) * 14; p.rz = (Math.random() - .5) * 14; }
       p.s.visible = true;
     }
@@ -35,7 +42,8 @@ function crearParticules(scene, ground) {
       if (p.life <= 0) continue;
       p.life -= dt; const k = clamp(p.life / p.max, 0, 1);
       p.s.position.x += p.vx * dt; p.s.position.y += p.vy * dt; p.s.position.z += p.vz * dt;
-      if (p.kind === 'pols') { p.vx *= .96; p.vz *= .96; p.vy *= .97; const s = p.size * (1.6 - k * .8); p.s.scale.set(s, s, s); p.s.material.opacity = k * .38; }
+      if (p.kind === 'brill') { p.vy -= 2 * dt; p.s.scale.setScalar(p.size * (.5 + k)); p.s.material.opacity = k; }
+      else if (p.kind === 'pols') { p.vx *= .96; p.vz *= .96; p.vy *= .97; const s = p.size * (1.6 - k * .8); p.s.scale.set(s, s, s); p.s.material.opacity = k * .38; }
       else { p.vy -= 7 * dt; p.s.rotation.x += p.rx * dt; p.s.rotation.z += p.rz * dt; p.s.material.opacity = Math.min(1, k * 3); const gy = ground(p.s.position.x, p.s.position.z); if (p.s.position.y < gy) { p.s.position.y = gy; p.vx = p.vz = p.vy = 0; } }
       if (p.life <= 0) p.s.visible = false;
     }

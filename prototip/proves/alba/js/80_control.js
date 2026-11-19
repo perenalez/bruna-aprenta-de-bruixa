@@ -14,13 +14,16 @@ const esTactil = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in wi
 
 function crearControl(canvas, ui) {
   const keys = {};
-  const st = { jump: false, held: false, btnHeld: false, yaw: Math.PI, pitch: .42, dist: 6.2, forcar: null };
+  const st = { jump: false, held: false, btnHeld: false, turboBtn: false, yaw: Math.PI, pitch: .42, dist: 6.2, forcar: null };
   const input = { x: 0, y: 0 };
   addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Space') { e.preventDefault(); if (!e.repeat) st.jump = true; } if (e.code.startsWith('Arrow')) e.preventDefault(); });
   addEventListener('keyup', e => { keys[e.code] = false; });
   // botón Saltar (mantenerlo apretado = salto más alto y suave)
   ui.jump.addEventListener('pointerdown', e => { st.jump = true; st.btnHeld = true; ui.jump.setPointerCapture && ui.jump.setPointerCapture(e.pointerId); e.preventDefault(); });
   const upJ = () => { st.btnHeld = false; }; ui.jump.addEventListener('pointerup', upJ); ui.jump.addEventListener('pointercancel', upJ);
+  // botó «Turbo» (mantenir premut) · tecla T
+  if (ui.turbo) { ui.turbo.addEventListener('pointerdown', e => { st.turboBtn = true; ui.turbo.setPointerCapture && ui.turbo.setPointerCapture(e.pointerId); e.preventDefault(); });
+    const upT = () => { st.turboBtn = false; }; ui.turbo.addEventListener('pointerup', upT); ui.turbo.addEventListener('pointercancel', upT); }
   // joystick fijo
   { let jid = null; const JR = 50;
     const mv = e => { const r = ui.joy.getBoundingClientRect(); let dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2); const l = Math.hypot(dx, dy); if (l > JR) { dx *= JR / l; dy *= JR / l; } ui.knob.style.transform = `translate(${dx}px,${dy}px)`; input.x = dx / JR; input.y = dy / JR; };
@@ -50,7 +53,7 @@ function crearControl(canvas, ui) {
     else if (m > .12) { ix = input.x; iz = input.y; mag = m < .7 ? .5 * clamp(m / .55, .4, 1) : 1; }
     const l = Math.hypot(ix, iz); if (l > 0) { ix /= l; iz /= l; }
     const fx = -Math.sin(st.yaw), fz = -Math.cos(st.yaw), rx = Math.cos(st.yaw), rz = -Math.sin(st.yaw);
-    const out = { dx: rx * ix - fx * iz, dz: rz * ix - fz * iz, mag, jump: st.jump, held: !!(keys.Space || st.btnHeld) };
+    const out = { dx: rx * ix - fx * iz, dz: rz * ix - fz * iz, mag, jump: st.jump, held: !!(keys.Space || st.btnHeld), turbo: !!(keys.KeyT || st.turboBtn || st.turboForcat) };
     st.jump = false;
     return out;
   }

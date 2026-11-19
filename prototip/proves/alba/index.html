@@ -32,6 +32,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f0e1c2;touch-action:n
 .rb{border:0;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 2px 8px rgba(0,0,0,.3);font:700 13px system-ui;color:#3b2c2a;cursor:pointer;touch-action:manipulation}
 .rb:active{transform:scale(.94);background:#fff}
 #bjump{width:88px;height:88px}
+#bturbo{width:66px;height:66px;background:rgba(255,215,94,.9);color:#5a2e10}
 </style>
 </head>
 <body>
@@ -39,11 +40,11 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f0e1c2;touch-action:n
 <div id="load"><b>Prova: moviment estil Alba</b><div id="track"><div id="bar"></div></div><small>Esculpint el personatge i plantant l'herba…</small></div>
 <div id="hud">
   <div id="title">Prova · nou motor<small>moviment estil Alba</small></div>
-  <div id="tools"><span id="fps"></span><button id="motor">Motor: nou</button><button id="pers">Personatge</button><button id="post">Desenfocament: sí</button><button id="sortir">Sortir</button><div id="stats"></div></div>
+  <div id="tools"><span id="fps"></span><button id="motor">Motor: nou</button><button id="pers">Personatge</button><button id="bambes">Bambes: no</button><button id="post">Desenfocament: sí</button><button id="sortir">Sortir</button><div id="stats"></div></div>
 </div>
-<div id="hint" class="ui"><span class="touch">Joystick: caminar (a fons, córrer) · arrossega per girar la càmera</span><span class="desk">WASD: caminar · Majúscules: córrer · Espai: saltar · arrossega per girar la càmera</span></div>
+<div id="hint" class="ui"><span class="touch">Joystick: caminar (a fons, córrer) · arrossega per girar la càmera</span><span class="desk">WASD: caminar · Majúscules: córrer · T: turbo · Espai: saltar · arrossega per girar la càmera</span></div>
 <div id="joy" class="ui"><div id="knob"></div></div>
-<div id="acts" class="ui"><button id="bjump" class="rb">Saltar</button></div>
+<div id="acts" class="ui"><button id="bturbo" class="rb">Turbo</button><button id="bjump" class="rb">Saltar</button></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 /*@@BUNDLE@@*/

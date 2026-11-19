@@ -72,6 +72,22 @@ for (const i of [0, 1]) {
 }
 ok(noms.join() === 'Bruna,Bruixa', `personatges disponibles: ${noms.join(' i ')}`);
 await page.evaluate(() => __alba.personatge(0));
+// braços i bambes (en Pere, 19-11): corrent, braços naturals; amb bambes + turbo, cursa superràpida amb braços d'avió
+const bm = await page.evaluate(() => {
+  const A = __alba, armZ = () => Math.max(...A.rig.arms.map(a => Math.abs(a.rotation.z))), o = {};
+  A.personatge(0); A.teleport(0, 8); A.bambes(false); A.turbo(false);
+  A.input(0, -1, 1); A.step(120); o.corre = { sp: A.pl.sp, z: armZ() };
+  A.teleport(0, 8); A.turbo(true); A.step(70); o.turbo = { sp: A.pl.sp, z: armZ() };
+  A.teleport(0, 8); A.bambes(true); A.step(70); o.dash = { sp: A.pl.sp, z: armZ() };
+  A.turbo(false); A.input(0, 0, 0); A.step(90);
+  const salt = (doble) => { const y0 = A.pl.y; let top = y0; A.saltar(); A.mantenir(true);
+    for (let i = 0; i < 160; i++) { if (doble && i === 22) A.saltar(); A.step(1); top = Math.max(top, A.pl.y); if (A.pl.grounded && i > 10) break; } A.mantenir(false); A.step(30); return top - y0; };
+  o.simple = salt(false); o.doble = salt(true); A.bambes(false); return o;
+});
+ok(bm.corre.z < .5, `corrent, els braços no s'obren en horitzontal (${bm.corre.z.toFixed(2)})`);
+ok(bm.turbo.sp > bm.corre.sp + 1 && bm.turbo.z < .5, `turbo sense bambes: més ràpid i braços normals (${bm.turbo.sp.toFixed(1)} m/s, ${bm.turbo.z.toFixed(2)})`);
+ok(bm.dash.sp > 11 && bm.dash.z > 1, `amb bambes i turbo: cursa superràpida amb braços d'avió (${bm.dash.sp.toFixed(1)} m/s, ${bm.dash.z.toFixed(2)})`);
+ok(bm.doble > bm.simple * 1.3, `amb bambes, doble salt (${bm.simple.toFixed(2)} → ${bm.doble.toFixed(2)} m)`);
 // botó «Motor: nou / actual»: canvia el render i l'herba deixa de moure's; «Sortir» torna a la llista de proves del joc
 const mo = await page.evaluate(() => { const b = document.getElementById('motor'); const t0 = __alba.VENT.uTime.value;
   b.click(); __alba.step(30); __alba.render(); const r = { m: __alba.motor, txt: b.textContent, quieta: __alba.VENT.uTime.value === t0 || true, blur: getComputedStyle(document.getElementById('post')).display };

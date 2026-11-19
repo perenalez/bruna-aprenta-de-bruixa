@@ -21,6 +21,7 @@ const ALBA_P = {
   squashK: 140, squashC: 11,    // muelle de aplastar/estirar
   sombreroK: 90, sombreroC: 7,  // muelle del sombrero
   radio: .25,                   // radio del personaje para colisiones
+  turbo: 7.4, dash: 11.3,       // turbo (botó «Turbo»); amb les bambes, cursa superràpida (com al joc: 8,5 i 13 m/s a la Bruna)
 };
 
 function crearJugador(x, z, yaw, ground) {
@@ -35,7 +36,10 @@ function pasJugador(pl, inp, mundo, dt, esc = 1) {
   const P = ALBA_P;
   pl.ev.step = pl.ev.land = pl.ev.jump = false;
   const W = P.walk * esc, Rn = P.run * esc;
-  const target = inp.mag <= .5 ? inp.mag / .5 * W : lerp(W, Rn, (inp.mag - .5) / .5);
+  let target = inp.mag <= .5 ? inp.mag / .5 * W : lerp(W, Rn, (inp.mag - .5) / .5);
+  // turbo: més ràpid; amb les bambes màgiques, la cursa superràpida («dash»)
+  const turbo = inp.turbo && inp.mag > 0;if (turbo) target = (pl.shoes ? P.dash : P.turbo) * esc;
+  pl.dash = turbo && pl.shoes; pl.dashK = damp(pl.dashK || 0, pl.dash ? 1 : 0, 6, dt);
   const acc = pl.grounded ? P.accSuelo : P.accAire;
   pl.vx = damp(pl.vx, inp.dx * target, acc, dt); pl.vz = damp(pl.vz, inp.dz * target, acc, dt);
   const sp = Math.hypot(pl.vx, pl.vz);
@@ -47,11 +51,14 @@ function pasJugador(pl, inp, mundo, dt, esc = 1) {
   for (const [ox, oz, r] of mundo.obstacles) { const dx = nx - ox, dz = nz - oz, d = Math.hypot(dx, dz), rr = r + P.radio * esc; if (d < rr && d > 1e-6) { nx = ox + dx / d * rr; nz = oz + dz / d * rr; } }
   if (mundo.canStand(nx, nz)) { pl.x = nx; pl.z = nz; } else { pl.vx *= .5; pl.vz *= .5; }
   const gh = mundo.ground(pl.x, pl.z);
-  if (inp.jump && pl.grounded) { pl.vy = P.saltoV * Math.sqrt(esc); pl.grounded = false; pl.squashV = 5; pl.ev.jump = true; }
+  if (inp.jump && pl.grounded) { pl.vy = P.saltoV * Math.sqrt(esc); pl.grounded = false; pl.squashV = 5; pl.ev.jump = true; pl.dbl = false; }
+  // bambes màgiques: doble salt a l'aire (com al joc amb les sabates de la poció 3)
+  else if (inp.jump && !pl.grounded && pl.shoes && !pl.dbl) { pl.vy = Math.max(pl.vy, P.saltoV * .95 * Math.sqrt(esc)); pl.dbl = true; pl.squashV = 4; pl.ev.dbl = true; }
   if (!pl.grounded) {
     let g = P.gravedad; if (pl.vy > 0 && inp.held) g = P.gravedadMantenido; if (Math.abs(pl.vy) < 1.4) g *= P.pausaArriba;
-    pl.vy -= g * dt; pl.y += pl.vy * dt; pl.airT += dt;
-    if (pl.y <= gh) { pl.y = gh; pl.grounded = true; pl.squashV = -4.5 - Math.min(3, -pl.vy * .3); pl.vy = 0; pl.airT = 0; pl.ev.land = true; }
+    pl.glide = pl.dbl && pl.vy < 0 && inp.held;                 // després del doble salt, mantenint «Saltar», planeja
+    if (pl.glide) pl.vy = damp(pl.vy, -1.25, 5, dt); else pl.vy -= g * dt; pl.y += pl.vy * dt; pl.airT += dt;
+    if (pl.y <= gh) { pl.y = gh; pl.grounded = true; pl.dbl = false; pl.glide = false; pl.squashV = -4.5 - Math.min(3, -pl.vy * .3); pl.vy = 0; pl.airT = 0; pl.ev.land = true; }
   } else {
     pl.y = damp(pl.y, gh, 25, dt);
     if (sp < .1 && gh < pl.y - .3) pl.grounded = false;      // se cae por un desnivel
@@ -71,17 +78,17 @@ function animarRig(b, pl, dt, t, esc = 1) {
   const s = Math.sin(pl.phase), c = Math.cos(pl.phase);
   b.root.position.set(pl.x, pl.y, pl.z); b.root.rotation.y = pl.yaw;
   // inclinación hacia delante al correr y hacia dentro en las curvas
-  const lean = .06 * wn + .16 * rn;
+  const dk = pl.dashK || 0, lean = .06 * wn + .16 * rn + .14 * dk;
   const roll = clamp(-pl.yawVel * .05 * (.3 + rn), -.3, .3);
   b.inner.rotation.set(lean, 0, roll);
   const sq = clamp(pl.squash, -.5, .5); b.inner.scale.set(1 - sq * .35, 1 + sq * .6, 1 - sq * .35);
   // pelvis: balanceo flotante (amplitud pequeña: Pere pidió que no maree)
   const k = b.esc ?? b.hipY / .30;
-  b.hips.position.y = b.hipY + ((Math.abs(c) - .6) * .028 * m * (1 + rn * .5) + (pl.grounded ? 0 : .02)) * k;
+  b.hips.position.y = b.hipY + ((Math.abs(c) - .6) * .028 * m * (1 + rn * .5) + (pl.grounded ? 0 : .02) + dk * .05 * Math.abs(c)) * k;   // amb el dash flota entre passes
   b.hips.rotation.y = s * .14 * m * (1 - rn * .4);
   b.hips.rotation.z = c * .035 * m;
   // piernas
-  const amp = .55 + rn * .35;
+  const amp = .55 + rn * .35 + dk * .25;
   const rest = b.legRest || 0;   // giro de cadera en reposo (rigs con rodilla, p. ej. la Bruna del juego)
   b.legs.forEach((g, i) => {
     const sg = i ? 1 : -1, u = g.userData;
@@ -97,17 +104,19 @@ function animarRig(b, pl, dt, t, esc = 1) {
       if (b.feet) b.feet[i].rotation.x = -(g.rotation.x + kn.rotation.x) * .85;
     }
   });
-  // brazos: se balancean al caminar y se abren «de avión» al correr; en el aire, en cruz
+  // braços (en Pere, 19-11): en córrer es mouen endavant i enrere al ritme de les passes, amb els colzes doblegats,
+  // com quan es corre de debò. Només en la cursa superràpida amb les bambes s'obren en horitzontal, «d'avió».
   const breathe = Math.sin(t * 1.8) * .03;
   b.arms.forEach((g, i) => {
     const sg = i ? 1 : -1;
     let rx, rz;
-    if (pl.grounded) { rx = -sg * s * (.55 - rn * .3) * m + breathe * .5 - rn * .25; rz = sg * (.14 + rn * .95 + Math.sin(pl.phase * 2) * .08 * rn + breathe * .3); }
-    else { rx = -.7; rz = sg * 1.15; }
+    if (pl.grounded) { rx = -sg * s * (.5 + rn * .35) * m + breathe * .5 - rn * .12; rz = sg * (.12 + rn * .1 + breathe * .3); }
+    else { rx = pl.glide ? -.4 : -.55; rz = sg * (pl.glide ? 1.0 : .5); }
+    rx = lerp(rx, -.28 - sg * s * .06, dk); rz = lerp(rz, sg * (1.25 + Math.sin(pl.phase * 2) * .06), dk);
     g.rotation.x = damp(g.rotation.x, rx, 14, dt); g.rotation.z = damp(g.rotation.z, rz, 10, dt);
   });
   // opcional: codos ligeramente doblados (más al correr y en el aire)
-  if (b.elbows) b.elbows.forEach(e => { e.rotation.x = damp(e.rotation.x, -(.2 + rn * .55 + (pl.grounded ? 0 : .3)), 10, dt); });
+  if (b.elbows) b.elbows.forEach(e => { e.rotation.x = damp(e.rotation.x, lerp(-(.25 + rn * 1.15 + (pl.grounded ? 0 : .2)), -.12, dk), 10, dt); });
   // cabeza
   b.neck.rotation.x = damp(b.neck.rotation.x, -lean * .7 + Math.sin(t * 1.8) * .015 + (pl.grounded ? 0 : -.12), 8, dt);
   b.neck.rotation.y = damp(b.neck.rotation.y, clamp(pl.yawVel * .08, -.4, .4), 6, dt);
