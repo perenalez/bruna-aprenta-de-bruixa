@@ -18,6 +18,8 @@ Joc 3D per a navegador, amb prioritat al mòbil. L'encàrrec complet és a
   aprovat. Pas 2 (correccions) fet i publicat com a **v.1.2**.
   Pas 3 («Crea el teu personatge») fet i publicat. Pas 4 («Saltar nivells», amb subnivells per poció) fet i publicat.
   Passos 5 i 6 units (en Pere): «Nou motor de render · moviment Alba» (`prototip/proves/alba/`), amb botó per comparar motors. Crèdits: «Un joc creat per Ayla Sainz i Pere Nadal» (no «Laia»).
+  Proves noves: Pantalla d'inici (tutorial), Nedar (espai aquàtic) i la Gran Bruixa (de moment només a les proves).
+- **Cua (en Pere):** la Gran Bruixa ha de fer accions divertides diferents a cada nivell (per treballar); portar-la al joc normal quan ho aprovi.
 
 ## Publicació
 

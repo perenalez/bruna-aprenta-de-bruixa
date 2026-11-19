@@ -270,7 +270,7 @@ camT.y+=(S.y+0.72-camT.y)*(1-Math.exp(-dt*(lift.riding?8:3.2)));
 
 /* ---------- bucle ---------- */
 function frame(dt){if(AQ.on){aquaStep(dt);return;}   // prova de nedar (66_proves_aigua.js): física i escena pròpies
-  stepMove(dt);stepAct(dt);animate(dt);animWorld(dt);worldAnim(dt);herbaStep();dayStep(dt);towerAnim(dt);bunnyStep(dt);turboStep(dt);gameStep(dt);}
+  stepMove(dt);stepAct(dt);animate(dt);animWorld(dt);worldAnim(dt);herbaStep();dayStep(dt);towerAnim(dt);bunnyStep(dt);turboStep(dt);gameStep(dt);gbStep(dt);}
 let last=performance.now();
 function loop(now){
   const dt=clamp((now-last)/1000,0,0.04);last=Math.max(last,now);   // el primer rAF puede llegar con una marca de tiempo anterior: dt negativo

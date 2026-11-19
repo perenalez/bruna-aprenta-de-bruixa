@@ -26,7 +26,7 @@ function loadProva(){PROVA.on=true;const pc=/[?&]poc=(\d)/.exec(location.search)
   if(poc)fetes=[...Array(poc-1).keys()];
   fetes.sort((a,b)=>a-b).forEach(i=>{const P=NIVEL1.pociones[i];GS.done.push(i);if(P.premio&&P.premio.ropa)GS.clothes.push(P.premio.ropa);(P.diario||[]).forEach(t=>GS.diary.push(t));});
   if(fetes.length){GS.pot=Math.max(...fetes);GS.phase='fin';GS.wardOpen=true;GS.flags.guia=1;}
-  if(poc&&NIVEL1.pociones[poc-1]){GS.pot=poc-1;GS.phase='leer';GS.flags.guia=1;}}   // la veu ja l'ha encarregada: toca llegir el llibre
+  if(poc&&NIVEL1.pociones[poc-1]){GS.pot=poc-1;GS.phase=poc===1?'inicio':'leer';GS.flags.guia=1;}}   // 1.1: la Gran Bruixa encara l'ha de rebre a la sala del tron   // la veu ja l'ha encarregada: toca llegir el llibre
 function loadGame(){if(!PLAY)return;if(NIVELL_PROVA||INICI_PROVA||AIGUA_PROVA){loadProva();return;}try{if(/[?&]reset/.test(location.search))localStorage.removeItem(SAVE);const s=localStorage.getItem(SAVE);if(s)Object.assign(GS,JSON.parse(s));}catch(e){}
   if(GS.phase==='fin1')GS.phase='fin';                                          // partidas guardadas con la versión anterior
   if(!GS.done.length&&GS.clothes.includes('barret'))GS.done=[0];}
