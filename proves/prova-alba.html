@@ -32,6 +32,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f0e1c2;touch-action:n
 .rb{border:0;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 2px 8px rgba(0,0,0,.3);font:700 13px system-ui;color:#3b2c2a;cursor:pointer;touch-action:manipulation}
 .rb:active{transform:scale(.94);background:#fff}
 #bjump{width:88px;height:88px}
+#bturbo{width:66px;height:66px;background:rgba(255,215,94,.9);color:#5a2e10}
 </style>
 </head>
 <body>
@@ -39,11 +40,11 @@ html,body{margin:0;height:100%;overflow:hidden;background:#f0e1c2;touch-action:n
 <div id="load"><b>Prova: moviment estil Alba</b><div id="track"><div id="bar"></div></div><small>Esculpint el personatge i plantant l'herba…</small></div>
 <div id="hud">
   <div id="title">Prova · nou motor<small>moviment estil Alba</small></div>
-  <div id="tools"><span id="fps"></span><button id="motor">Motor: nou</button><button id="pers">Personatge</button><button id="post">Desenfocament: sí</button><button id="sortir">Sortir</button><div id="stats"></div></div>
+  <div id="tools"><span id="fps"></span><button id="motor">Motor: nou</button><button id="pers">Personatge</button><button id="bambes">Bambes: no</button><button id="post">Desenfocament: sí</button><button id="sortir">Sortir</button><div id="stats"></div></div>
 </div>
-<div id="hint" class="ui"><span class="touch">Joystick: caminar (a fons, córrer) · arrossega per girar la càmera</span><span class="desk">WASD: caminar · Majúscules: córrer · Espai: saltar · arrossega per girar la càmera</span></div>
+<div id="hint" class="ui"><span class="touch">Joystick: caminar (a fons, córrer) · arrossega per girar la càmera</span><span class="desk">WASD: caminar · Majúscules: córrer · T: turbo · Espai: saltar · arrossega per girar la càmera</span></div>
 <div id="joy" class="ui"><div id="knob"></div></div>
-<div id="acts" class="ui"><button id="bjump" class="rb">Saltar</button></div>
+<div id="acts" class="ui"><button id="bturbo" class="rb">Turbo</button><button id="bjump" class="rb">Saltar</button></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (()=>{
@@ -1005,6 +1006,7 @@ const ALBA_P = {
   squashK: 140, squashC: 11,    // muelle de aplastar/estirar
   sombreroK: 90, sombreroC: 7,  // muelle del sombrero
   radio: .25,                   // radio del personaje para colisiones
+  turbo: 7.4, dash: 11.3,       // turbo (botó «Turbo»); amb les bambes, cursa superràpida (com al joc: 8,5 i 13 m/s a la Bruna)
 };
 
 function crearJugador(x, z, yaw, ground) {
@@ -1019,7 +1021,10 @@ function pasJugador(pl, inp, mundo, dt, esc = 1) {
   const P = ALBA_P;
   pl.ev.step = pl.ev.land = pl.ev.jump = false;
   const W = P.walk * esc, Rn = P.run * esc;
-  const target = inp.mag <= .5 ? inp.mag / .5 * W : lerp(W, Rn, (inp.mag - .5) / .5);
+  let target = inp.mag <= .5 ? inp.mag / .5 * W : lerp(W, Rn, (inp.mag - .5) / .5);
+  // turbo: més ràpid; amb les bambes màgiques, la cursa superràpida («dash»)
+  const turbo = inp.turbo && inp.mag > 0;if (turbo) target = (pl.shoes ? P.dash : P.turbo) * esc;
+  pl.dash = turbo && pl.shoes; pl.dashK = damp(pl.dashK || 0, pl.dash ? 1 : 0, 6, dt);
   const acc = pl.grounded ? P.accSuelo : P.accAire;
   pl.vx = damp(pl.vx, inp.dx * target, acc, dt); pl.vz = damp(pl.vz, inp.dz * target, acc, dt);
   const sp = Math.hypot(pl.vx, pl.vz);
@@ -1031,11 +1036,14 @@ function pasJugador(pl, inp, mundo, dt, esc = 1) {
   for (const [ox, oz, r] of mundo.obstacles) { const dx = nx - ox, dz = nz - oz, d = Math.hypot(dx, dz), rr = r + P.radio * esc; if (d < rr && d > 1e-6) { nx = ox + dx / d * rr; nz = oz + dz / d * rr; } }
   if (mundo.canStand(nx, nz)) { pl.x = nx; pl.z = nz; } else { pl.vx *= .5; pl.vz *= .5; }
   const gh = mundo.ground(pl.x, pl.z);
-  if (inp.jump && pl.grounded) { pl.vy = P.saltoV * Math.sqrt(esc); pl.grounded = false; pl.squashV = 5; pl.ev.jump = true; }
+  if (inp.jump && pl.grounded) { pl.vy = P.saltoV * Math.sqrt(esc); pl.grounded = false; pl.squashV = 5; pl.ev.jump = true; pl.dbl = false; }
+  // bambes màgiques: doble salt a l'aire (com al joc amb les sabates de la poció 3)
+  else if (inp.jump && !pl.grounded && pl.shoes && !pl.dbl) { pl.vy = Math.max(pl.vy, P.saltoV * .95 * Math.sqrt(esc)); pl.dbl = true; pl.squashV = 4; pl.ev.dbl = true; }
   if (!pl.grounded) {
     let g = P.gravedad; if (pl.vy > 0 && inp.held) g = P.gravedadMantenido; if (Math.abs(pl.vy) < 1.4) g *= P.pausaArriba;
-    pl.vy -= g * dt; pl.y += pl.vy * dt; pl.airT += dt;
-    if (pl.y <= gh) { pl.y = gh; pl.grounded = true; pl.squashV = -4.5 - Math.min(3, -pl.vy * .3); pl.vy = 0; pl.airT = 0; pl.ev.land = true; }
+    pl.glide = pl.dbl && pl.vy < 0 && inp.held;                 // després del doble salt, mantenint «Saltar», planeja
+    if (pl.glide) pl.vy = damp(pl.vy, -1.25, 5, dt); else pl.vy -= g * dt; pl.y += pl.vy * dt; pl.airT += dt;
+    if (pl.y <= gh) { pl.y = gh; pl.grounded = true; pl.dbl = false; pl.glide = false; pl.squashV = -4.5 - Math.min(3, -pl.vy * .3); pl.vy = 0; pl.airT = 0; pl.ev.land = true; }
   } else {
     pl.y = damp(pl.y, gh, 25, dt);
     if (sp < .1 && gh < pl.y - .3) pl.grounded = false;      // se cae por un desnivel
@@ -1055,17 +1063,17 @@ function animarRig(b, pl, dt, t, esc = 1) {
   const s = Math.sin(pl.phase), c = Math.cos(pl.phase);
   b.root.position.set(pl.x, pl.y, pl.z); b.root.rotation.y = pl.yaw;
   // inclinación hacia delante al correr y hacia dentro en las curvas
-  const lean = .06 * wn + .16 * rn;
+  const dk = pl.dashK || 0, lean = .06 * wn + .16 * rn + .14 * dk;
   const roll = clamp(-pl.yawVel * .05 * (.3 + rn), -.3, .3);
   b.inner.rotation.set(lean, 0, roll);
   const sq = clamp(pl.squash, -.5, .5); b.inner.scale.set(1 - sq * .35, 1 + sq * .6, 1 - sq * .35);
   // pelvis: balanceo flotante (amplitud pequeña: Pere pidió que no maree)
   const k = b.esc ?? b.hipY / .30;
-  b.hips.position.y = b.hipY + ((Math.abs(c) - .6) * .028 * m * (1 + rn * .5) + (pl.grounded ? 0 : .02)) * k;
+  b.hips.position.y = b.hipY + ((Math.abs(c) - .6) * .028 * m * (1 + rn * .5) + (pl.grounded ? 0 : .02) + dk * .05 * Math.abs(c)) * k;   // amb el dash flota entre passes
   b.hips.rotation.y = s * .14 * m * (1 - rn * .4);
   b.hips.rotation.z = c * .035 * m;
   // piernas
-  const amp = .55 + rn * .35;
+  const amp = .55 + rn * .35 + dk * .25;
   const rest = b.legRest || 0;   // giro de cadera en reposo (rigs con rodilla, p. ej. la Bruna del juego)
   b.legs.forEach((g, i) => {
     const sg = i ? 1 : -1, u = g.userData;
@@ -1081,17 +1089,19 @@ function animarRig(b, pl, dt, t, esc = 1) {
       if (b.feet) b.feet[i].rotation.x = -(g.rotation.x + kn.rotation.x) * .85;
     }
   });
-  // brazos: se balancean al caminar y se abren «de avión» al correr; en el aire, en cruz
+  // braços (en Pere, 19-11): en córrer es mouen endavant i enrere al ritme de les passes, amb els colzes doblegats,
+  // com quan es corre de debò. Només en la cursa superràpida amb les bambes s'obren en horitzontal, «d'avió».
   const breathe = Math.sin(t * 1.8) * .03;
   b.arms.forEach((g, i) => {
     const sg = i ? 1 : -1;
     let rx, rz;
-    if (pl.grounded) { rx = -sg * s * (.55 - rn * .3) * m + breathe * .5 - rn * .25; rz = sg * (.14 + rn * .95 + Math.sin(pl.phase * 2) * .08 * rn + breathe * .3); }
-    else { rx = -.7; rz = sg * 1.15; }
+    if (pl.grounded) { rx = -sg * s * (.5 + rn * .35) * m + breathe * .5 - rn * .12; rz = sg * (.12 + rn * .1 + breathe * .3); }
+    else { rx = pl.glide ? -.4 : -.55; rz = sg * (pl.glide ? 1.0 : .5); }
+    rx = lerp(rx, -.28 - sg * s * .06, dk); rz = lerp(rz, sg * (1.25 + Math.sin(pl.phase * 2) * .06), dk);
     g.rotation.x = damp(g.rotation.x, rx, 14, dt); g.rotation.z = damp(g.rotation.z, rz, 10, dt);
   });
   // opcional: codos ligeramente doblados (más al correr y en el aire)
-  if (b.elbows) b.elbows.forEach(e => { e.rotation.x = damp(e.rotation.x, -(.2 + rn * .55 + (pl.grounded ? 0 : .3)), 10, dt); });
+  if (b.elbows) b.elbows.forEach(e => { e.rotation.x = damp(e.rotation.x, lerp(-(.25 + rn * 1.15 + (pl.grounded ? 0 : .2)), -.12, dk), 10, dt); });
   // cabeza
   b.neck.rotation.x = damp(b.neck.rotation.x, -lean * .7 + Math.sin(t * 1.8) * .015 + (pl.grounded ? 0 : -.12), 8, dt);
   b.neck.rotation.y = damp(b.neck.rotation.y, clamp(pl.yawVel * .08, -.4, .4), 6, dt);
@@ -1191,6 +1201,12 @@ function crearParticules(scene, ground) {
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: '#f3e3c2', transparent: true, depthWrite: false, opacity: 0 }));
     s.visible = false; scene.add(s); parts.push({ s, life: 0, max: 1, vx: 0, vy: 0, vz: 0, kind: 'pols' });
   }
+  // espurnes de les bambes màgiques
+  const SC = ['#ffe36a', '#fff3b0', '#c98aff', '#ff9ad8'];
+  for (let i = 0; i < 40; i++) {
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: SC[i % 4], transparent: true, depthWrite: false, opacity: 0, blending: THREE.AdditiveBlending }));
+    s.visible = false; scene.add(s); parts.push({ s, life: 0, max: 1, vx: 0, vy: 0, vz: 0, kind: 'brill' });
+  }
   const bladeG = new THREE.PlaneGeometry(.05, .14);
   for (let i = 0; i < 40; i++) {
     const m = new THREE.Mesh(bladeG, new THREE.MeshLambertMaterial({ color: i % 2 ? '#e6c25a' : '#c9a33e', side: THREE.DoubleSide, transparent: true }));
@@ -1199,9 +1215,10 @@ function crearParticules(scene, ground) {
   function emit(kind, x, y, z, n, spread = 1) {
     for (let k = 0; k < n; k++) {
       const p = parts.find(p => p.life <= 0 && p.kind === kind); if (!p) return;
-      p.life = p.max = kind === 'pols' ? .7 + Math.random() * .5 : 1 + Math.random() * .6;
+      p.life = p.max = kind === 'pols' ? .7 + Math.random() * .5 : kind === 'brill' ? .5 + Math.random() * .4 : 1 + Math.random() * .6;
       p.s.position.set(x + (Math.random() - .5) * .2 * spread, y + .05, z + (Math.random() - .5) * .2 * spread);
-      if (kind === 'pols') { p.vx = (Math.random() - .5) * .8 * spread; p.vy = .35 + Math.random() * .4; p.vz = (Math.random() - .5) * .8 * spread; p.size = .18 + Math.random() * .16; }
+      if (kind === 'brill') { p.vx = (Math.random() - .5) * 1.6; p.vy = .6 + Math.random() * 1.2; p.vz = (Math.random() - .5) * 1.6; p.size = .07 + Math.random() * .07; }
+      else if (kind === 'pols') { p.vx = (Math.random() - .5) * .8 * spread; p.vy = .35 + Math.random() * .4; p.vz = (Math.random() - .5) * .8 * spread; p.size = .18 + Math.random() * .16; }
       else { const a = Math.random() * TAU; p.vx = Math.cos(a) * 1.4; p.vy = 2 + Math.random() * 1.8; p.vz = Math.sin(a) * 1.4; p.rx = (Math.random() - .5) * 14; p.rz = (Math.random() - .5) * 14; }
       p.s.visible = true;
     }
@@ -1211,7 +1228,8 @@ function crearParticules(scene, ground) {
       if (p.life <= 0) continue;
       p.life -= dt; const k = clamp(p.life / p.max, 0, 1);
       p.s.position.x += p.vx * dt; p.s.position.y += p.vy * dt; p.s.position.z += p.vz * dt;
-      if (p.kind === 'pols') { p.vx *= .96; p.vz *= .96; p.vy *= .97; const s = p.size * (1.6 - k * .8); p.s.scale.set(s, s, s); p.s.material.opacity = k * .38; }
+      if (p.kind === 'brill') { p.vy -= 2 * dt; p.s.scale.setScalar(p.size * (.5 + k)); p.s.material.opacity = k; }
+      else if (p.kind === 'pols') { p.vx *= .96; p.vz *= .96; p.vy *= .97; const s = p.size * (1.6 - k * .8); p.s.scale.set(s, s, s); p.s.material.opacity = k * .38; }
       else { p.vy -= 7 * dt; p.s.rotation.x += p.rx * dt; p.s.rotation.z += p.rz * dt; p.s.material.opacity = Math.min(1, k * 3); const gy = ground(p.s.position.x, p.s.position.z); if (p.s.position.y < gy) { p.s.position.y = gy; p.vx = p.vz = p.vy = 0; } }
       if (p.life <= 0) p.s.visible = false;
     }
@@ -1257,13 +1275,16 @@ const esTactil = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in wi
 
 function crearControl(canvas, ui) {
   const keys = {};
-  const st = { jump: false, held: false, btnHeld: false, yaw: Math.PI, pitch: .42, dist: 6.2, forcar: null };
+  const st = { jump: false, held: false, btnHeld: false, turboBtn: false, yaw: Math.PI, pitch: .42, dist: 6.2, forcar: null };
   const input = { x: 0, y: 0 };
   addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Space') { e.preventDefault(); if (!e.repeat) st.jump = true; } if (e.code.startsWith('Arrow')) e.preventDefault(); });
   addEventListener('keyup', e => { keys[e.code] = false; });
   // botón Saltar (mantenerlo apretado = salto más alto y suave)
   ui.jump.addEventListener('pointerdown', e => { st.jump = true; st.btnHeld = true; ui.jump.setPointerCapture && ui.jump.setPointerCapture(e.pointerId); e.preventDefault(); });
   const upJ = () => { st.btnHeld = false; }; ui.jump.addEventListener('pointerup', upJ); ui.jump.addEventListener('pointercancel', upJ);
+  // botó «Turbo» (mantenir premut) · tecla T
+  if (ui.turbo) { ui.turbo.addEventListener('pointerdown', e => { st.turboBtn = true; ui.turbo.setPointerCapture && ui.turbo.setPointerCapture(e.pointerId); e.preventDefault(); });
+    const upT = () => { st.turboBtn = false; }; ui.turbo.addEventListener('pointerup', upT); ui.turbo.addEventListener('pointercancel', upT); }
   // joystick fijo
   { let jid = null; const JR = 50;
     const mv = e => { const r = ui.joy.getBoundingClientRect(); let dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2); const l = Math.hypot(dx, dy); if (l > JR) { dx *= JR / l; dy *= JR / l; } ui.knob.style.transform = `translate(${dx}px,${dy}px)`; input.x = dx / JR; input.y = dy / JR; };
@@ -1293,7 +1314,7 @@ function crearControl(canvas, ui) {
     else if (m > .12) { ix = input.x; iz = input.y; mag = m < .7 ? .5 * clamp(m / .55, .4, 1) : 1; }
     const l = Math.hypot(ix, iz); if (l > 0) { ix /= l; iz /= l; }
     const fx = -Math.sin(st.yaw), fz = -Math.cos(st.yaw), rx = Math.cos(st.yaw), rz = -Math.sin(st.yaw);
-    const out = { dx: rx * ix - fx * iz, dz: rz * ix - fz * iz, mag, jump: st.jump, held: !!(keys.Space || st.btnHeld) };
+    const out = { dx: rx * ix - fx * iz, dz: rz * ix - fz * iz, mag, jump: st.jump, held: !!(keys.Space || st.btnHeld), turbo: !!(keys.KeyT || st.turboBtn || st.turboForcat) };
     st.jump = false;
     return out;
   }
@@ -1339,11 +1360,12 @@ sun.shadow.bias = -.0006; sun.shadow.normalBias = .035;
 scene.add(sun, sun.target);
 const SUN_OFF = new THREE.Vector3(-16, 26, 11);
 
-const ctl = crearControl(canvas, { joy: $('joy'), knob: $('knob'), jump: $('bjump'), hint: $('hint') });
+const ctl = crearControl(canvas, { joy: $('joy'), knob: $('knob'), jump: $('bjump'), turbo: $('bturbo'), hint: $('hint') });
 const camT = new THREE.Vector3();
 let rig, pl, post, parts, papallones, esc = 1;
 // lista de personajes: el primero es el que sale al empezar
 let FABRIQUES = [brunaJoc, brunaEsculpida], rigs = [], actual = 0;
+const BAMBES = { on: false };
 function posarPersonatge(i, progreso) {
   if (rig) scene.remove(rig.root);
   actual = i;
@@ -1351,6 +1373,7 @@ function posarPersonatge(i, progreso) {
   rig = rigs[i]; esc = rig.esc ?? rig.hipY / .30;
   scene.add(rig.root);
   if (pl) { rig.root.position.set(pl.x, pl.y, pl.z); rig.root.rotation.y = pl.yaw; }
+  aletes();
   $('pers').textContent = 'Personatge: ' + (rig.nom || (i + 1));
 }
 const mundo = { ground: MON.heightAt, canStand: (x, z) => MON.heightAt(x, z) > MON.SEA - .15, obstacles: [] };
@@ -1387,12 +1410,15 @@ function pas(dt) {
   tAcc += dt; const t = tAcc;
   if (MOTOR.nou) VENT.uTime.value = t;            // amb el motor actual l'herba no es mou
   const inp = ctl.leer();
-  pasJugador(pl, inp, mundo, dt, esc);
+  pl.shoes = BAMBES.on; pasJugador(pl, inp, mundo, dt, esc);
   animarRig(rig, pl, dt, t, esc);
   // partículas según los eventos de la locomoción
   const fx = pl.x + Math.sin(pl.yaw) * .05, fz = pl.z + Math.cos(pl.yaw) * .05;
   if (pl.ev.jump) parts.emit('pols', pl.x, pl.gh, pl.z, 5, 1.4);
   if (pl.ev.land) parts.emit('pols', pl.x, pl.gh, pl.z, 7, 1.8);
+  // bambes: espurnes al doble salt i a cada passa de la cursa superràpida
+  if (pl.ev.dbl) parts.emit('brill', pl.x, pl.y + .05, pl.z, 14);
+  if (pl.ev.step && (pl.dashK || 0) > .5) parts.emit('brill', pl.x, pl.gh + .03, pl.z, 4);
   if (pl.ev.step) {
     const rn = clamp((pl.sp / esc - ALBA_P.walk) / (ALBA_P.run - ALBA_P.walk), 0, 1);
     parts.emit('pols', fx, pl.gh, fz, rn > .3 ? 2 : 1, .7);
@@ -1424,6 +1450,13 @@ $('motor').addEventListener('click', e => { MOTOR.nou = !MOTOR.nou; fpsT = 0; fp
 // «Sortir» torna a la llista de proves del joc
 $('sortir').addEventListener('click', () => { location.href = './index' + (/\.local\.html/.test(location.pathname) ? '.local' : '') + '.html?prova=zona'; });
 $('pers').addEventListener('click', () => posarPersonatge((actual + 1) % FABRIQUES.length));
+// «Bambes» (en Pere, 19-11): les sabates màgiques de la poció 3 → doble salt, planeig i, amb «Turbo», la cursa superràpida
+function aletes() { if (!rig) return; (rig.feet || []).forEach((f, i) => {
+    if (!f.userData.ales) { const g = new THREE.Group(), m = new THREE.MeshLambertMaterial({ color: '#fffdf6', emissive: '#ffffff', emissiveIntensity: .25 });
+      [[0, .04, -.02, .07], [0, .02, -.06, .055], [0, 0, -.09, .04]].forEach(([x, y, z, r]) => { const w = new THREE.Mesh(new THREE.SphereGeometry(1, 8, 6), m); w.position.set(x, y, z); w.scale.set(.012, r * .55, r); w.rotation.x = .5; g.add(w); });
+      g.position.set((i ? 1 : -1) * .07, 0, -.02); g.rotation.z = (i ? -1 : 1) * .6; f.add(g); f.userData.ales = g; }
+    f.userData.ales.visible = BAMBES.on; }); }
+$('bambes').addEventListener('click', e => { BAMBES.on = !BAMBES.on; e.currentTarget.textContent = 'Bambes: ' + (BAMBES.on ? 'sí' : 'no'); aletes(); });
 $('post').addEventListener('click', e => { post.enabled = !post.enabled; e.currentTarget.textContent = 'Desenfocament: ' + (post.enabled ? 'sí' : 'no'); });
 
 // API de depuración (mismo estilo que window.__j del juego): los tests congelan el bucle
@@ -1435,7 +1468,7 @@ window.__alba = {
   get motor() { return MOTOR.nou ? 'nou' : 'actual'; }, MOTOR,
   personatge(i) { posarPersonatge(i); return rig.nom; },
   input(x, y, mag) { ctl.st.forcar = (x || y) ? { x, y, mag } : null; },
-  saltar() { ctl.st.jump = true; },
+  saltar() { ctl.st.jump = true; }, mantenir(v) { ctl.st.btnHeld = v; }, turbo(v) { ctl.st.turboForcat = v; }, bambes(v) { BAMBES.on = v; aletes(); }, get BAMBES() { return BAMBES; },
   teleport(x, z) { pl.x = x; pl.z = z; pl.y = MON.heightAt(x, z); camT.set(x, pl.y + .75, z); },
   camara(yaw, pitch, dist) { ctl.st.yaw = yaw; ctl.st.pitch = pitch; ctl.st.dist = dist; },
   get llest() { return !!pl; },
