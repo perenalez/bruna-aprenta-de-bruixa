@@ -269,14 +269,15 @@ camT.y+=(S.y+0.72-camT.y)*(1-Math.exp(-dt*(lift.riding?8:3.2)));
 }
 
 /* ---------- bucle ---------- */
-function frame(dt){stepMove(dt);stepAct(dt);animate(dt);animWorld(dt);worldAnim(dt);herbaStep();dayStep(dt);towerAnim(dt);bunnyStep(dt);turboStep(dt);gameStep(dt);}
+function frame(dt){if(AQ.on){aquaStep(dt);return;}   // prova de nedar (66_proves_aigua.js): física i escena pròpies
+  stepMove(dt);stepAct(dt);animate(dt);animWorld(dt);worldAnim(dt);herbaStep();dayStep(dt);towerAnim(dt);bunnyStep(dt);turboStep(dt);gameStep(dt);}
 let last=performance.now();
 function loop(now){
   const dt=clamp((now-last)/1000,0,0.04);last=Math.max(last,now);   // el primer rAF puede llegar con una marca de tiempo anterior: dt negativo
   if(dt<=0){requestAnimationFrame(loop);return;}
-  frame(dt);updateCam(dt);titleStep(dt);provaStep();renderCtx();
-  if(!PCR.open)renderer.render(titleScene()||scene,camera);   // amb el creador de personatge obert no cal dibuixar el joc
+  frame(dt);if(!AQ.on)updateCam(dt);titleStep(dt);provaStep();renderCtx();
+  if(!PCR.open)renderer.render(AQ.on?AQS:(titleScene()||scene),camera);   // amb el creador de personatge obert no cal dibuixar el joc
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
-window.__j={render:()=>renderer.render(titleScene()||scene,camera),step:(n,dt)=>{for(let i=0;i<n;i++)frame(dt||1/60);updateCam(1);},S,cam,K,input,ACT,actions,teleport,lift,doors,landH,groundY,parts,get mode(){return mode;},get key(){return curKey;},get act(){return act;},OX,OY,OZ,BN,GT,H1,H2,RXB,BZ,BL,trail,gY,pathX,waterAt,FL,FLY,broom,canLaunch,TURBO,MUSH,FRUIT,tryFly,canMountHere,get inCave(){return inCave;}};
+window.__j={render:()=>renderer.render(AQ.on?AQS:(titleScene()||scene),camera),step:(n,dt)=>{for(let i=0;i<n;i++)frame(dt||1/60);if(!AQ.on)updateCam(1);},S,cam,K,input,ACT,actions,teleport,lift,doors,landH,groundY,parts,get mode(){return mode;},get key(){return curKey;},get act(){return act;},OX,OY,OZ,BN,GT,H1,H2,RXB,BZ,BL,trail,gY,pathX,waterAt,FL,FLY,broom,canLaunch,TURBO,MUSH,FRUIT,tryFly,canMountHere,get inCave(){return inCave;}};
