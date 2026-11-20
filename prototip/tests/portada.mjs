@@ -31,8 +31,8 @@ const z = await page.evaluate(() => ({ on: document.getElementById('tproves').cl
 ok(z.on && z.txt.includes('Testejar'), 'la zona de proves no s\'obre');
 await page.click('#tproves [data-go=llista]');
 const l = await page.evaluate(() => [...document.querySelectorAll('#tproves li button')].map(b => ({ t: b.innerText, off: b.disabled })));
-ok(l.length === 5, 'la llista hauria de tenir 5 proves');
-for (const n of ["Pantalla d'inici", 'Crea el teu personatge', 'Provar nivells', 'Nou motor de render · moviment Alba', 'Proves de noves accions']) ok(l.some(b => b.t.includes(n) && !b.off), `«${n}» no està activada`);
+ok(l.length === 6, 'la llista hauria de tenir 6 proves');
+for (const n of ["Pantalla d'inici", 'Crea el teu personatge', 'Provar nivells', 'Nou motor de render · moviment Alba', 'Proves de noves accions', 'Món submarí (nivell 2)']) ok(l.some(b => b.t.includes(n) && !b.off), `«${n}» no està activada`);
 await page.click('#tproves [data-go=zona]');
 ok(await page.evaluate(() => document.getElementById('tproves').innerText.includes('Testejar')), '«Tornar» no torna a la zona');
 await page.click('#tproves [data-go=""]');
@@ -53,4 +53,4 @@ ok(Math.abs(g.fov - 38) < 0.01, 'la càmera del joc no torna al seu angle');
 await browser.close();
 if (errores.length) fallos.push('Errors:\n' + errores.join('\n'));
 if (fallos.length) { console.error('✗ Portada:\n- ' + fallos.join('\n- ')); process.exit(1); }
-console.log('✓ Portada: textos, v.1.2, contrasenya, zona de proves (5 proves actives), Tornar, Juga i volta de 360°');
+console.log('✓ Portada: textos, v.1.2, contrasenya, zona de proves (6 proves actives), Tornar, Juga i volta de 360°');

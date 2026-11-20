@@ -9,7 +9,7 @@
    «Accedir a la zona de proves» abre #tproves: botón «Testejar» → lista de pruebas (desactivadas, «Aviat»).
    ?sinportada en la URL la salta (para pruebas).
    ===================================================================== */
-const TITLE={on:PLAY&&!/[?&](sinportada|prova=nivell|prova=inici|prova=aigua)/.test(location.search),t:0,
+const TITLE={on:PLAY&&!/[?&](sinportada|prova=nivell|prova=inici|prova=aigua|prova=submari)/.test(location.search),t:0,
   // cámara de la portada (pensada para un móvil vertical, aspecto 0.46)
   cam:{x:0,y:0.55,z:2.75,lx:0.05,ly:1.08,fov:44,fovH:40,asp:0.46}};
 const TSC=new THREE.Scene();
@@ -153,7 +153,7 @@ const RAYS='<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M6 9L20 15M3 21
 @media (min-aspect-ratio:1/1) and (max-height:520px){#tscreen .sub{display:none}#tscreen h1{font-size:clamp(40px,13vh,70px)}#tplay{font-size:26px;padding:8px 34px 10px}#tgo{width:60px;height:60px;font-size:9px}}`;document.head.appendChild(css);}
 // pruebas de la zona de proves (se activan a medida que se hacen)
 const PROVA_OPEN={};   // cada prova feta s'hi apunta (62_proves_personatge.js…)
-const PROVES=[{id:'inici',lab:'Pantalla d\'inici'},{id:'personatge',lab:'Crea el teu personatge'},{id:'nivells',lab:'Provar nivells'},{id:'render',lab:'Nou motor de render · moviment Alba'},{id:'accions',lab:'Proves de noves accions'}];   // en Pere: «el nou render i el moviment Alba són el mateix»
+const PROVES=[{id:'inici',lab:'Pantalla d\'inici'},{id:'personatge',lab:'Crea el teu personatge'},{id:'nivells',lab:'Provar nivells'},{id:'render',lab:'Nou motor de render · moviment Alba'},{id:'accions',lab:'Proves de noves accions'},{id:'submari',lab:'Món submarí (nivell 2)'}];   // en Pere: «el nou render i el moviment Alba són el mateix»
 function showTitleUI(on){['hud','joy','acts','chips','top','hint','bwand','spells','ctx','tbar','frost'].forEach(id=>{const e=$(id);if(e)e.style.visibility=on?'hidden':'';});}
 // la zona de proves només s'obre amb la contrasenya (en Pere, 19-11); es recorda mentre la pestanya és oberta
 const PROVES_PW='ayla';
